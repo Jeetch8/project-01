@@ -1,25 +1,27 @@
+interface Props {
+  fetchHomeFeed: () => void;
+}
+
 import React, { useState } from "react";
-import AvatarImage from "../global/AvatarImage";
-import { IoImageOutline, IoVideocamOutline } from "react-icons/io5";
+import AvatarImage from "@/Components/Global/AvatarImage";
+import { IoImageOutline } from "react-icons/io5";
 import { useFetch } from "../../hooks/useFetch";
-import {
-  blobToFile,
-  urlToBlobConverter,
-} from "../../utils/url_to_blob_converter";
+import { urlToBlobConverter } from "@/utils/url_to_blob_converter";
 import { base_url } from "../../utils/base_url";
 import toast from "react-hot-toast";
 import PostImages from "./PostImages";
 import { MdDeleteForever } from "react-icons/md";
 
-const CreatePost = ({ fetchHomeFeed }) => {
+const CreatePost = ({ fetchHomeFeed }: Props) => {
   const [userInput, setUserInput] = useState("");
-  const [userSelectedImage, setUserSelectedImage] = useState(null);
-  const [userSelectedImageBlob, setUserSelectedImageBlob] = useState(null);
+  const [userSelectedImage, setUserSelectedImage] = useState<File | null>(null);
+  const [userSelectedImageBlob, setUserSelectedImageBlob] =
+    useState<Blob | null>(null);
   const { doFetch } = useFetch({
     url: base_url + "/post",
     method: "POST",
     authorized: true,
-    onSuccess: (res) => {
+    onSuccess: () => {
       toast.success("Post created successfully");
       setUserInput("");
       setUserSelectedImage(null);
@@ -36,7 +38,8 @@ const CreatePost = ({ fetchHomeFeed }) => {
     doFetch(formdata);
   };
 
-  const handleImageChange = async (e) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e?.target?.files) return;
     setUserSelectedImage(e.target.files[0]);
     const blob = await urlToBlobConverter(e.target.files[0]);
     setUserSelectedImageBlob(blob);
@@ -68,11 +71,7 @@ const CreatePost = ({ fetchHomeFeed }) => {
           <div className=" px-4 flex items-center justify-between border-t-[1px] border-zinc-700 pt-2">
             <div className="flex items-center gap-x-4">
               <div>
-                <label
-                  htmlFor="newPostImage"
-                  className=" cursor-pointer"
-                  name="newPostImage"
-                >
+                <label htmlFor="newPostImage" className=" cursor-pointer">
                   <IoImageOutline color="#199BF0" size={21} />
                 </label>
                 <input

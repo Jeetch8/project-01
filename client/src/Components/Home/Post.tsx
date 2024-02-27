@@ -7,16 +7,54 @@ import { CiBookmark } from "react-icons/ci";
 import PostImages from "./PostImages";
 import Comments from "./Comments";
 import { FaBookmark } from "react-icons/fa";
+import { useFetch } from "@/hooks/useFetch";
+import { base_url } from "@/utils/base_url";
 
-const Post = ({
-  post,
-  likePostFetch,
-  unlikePostFetch,
-  commentOnPostFetch,
-  bookmarkPostFetch,
-  unBookmarkPostFetch,
-}) => {
+const Post = ({ post }) => {
   const [isCommentOpen, setIsCommentOpen] = React.useState(false);
+  const { doFetch: likePostFetch } = useFetch({
+    url: base_url + "/post/like",
+    authorized: true,
+    method: "PATCH",
+    onSuccess: (res) => {
+      post.liked = true;
+      post.likes = res.post.likes;
+    },
+  });
+  const { doFetch: unlikePostFetch } = useFetch({
+    url: base_url + "/post/unlike",
+    authorized: true,
+    method: "PATCH",
+    onSuccess: (res) => {
+      post.liked = false;
+      post.likes = res.post.likes;
+    },
+  });
+  const { doFetch: commentOnPostFetch } = useFetch({
+    url: base_url + "/post/comment",
+    authorized: true,
+    method: "PUT",
+    onSuccess: (res) => {
+      post.comments = res.post.comments;
+    },
+  });
+  const { doFetch: bookmarkPostFetch } = useFetch({
+    url: base_url + "/bookmark/",
+    authorized: true,
+    method: "PATCH",
+    onSuccess: (res) => {
+      post.bookmarked = true;
+    },
+  });
+
+  const { doFetch: unBookmarkPostFetch } = useFetch({
+    url: base_url + "/bookmark/",
+    authorized: true,
+    method: "DELETE",
+    onSuccess: (res) => {
+      post.bookmarked = false;
+    },
+  });
 
   return (
     <div className="border-b-[1px] border-zinc-700 px-4 pt-3 pb-3">

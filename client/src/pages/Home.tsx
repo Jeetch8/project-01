@@ -1,8 +1,7 @@
-import React from "react";
-import Feed from "../components/Home/Feed";
-import CreatePost from "../components/Home/CreatePost";
-import { base_url } from "../utils/base_url";
-import { useFetch } from "../hooks/useFetch";
+import Feed from "@/Components/Home/Feed";
+import CreatePost from "@/Components/Home/CreatePost";
+import { base_url } from "@/utils/base_url";
+import { useFetch } from "@/hooks/useFetch";
 
 const Home = () => {
   const { doFetch: fetchHomeFeed, dataRef: homeFeedData } = useFetch({

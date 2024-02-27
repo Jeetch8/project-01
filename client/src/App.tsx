@@ -1,15 +1,15 @@
-import React, { Children } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import HomeLayout from "@/layout/HomeLayout";
 import Register from "@/pages/Register";
 import Login from "@/pages/Login";
-import ChangePassword from "@/pages/ChangePassword";
+import ForgotPassword from "@/pages/ForgotPassword";
 import PageNotFound from "@/pages/PageNotFound";
 import Bookmark from "@/pages/Bookmark";
-import Profile from "@/pages/Profile";
-import Notifications from "@/pages/Notifications";
-import Messages from "@/pages/Messages";
+// import Profile from "@/pages/Profile";
+// import Notifications from "@/pages/Notifications";
+// import Messages from "@/pages/Messages";
 import Home from "@/pages/Home";
+import ResetPassword from "./pages/ResetPassword";
 
 const router = createBrowserRouter([
   {
@@ -24,18 +24,18 @@ const router = createBrowserRouter([
         path: "/bookmark",
         element: <Bookmark />,
       },
-      {
-        path: "/profile",
-        element: <Profile />,
-      },
-      {
-        path: "/notifications",
-        element: <Notifications />,
-      },
-      {
-        path: "/messages",
-        element: <Messages />,
-      },
+      // {
+      //   path: "/profile",
+      //   element: <Profile />,
+      // },
+      // {
+      //   path: "/notifications",
+      //   element: <Notifications />,
+      // },
+      // {
+      //   path: "/messages",
+      //   element: <Messages />,
+      // },
       {
         path: "/*",
         element: <PageNotFound />,
@@ -52,7 +52,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/forgot-password",
-    element: <ChangePassword />,
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
 ]);
 

@@ -7,5 +7,11 @@
   "workspaces": [
     "server",
     "client"
-  ]
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace client dev\" \"yarn workspace server dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }

@@ -1,6 +1,6 @@
-export const getTokenFromLocalStorage = () => {
+export const getTokenFromLocalStorage = (variable?: string) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem(variable ?? "token");
     if (token !== undefined || token) {
       return token;
     } else return false;

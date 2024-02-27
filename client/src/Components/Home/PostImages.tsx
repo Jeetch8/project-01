@@ -1,7 +1,10 @@
-import React from "react";
+interface Props {
+  images: string[];
+}
+
 import { twMerge } from "tailwind-merge";
 
-const PostImages = ({ images }) => {
+const PostImages = ({ images }: Props) => {
   return (
     <div className={twMerge("grid gap-1", images.length > 1 && "grid-cols-2")}>
       {images.map((el, ind) => {
