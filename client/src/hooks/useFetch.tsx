@@ -1,7 +1,7 @@
-import { useCallback, useRef, useState } from "react";
-import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import { getTokenFromLocalStorage } from "@/utils/LocalStorage";
+import { useCallback, useRef, useState } from 'react';
+import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { getTokenFromLocalStorage } from '@/utils/localstorage';
 
 class CustomError extends Error {
   constructor(
@@ -13,18 +13,18 @@ class CustomError extends Error {
 }
 
 export enum AcceptedMethods {
-  GET = "GET",
-  POST = "POST",
-  PUT = "PUT",
-  DELETE = "DELETE",
-  PATCH = "PATCH",
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  DELETE = 'DELETE',
+  PATCH = 'PATCH',
 }
 
 export enum FetchStates {
-  LOADING = "loading",
-  ERROR = "error",
-  IDLE = "idle",
-  SUCCESS = "success",
+  LOADING = 'loading',
+  ERROR = 'error',
+  IDLE = 'idle',
+  SUCCESS = 'success',
 }
 
 type HTTPMethods = keyof typeof AcceptedMethods;
@@ -40,14 +40,14 @@ interface UseFetchProps<TData, TError> {
 }
 
 interface ApiResponse<TData> {
-  status: "success" | "error";
+  status: 'success' | 'error';
   data: TData;
   message: string;
 }
 
 export interface ApiError {
-  message: string;
-  status: "error";
+  message: string | string[];
+  error: string;
   statusCode: number;
 }
 
@@ -67,8 +67,8 @@ export const useFetch = <TData = unknown, TError = ApiError>({
 
   const handleUnAuthorisedAccessError = useCallback(() => {
     setFetchState(FetchStates.ERROR);
-    toast.error("Please login again");
-    navigate("/login");
+    toast.error('Please login again');
+    navigate('/login');
     localStorage.clear();
   }, []);
 
@@ -82,18 +82,18 @@ export const useFetch = <TData = unknown, TError = ApiError>({
           // eslint-disable-next-line no-empty
           if (dataToSend instanceof FormData) {
           } else {
-            fetchHeaders.set("Content-Type", "application/json");
+            fetchHeaders.set('Content-Type', 'application/json');
           }
         }
 
         if (authorized) {
           const token = getTokenFromLocalStorage(authTokenVariable);
           if (!token) {
-            console.log(url, "401 redirect " + url);
+            console.log(url, '401 redirect ' + url);
             handleUnAuthorisedAccessError();
             return;
           }
-          fetchHeaders.set("Authorization", `Bearer ${token}`);
+          fetchHeaders.set('Authorization', `Bearer ${token}`);
         }
 
         const fetchOptions: RequestInit = {
@@ -107,12 +107,12 @@ export const useFetch = <TData = unknown, TError = ApiError>({
         const req = await fetch(url, fetchOptions);
         if (!req.ok) {
           if (req.status === 401) {
-            console.log(url, "401 redirect " + url);
+            console.log(url, '401 redirect ' + url);
             handleUnAuthorisedAccessError();
             return;
           }
           const err = await req.json();
-          console.log(url, err, "usefetch err");
+          console.log(url, err, 'usefetch err');
           if (req.statusText) throw new CustomError(err.message, req.status);
         }
         const res: ApiResponse<TData> = await req.json();
@@ -122,13 +122,13 @@ export const useFetch = <TData = unknown, TError = ApiError>({
         setFetchState(FetchStates.SUCCESS);
         dataRef.current = res.data;
       } catch (error) {
-        console.error(error, "error from useFetch", url);
+        console.error(error, 'error from useFetch', url);
         setFetchState(FetchStates.ERROR);
         errorRef.current = error as TError;
         if (onError) {
           onError(error as TError);
         } else {
-          toast.error("Something went wrong");
+          toast.error('Something went wrong');
         }
       }
     },

@@ -1,15 +1,19 @@
+import { cn } from "@/utils/helpers";
+
 const AvatarImage = ({
   url,
   diameter,
   className,
+  fallback,
 }: {
   url: string;
   diameter: string;
   className?: string;
+  fallback?: string;
 }) => {
   return (
     <div
-      className={className}
+      className={cn(className)}
       role="avatar"
       style={{
         width: diameter,
@@ -20,6 +24,7 @@ const AvatarImage = ({
         borderRadius: "100%",
         backgroundImage:
           `url(${url})` ??
+          fallback ??
           "https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small_2x/user-profile-icon-free-vector.jpg",
       }}
     ></div>

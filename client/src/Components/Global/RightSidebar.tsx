@@ -1,6 +1,6 @@
-import SearchInput from "./RightSidebar/SearchInput";
-import WhatsHappeninigCard from "./RightSidebar/WhatsHappeninigCard";
-import WhoToFollowCard from "./RightSidebar/WhoToFollowCard";
+import SearchInput from "./RightSidebarComp/SearchInput";
+import WhatsHappeninigCard from "./RightSidebarComp/WhatsHappeninigCard";
+import WhoToFollowCard from "./RightSidebarComp/WhoToFollowCard";
 
 export default function RightSidebar() {
   return (

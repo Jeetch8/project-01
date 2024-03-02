@@ -1,5 +1,5 @@
 interface Props {
-  images: string[];
+  images: (string | Blob)[];
 }
 
 import { twMerge } from "tailwind-merge";
@@ -21,7 +21,7 @@ const PostImages = ({ images }: Props) => {
               }}
             ></div>
           );
-        return <img src={el} key={ind} alt="" />;
+        return <img src={el.toString()} key={ind} alt="" />;
       })}
     </div>
   );

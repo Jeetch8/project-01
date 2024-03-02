@@ -1,5 +1,5 @@
-import NewsCard from "./NewsCard";
-import React from "react";
+import NewsCard from './NewsCard';
+import React from 'react';
 
 export default function WhatsHappeninigCard() {
   return (

@@ -1,17 +1,17 @@
 import React from "react";
-import AvatarImage from "../global/AvatarImage";
+import AvatarImage from "@/Components/Global/AvatarImage";
 import { SlOptions } from "react-icons/sl";
 import { TbHeartFilled, TbMessage } from "react-icons/tb";
 import { CiHeart } from "react-icons/ci";
 import { CiBookmark } from "react-icons/ci";
 import PostImages from "./PostImages";
-import Comments from "./Comments";
+// import Comments from "./Comments";
 import { FaBookmark } from "react-icons/fa";
 import { useFetch } from "@/hooks/useFetch";
 import { base_url } from "@/utils/base_url";
 
 const Post = ({ post }) => {
-  const [isCommentOpen, setIsCommentOpen] = React.useState(false);
+  const [isCommentOpen, setIsCommentOpen] = React.useState<boolean>(false);
   const { doFetch: likePostFetch } = useFetch({
     url: base_url + "/post/like",
     authorized: true,
@@ -131,9 +131,9 @@ const Post = ({ post }) => {
               </span>
             </div>
           </div>
-          {isCommentOpen && (
+          {/* {isCommentOpen && (
             <Comments commentOnPostFetch={commentOnPostFetch} post={post} />
-          )}
+          )} */}
         </div>
       </div>
     </div>

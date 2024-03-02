@@ -1,13 +1,12 @@
-import React from "react";
-import NavSidebar from "@/components/NavSidebar";
+import RightSidebar from "@/Components/Global/RightSidebar";
 import { Outlet } from "react-router-dom";
 
 const HomeLayout = () => {
   return (
-    <div>
-      <NavSidebar />
-      <Outlet />
-    </div>
+    <>
+    <Outlet />
+      <RightSidebar />
+    </>
   );
 };
 

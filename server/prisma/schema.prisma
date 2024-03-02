@@ -1,0 +1,246 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PSQL_DB_URL")
+}
+
+enum auth_provider {
+  local
+  google
+  github
+}
+
+model app_user {
+  id              String         @id @default(cuid())
+  signup_date     DateTime       @default(now())
+  email           String         @unique
+  password        String
+  auth_provider   auth_provider  @default(local)
+  email_verified  Boolean        @default(false)
+  user_profile_id String         @unique
+  user_profile    user_profile   @relation(fields: [user_profile_id], references: [id])
+  user_sessions   user_session[]
+  user_tokens     user_tokens?
+}
+
+model user_tokens {
+  id                           String    @id @default(cuid())
+  app_user_id                  String    @unique
+  forgot_password_token        String?
+  forgot_password_token_expiry DateTime?
+  email_verification_token     String?
+  email_verification_expiry    DateTime?
+  app_user                     app_user  @relation(fields: [app_user_id], references: [id], onDelete: Cascade)
+}
+
+model user_profile {
+  id                    String                  @id @default(cuid())
+  first_name            String
+  last_name             String
+  full_name             String
+  username              String                  @unique
+  date_of_birth         String
+  banner_img            String?
+  profile_img           String
+  email                 String                  @unique
+  bio                   String?
+  location              String?
+  followers_count       Int                     @default(0)
+  following_count       Int                     @default(0)
+  app_user              app_user?
+  user_joined_community user_joined_community[]
+  threads               thread[]
+  posts                 post[]
+  comment_on_posts      post_comment[]          @relation("comment_by")
+  liked_posts           liked_post[]
+  post_media            post_media[]
+  bookmark_category     bookmark_category[]
+  followers             follower[]              @relation("followed_user")
+  following             follower[]              @relation("following_user")
+  replies               replies[]
+}
+
+model user_session {
+  id            String   @id @default(cuid())
+  browser       String
+  device        String
+  ip_address    String
+  os            String
+  signed_in_on  DateTime @default(now())
+  userid        String
+  access_token  String?
+  refresh_token String?
+  user          app_user @relation(fields: [userid], references: [id], onDelete: Cascade)
+}
+
+model community {
+  id                    String                  @id @default(cuid())
+  user_joined_community user_joined_community[]
+}
+
+model thread {
+  id                   String                 @id @default(cuid())
+  creator_id           String
+  creator              user_profile           @relation(fields: [creator_id], references: [id])
+  thread_posts_mapping thread_posts_mapping[]
+}
+
+model post_comment {
+  id                String         @id @default(cuid())
+  caption           String
+  comment_by        String
+  post_id           String
+  likes_count       Int            @default(0)
+  parent_comment_id String? // This field is nullable because not all comments are replies
+  post              post           @relation(fields: [post_id], references: [id])
+  comment_by_user   user_profile   @relation("comment_by", fields: [comment_by], references: [id])
+  parent_comment    post_comment?  @relation("parent_comment", fields: [parent_comment_id], references: [id])
+  child_comments    post_comment[] @relation("parent_comment")
+  replies           replies[]
+}
+
+model liked_post {
+  id      String       @id @default(cuid())
+  post_id String
+  user_id String
+  post    post         @relation(fields: [post_id], references: [id])
+  user    user_profile @relation(fields: [user_id], references: [id])
+}
+
+model messages {
+  id String @id @default(cuid())
+}
+
+model follower {
+  id                String       @id @default(cuid())
+  following_user_id String
+  followee_user_id  String
+  following_user    user_profile @relation("following_user", fields: [following_user_id], references: [id])
+  followed_user     user_profile @relation("followed_user", fields: [followee_user_id], references: [id])
+}
+
+model bookmark_category {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  user_id     String
+  user        user_profile @relation(fields: [user_id], references: [id])
+  bookmark    bookmark[]
+}
+
+model bookmark {
+  id                   String            @id @default(cuid())
+  bookmark_category_id String
+  post_id              String
+  bookmark_category    bookmark_category @relation(fields: [bookmark_category_id], references: [id])
+  post                 post              @relation(fields: [post_id], references: [id])
+}
+
+model replies {
+  id         String       @id @default(cuid())
+  user_id    String
+  comment_id String
+  post_id    String
+  user       user_profile @relation(fields: [user_id], references: [id])
+  comment    post_comment @relation(fields: [comment_id], references: [id])
+  post       post         @relation(fields: [post_id], references: [id])
+}
+
+model user_joined_community {
+  id           String       @id @default(cuid())
+  user_id      String
+  community_id String
+  position     Int?
+  user         user_profile @relation(fields: [user_id], references: [id])
+  community    community    @relation(fields: [community_id], references: [id])
+}
+
+model thread_posts_mapping {
+  id        String @id @default(cuid())
+  thread_id String
+  post_id   String
+  thread    thread @relation(fields: [thread_id], references: [id])
+  post      post   @relation(fields: [post_id], references: [id])
+}
+
+enum replies_allwed_by {
+  everyone
+  accounts_you_follow
+  only_accounts_you_mention
+}
+
+model post {
+  id                   String                 @id @default(cuid())
+  caption              String
+  creator_id           String
+  comments_count       Int                    @default(0)
+  view_count           Int                    @default(0)
+  likes_count          Int                    @default(0)
+  repost_count         Int                    @default(0)
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @default(now())
+  replies_allowed_by   replies_allwed_by
+  published            Boolean                @default(false)
+  schedule_at          DateTime
+  position_number      Int                    @default(0)
+  active               Boolean                @default(true)
+  liked_post           liked_post[]
+  post_comments        post_comment[]
+  bookmarks            bookmark[]
+  thread_posts_mapping thread_posts_mapping[]
+  replies              replies[]
+  creator              user_profile           @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  post_media           post_media[]
+  post_poll            post_poll?
+}
+
+model post_poll {
+  id          String        @id @default(cuid())
+  post_id     String        @unique
+  ends_on     DateTime
+  post        post?         @relation(fields: [post_id], references: [id])
+  post_choice post_choice[]
+}
+
+model post_choice {
+  id             String    @id @default(cuid())
+  post_poll_id   String
+  title          String
+  selected_count Int
+  post_poll      post_poll @relation(fields: [post_poll_id], references: [id])
+}
+
+enum media_type {
+  image
+  video
+  audio
+  document
+}
+
+model post_media {
+  id                 String       @id @default(cuid())
+  post_id            String
+  media_type         media_type
+  tags               String?
+  alt                String?
+  original_media_url String
+  modified_media_url String
+  creator_id         String
+  post               post         @relation(fields: [post_id], references: [id])
+  creator            user_profile @relation(fields: [creator_id], references: [id])
+}
+
+model notification {
+  id           String  @id @default(cuid())
+  type         String?
+  reference_id String?
+}

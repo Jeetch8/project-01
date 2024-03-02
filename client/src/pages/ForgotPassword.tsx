@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { base_url } from "../utils/base_url";
 import { useNavigate } from "react-router-dom";
-import { getTokenFromLocalStorage } from "@/utils/LocalStorage";
+import { getTokenFromLocalStorage } from "@/utils/localstorage";
 import { useForm } from "react-hook-form";
 import { useFetch } from "@/hooks/useFetch";
 

@@ -1,27 +1,34 @@
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import HomeLayout from "@/layout/HomeLayout";
-import Register from "@/pages/Register";
-import Login from "@/pages/Login";
-import ForgotPassword from "@/pages/ForgotPassword";
-import PageNotFound from "@/pages/PageNotFound";
-import Bookmark from "@/pages/Bookmark";
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import HomeLayout from '@/layout/HomeLayout';
+import Register from '@/pages/Register';
+import Login from '@/pages/Login';
+import ForgotPassword from '@/pages/ForgotPassword';
+import PageNotFound from '@/pages/PageNotFound';
+import Bookmark from '@/pages/Bookmark';
 // import Profile from "@/pages/Profile";
 // import Notifications from "@/pages/Notifications";
 // import Messages from "@/pages/Messages";
-import Home from "@/pages/Home";
-import ResetPassword from "./pages/ResetPassword";
+import Home from '@/pages/Home';
+import ResetPassword from './pages/ResetPassword';
+import MainLayout from './layout/MainLayout';
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <HomeLayout />,
+    path: '/',
+    element: <MainLayout />,
     children: [
       {
-        path: "/home",
-        element: <Home />,
+        path: '/',
+        element: <HomeLayout />,
+        children: [
+          {
+            index: true,
+            element: <Home />,
+          },
+        ],
       },
       {
-        path: "/bookmark",
+        path: '/bookmark',
         element: <Bookmark />,
       },
       // {
@@ -36,33 +43,33 @@ const router = createBrowserRouter([
       //   path: "/messages",
       //   element: <Messages />,
       // },
-      {
-        path: "/*",
-        element: <PageNotFound />,
-      },
     ],
   },
   {
-    path: "/register",
+    path: '/*',
+    element: <PageNotFound />,
+  },
+  {
+    path: '/register',
     element: <Register />,
   },
   {
-    path: "/login",
+    path: '/login',
     element: <Login />,
   },
   {
-    path: "/forgot-password",
+    path: '/forgot-password',
     element: <ForgotPassword />,
   },
   {
-    path: "/reset-password",
+    path: '/reset-password',
     element: <ResetPassword />,
   },
 ]);
 
 const App = () => {
   return (
-    <div className=" relative">
+    <div className=" relative bg-black">
       <RouterProvider router={router} />
     </div>
   );
