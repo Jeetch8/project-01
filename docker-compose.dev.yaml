@@ -1,0 +1,67 @@
+version: '3'
+services:
+  backend:
+    container_name: backend
+    build:
+      context: ./server
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - PSQL_DB_USERNAME=postgres
+      - PSQL_DB_PASSWORD=1234
+      - NEO4J_DB_HOST=neo4j_db
+      - PSQL_DB_URL=postgresql://postgres:1234@sql_db:5432/social_media
+    depends_on:
+      sql_db:
+        condition: service_healthy
+      neo4j_db:
+        condition: service_healthy
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./client
+    ports:
+      - '5173:5173'
+    environment:
+      - NODE_ENV=development
+
+  sql_db:
+    container_name: sql_db
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=social_media
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  neo4j_db:
+    container_name: neo4j_db
+    image: neo4j:latest
+    environment:
+      - NEO4J_AUTH=neo4j/12345678
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-verbose --tries=1 --spider localhost:7474 || exit 1',
+        ]
+    volumes:
+      - neo4j-data:/data
+
+  redis_db:
+    image: redis:6
+    volumes:
+      - redis-data:/data
+volumes:
+  postgres-data:
+  neo4j-data:
+  redis-data:
