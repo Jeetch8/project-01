@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AppUserDto, UserProfileDto } from './dto/create-user.dto';
 import { PrismaService } from '@/prisma.service';
 import { Neo4jService } from 'nest-neo4j/dist';
@@ -27,31 +31,29 @@ export class UserService {
     );
   }
 
-  async findByEmail(email: string) {
-    return await this.prismaService.app_user.findUnique({
-      where: {
-        email: email.toLowerCase(),
-      },
-    });
+  async findUser({ email, userId }: { email?: string; userId?: string }) {
+    let app_user = email
+      ? await this.findOneAppUserByEmail(email)
+      : await this.findOneAppUser(userId);
+    if (!app_user) throw new NotFoundException('User not found');
+    let user_profile = await this.findUserProfileById(app_user.user_profile_id);
+    return { app_user, user_profile };
   }
 
   async create_user_profile({
     first_name,
     last_name,
-    username,
     date_of_birth,
+    gender,
     profile_img,
-    email,
   }: UserProfileDto) {
     const res = await this.prismaService.user_profile.create({
       data: {
+        username: await this.generate_unique_username(first_name, last_name),
+        full_name: first_name + ' ' + last_name,
         first_name,
         last_name,
-        full_name: first_name + ' ' + last_name,
-        username,
-        date_of_birth: date_of_birth,
         profile_img,
-        email,
       },
     });
     await this.neo4jService.write(
@@ -93,14 +95,6 @@ export class UserService {
     return temp_username;
   }
 
-  findOne(id: string) {
-    return this.prismaService.user_profile.findUnique({
-      where: {
-        id,
-      },
-    });
-  }
-
   findOneAppUser(id: string) {
     return this.prismaService.app_user.findUnique({
       where: {
@@ -109,19 +103,19 @@ export class UserService {
     });
   }
 
-  findOneAppUserByEmail(email: string) {
-    return this.prismaService.app_user.findUnique({
+  async findOneAppUserByEmail(email: string) {
+    return await this.prismaService.app_user.findUnique({
       where: {
         email: email.toLowerCase(),
       },
     });
   }
 
-  update(id: number) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findUserProfileById(id: string) {
+    return await this.prismaService.user_profile.findUnique({
+      where: {
+        id,
+      },
+    });
   }
 }

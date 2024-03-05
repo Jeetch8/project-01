@@ -1,10 +1,19 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '@/user/user.service';
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
 import { jwtAuthTokenPayload } from './entities/auth.entity';
-import { LocalLoginPayloadDto, RegisterPayloadDto } from './dto/auth.dto';
+import {
+  LocalLoginPayloadDto,
+  RegisterLocalPayloadDto,
+  RegisterPayloadDto,
+  RegisterSSOPayloadDto,
+} from './dto/auth.dto';
 import { generateFromEmail } from 'unique-username-generator';
 import { auth_provider } from '@prisma/client';
 
@@ -41,29 +50,57 @@ export class AuthService {
     }
   }
 
-  async registerUserLocal({
-    email,
-    password,
-    first_name,
-    last_name,
-    date_of_birth,
-    profile_img,
-  }: RegisterPayloadDto) {
-    const username = await generateFromEmail(email, 4);
+  async handleSSORegisterORLogin(
+    payload: RegisterSSOPayloadDto,
+    auth_provider: auth_provider
+  ) {
+    const doesUserExist = await this.usersService.findOneAppUserByEmail(
+      payload.email
+    );
+    if (doesUserExist) {
+      const tokenPayload = {
+        userId: doesUserExist.id,
+        email: doesUserExist.email,
+      };
+      return {
+        refresh_token: await this.generateRefreshToken(tokenPayload),
+        access_token: await this.generatedAccessToken(tokenPayload),
+      };
+    }
+    const tokens = await this.registerUser({
+      ...payload,
+      password: '',
+      auth_provider,
+    });
+    return tokens;
+  }
+
+  async registerLocalUser(payload: RegisterLocalPayloadDto) {
+    const user = await this.usersService.findOneAppUserByEmail(payload.email);
+    if (user) {
+      throw new BadRequestException('User with this email already exists');
+    }
+    const hashedPassword = await this.createHashedPassword(payload.password);
+    if (!hashedPassword) {
+      throw new Error('Could not hash password');
+    }
+    const tokens = await this.registerUser({
+      ...payload,
+      password: hashedPassword,
+      auth_provider: auth_provider.local,
+    });
+
+    return tokens;
+  }
+
+  async registerUser(payload: RegisterPayloadDto) {
+    const username = await generateFromEmail(payload.email, 4);
     const newProfileUser = await this.usersService.create_user_profile({
-      first_name,
-      last_name,
+      ...payload,
       username,
-      date_of_birth,
-      profile_img,
-      email,
     });
     const newAppUser = await this.usersService.create_app_user(
-      {
-        email,
-        password,
-        auth_provider: auth_provider.local,
-      },
+      { ...payload },
       newProfileUser.id
     );
     const tokenPayload = { userId: newAppUser.id, email: newAppUser.email };

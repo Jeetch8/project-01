@@ -1,17 +1,15 @@
-import { useEffect } from "react";
-import { useFetch } from "../hooks/useFetch";
-import { base_url } from "../utils/base_url";
-import {
-  setTokenInLocalStorage,
-  getTokenFromLocalStorage,
-} from "@/utils/localstorage";
-import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import ScaleLoader from "react-spinners/ScaleLoader";
-import { useForm } from "react-hook-form";
-import { emailRegex, passwordRegex } from "@/utils/Regex";
-import ErrorDisplayComp from "@/Components/Form/ErrorDisplayComp";
-import PasswordInput from "@/Components/Form/PasswordInput";
+import { useFetch } from '../hooks/useFetch';
+import { base_url } from '../utils/base_url';
+import { setTokenInLocalStorage } from '@/utils/localstorage';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import ScaleLoader from 'react-spinners/ScaleLoader';
+import { useForm } from 'react-hook-form';
+import { emailRegex, passwordRegex } from '@/utils/Regex';
+import ErrorDisplayComp from '@/Components/Form/ErrorDisplayComp';
+import PasswordInput from '@/Components/Form/PasswordInput';
+import { FaGoogle } from 'react-icons/fa';
+import { FaGithub } from 'react-icons/fa';
 
 const Login = () => {
   const {
@@ -20,34 +18,26 @@ const Login = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
   const navigate = useNavigate();
   const { fetchState, doFetch } = useFetch<{ token: string }>({
-    url: base_url + "/auth/login",
-    method: "POST",
+    url: base_url + '/auth/login',
+    method: 'POST',
     authorized: false,
     onSuccess: (res) => {
       setTokenInLocalStorage(res.token);
-      toast.success("Logged in");
+      toast.success('Logged in');
       setTimeout(() => {
-        navigate("/");
+        navigate('/');
       }, 2000);
     },
     onError: (err) => {
-      console.log(err);
       toast.error(err.message);
     },
   });
-
-  useEffect(() => {
-    const token = getTokenFromLocalStorage();
-    if (token) {
-      navigate("/");
-    }
-  }, []);
 
   return (
     <div className="flex justify-center items-center w-full h-[100vh] bg-black text-white">
@@ -65,14 +55,14 @@ const Login = () => {
             </label>
             <br />
             <input
-              {...register("email", {
+              {...register('email', {
                 pattern: {
                   value: emailRegex,
-                  message: "Email is not valid",
+                  message: 'Email is not valid',
                 },
                 required: {
                   value: true,
-                  message: "Email is required",
+                  message: 'Email is required',
                 },
               })}
               placeholder="Email"
@@ -92,12 +82,12 @@ const Login = () => {
                 fieldRules={{
                   required: {
                     value: true,
-                    message: "Password is required",
+                    message: 'Password is required',
                   },
                   pattern: {
                     value: passwordRegex,
                     message:
-                      "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one symbol",
+                      'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one symbol',
                   },
                 }}
                 placeholder="Password"
@@ -106,27 +96,47 @@ const Login = () => {
             <button
               className="px-6 py-3 rounded-md w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300"
               type="submit"
-              disabled={fetchState === "loading"}
+              disabled={fetchState === 'loading'}
             >
-              {fetchState === "loading" ? (
+              {fetchState === 'loading' ? (
                 <ScaleLoader role="loader" height={13} />
               ) : (
-                "Submit"
+                'Submit'
               )}
             </button>
           </form>
           <Link
-            to={"/forgot-password"}
+            to={'/forgot-password'}
             className="text-blue-500 underline block text-center"
           >
             Forgot password ?
           </Link>
           <Link
-            to={"/register"}
+            to={'/register'}
             className="text-blue-500 underline block text-center"
           >
             Register
           </Link>
+          <div>
+            <a
+              href={base_url + '/auth/login/google'}
+              role="button"
+              type="button"
+              className="bg-white w-full py-2 rounded-sm flex gap-x-4 items-center justify-center mt-4"
+            >
+              <FaGoogle color="black" />
+              <span className="text-black">Google Sign in</span>
+            </a>
+            <a
+              href={base_url + '/auth/login/github'}
+              role="button"
+              type="button"
+              className="bg-white w-full py-2 rounded-sm flex gap-x-4 items-center justify-center mt-2"
+            >
+              <FaGithub color="black" />
+              <span className="text-black">Github Sign in</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

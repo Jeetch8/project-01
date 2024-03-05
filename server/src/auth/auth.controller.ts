@@ -1,10 +1,21 @@
-import { Controller, Post, UseGuards, Req, Res, Body } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Req,
+  Res,
+  Body,
+  Get,
+  BadRequestException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { addTimeToCurrentTime } from '@/utils/helpers';
 import { LocalLoginPayloadDto, RegisterPayloadDto } from './dto/auth.dto';
-import { LocalAuthGuard } from './guards/local_strategy.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { app_user, auth_provider } from '@prisma/client';
+import { GithubAuthGuard } from './guards/github-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +36,7 @@ export class AuthController {
     @Body() registerPayload: RegisterPayloadDto
   ) {
     const { access_token, refresh_token } =
-      await this.authService.registerUserLocal(registerPayload);
+      await this.authService.registerUser(registerPayload);
     await this.attachRefreshToken(res, refresh_token);
     return { access_token };
   }
@@ -37,11 +48,50 @@ export class AuthController {
   }
 
   async attachRefreshToken(res: Response, refreshToken: string) {
-    res.cookie('refresh_token', refreshToken, {
+    res.cookie('AUTH_REFRESH_TOKEN', refreshToken, {
       httpOnly: true,
       secure: true, // use secure in production
       sameSite: 'strict',
       maxAge: addTimeToCurrentTime(7, 'days').valueOf(),
     });
+  }
+
+  @Get('login/google')
+  @UseGuards(GoogleAuthGuard)
+  async loginGoogle(@Req() req: Request) {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async handleGoogleRedirect(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    const { refresh_token, access_token } =
+      await this.authService.handleSSORegisterORLogin(
+        user,
+        auth_provider.google
+      );
+    this.attachRefreshToken(req.res, refresh_token);
+    // return { access_token };
+    return res.redirect('http://localhost:5173');
+  }
+
+  @Get('login/github')
+  @UseGuards(GithubAuthGuard)
+  async loginGithub(@Req() req: Request) {}
+
+  @Get('github/callback')
+  @UseGuards(GithubAuthGuard)
+  async handleGithubRedirect(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    if (!user.email) {
+      throw new BadRequestException('Github Email is not visible');
+    }
+    const { refresh_token, access_token } =
+      await this.authService.handleSSORegisterORLogin(
+        user,
+        auth_provider.google
+      );
+    this.attachRefreshToken(req.res, refresh_token);
+    // return { access_token };
+    return res.redirect('http://localhost:5173');
   }
 }

@@ -25,21 +25,21 @@ export class UserController {
   @Get('me')
   async getMe(@Req() req: Request) {
     const user = req.user as app_user;
-    return this.userService.findOne(user.id);
+    return this.userService.findOneAppUser(user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.userService.findOne(id);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string) {
-    return this.userService.update(+id);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string) {
+  //   return this.userService.update(+id);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.userService.remove(+id);
+  // }
 }

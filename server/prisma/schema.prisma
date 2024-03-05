@@ -42,16 +42,21 @@ model user_tokens {
   app_user                     app_user  @relation(fields: [app_user_id], references: [id], onDelete: Cascade)
 }
 
+enum gender {
+  male
+  female
+}
+
 model user_profile {
   id                    String                  @id @default(cuid())
   first_name            String
   last_name             String
   full_name             String
   username              String                  @unique
-  date_of_birth         String
-  banner_img            String?
   profile_img           String
-  email                 String                  @unique
+  gender                gender?
+  date_of_birth         String?
+  banner_img            String?
   bio                   String?
   location              String?
   followers_count       Int                     @default(0)

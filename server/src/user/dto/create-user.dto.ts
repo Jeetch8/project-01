@@ -1,13 +1,14 @@
 import {
   IsDateString,
   IsEmail,
+  IsEnum,
   IsJWT,
   IsOptional,
   IsString,
   IsUrl,
   Matches,
 } from 'class-validator';
-import { auth_provider as AuthProvider } from '@prisma/client';
+import { auth_provider as AuthProvider, gender } from '@prisma/client';
 
 export class UserProfileDto {
   @IsString({ message: 'first_name is required' })
@@ -20,13 +21,13 @@ export class UserProfileDto {
   username: string;
 
   @IsDateString({}, { message: 'date_of_birth is required' })
-  date_of_birth: string;
+  date_of_birth?: string;
 
   @IsUrl()
   profile_img: string;
 
-  @IsEmail({}, { message: 'email is required' })
-  email: string;
+  @IsEnum(gender, { message: 'Gender is required' })
+  gender?: gender;
 }
 
 export class AppUserDto {
