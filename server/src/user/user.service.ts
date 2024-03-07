@@ -7,6 +7,7 @@ import { AppUserDto, UserProfileDto } from './dto/create-user.dto';
 import { PrismaService } from '@/prisma.service';
 import { Neo4jService } from 'nest-neo4j/dist';
 import { handlePrismaError } from '@/utils/prisma-error-handler';
+import { app_user } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -117,5 +118,16 @@ export class UserService {
         id,
       },
     });
+  }
+
+  async updateAppUser(id: string, data: Partial<app_user>) {
+    return await handlePrismaError(() =>
+      this.prismaService.app_user.update({
+        where: {
+          id,
+        },
+        data,
+      })
+    );
   }
 }

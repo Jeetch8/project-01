@@ -10,6 +10,7 @@ import ErrorDisplayComp from '@/Components/Form/ErrorDisplayComp';
 import PasswordInput from '@/Components/Form/PasswordInput';
 import { FaGoogle } from 'react-icons/fa';
 import { FaGithub } from 'react-icons/fa';
+import RequestPasswordResetModal from '@/Components/Modals/RequestPasswordResetModal';
 
 const Login = () => {
   const {
@@ -35,7 +36,9 @@ const Login = () => {
       }, 2000);
     },
     onError: (err) => {
-      toast.error(err.message);
+      if (typeof err.message === 'string') {
+        toast.error(err.message);
+      }
     },
   });
 
@@ -66,7 +69,7 @@ const Login = () => {
                 },
               })}
               placeholder="Email"
-              className="rounded-md outline-none text-black w-[300px] px-2 py-1 border-2 mt-1"
+              className="rounded-md outline-none text-black w-[300px] px-2 py-1 border-2 mt-1 mb-4"
               type="text"
             />
             <br />
@@ -74,10 +77,11 @@ const Login = () => {
             <label className="font-semibold" htmlFor="password">
               Password
             </label>
-            <div className="max-w-[300px]">
+            <div className="max-w-[300px] w-full mt-1">
               <PasswordInput
                 errors={errors.password}
                 fieldName="password"
+                inputClassName="h-[38px]"
                 register={register}
                 fieldRules={{
                   required: {
@@ -94,7 +98,7 @@ const Login = () => {
               />
             </div>
             <button
-              className="px-6 py-3 rounded-md w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300"
+              className="px-6 py-3 rounded-md w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 my-6"
               type="submit"
               disabled={fetchState === 'loading'}
             >
@@ -105,12 +109,13 @@ const Login = () => {
               )}
             </button>
           </form>
-          <Link
+          <RequestPasswordResetModal />
+          {/* <Link
             to={'/forgot-password'}
             className="text-blue-500 underline block text-center"
           >
             Forgot password ?
-          </Link>
+          </Link> */}
           <Link
             to={'/register'}
             className="text-blue-500 underline block text-center"

@@ -1,9 +1,12 @@
 import {
   IsDateString,
   IsEnum,
+  IsJWT,
   IsString,
+  IsStrongPassword,
   IsUrl,
   Matches,
+  ValidateIf,
 } from 'class-validator';
 import { emailRegex, passwordRegex } from '@/utils/Regex';
 import { auth_provider, gender } from '@prisma/client';
@@ -57,3 +60,23 @@ export class RegisterSSOPayloadDto extends OmitType(RegisterPayloadDto, [
   'password',
   'auth_provider',
 ]) {}
+
+export class ResetPasswordDto {
+  @IsStrongPassword(
+    {
+      minLength: 8,
+      minLowercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+      minUppercase: 1,
+    },
+    { message: 'Password is not strong' }
+  )
+  password: string;
+
+  @ValidateIf((o) => o.password === o.confirmPassword, {message:"Passwords are not equal"})
+  confirmPassword: string;
+
+  @IsJWT()
+  token: string;
+}

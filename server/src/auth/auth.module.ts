@@ -8,6 +8,7 @@ import { UserService } from '@/user/user.service';
 import { PrismaService } from '@/prisma.service';
 import { GoogleStrategy } from './strategy/google.strategy';
 import { GithubStrategy } from './strategy/github.strategy';
+import { MailService } from '@/lib/mail/mail.service';
 
 @Module({
   imports: [UserModule, PassportModule, JwtModule.register({})],
@@ -18,6 +19,7 @@ import { GithubStrategy } from './strategy/github.strategy';
     PrismaService,
     GoogleStrategy,
     GithubStrategy,
+    MailService,
   ],
   exports: [AuthService],
 })

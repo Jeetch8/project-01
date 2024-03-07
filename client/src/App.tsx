@@ -2,7 +2,6 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import HomeLayout from '@/layout/HomeLayout';
 import Register from '@/pages/Register';
 import Login from '@/pages/Login';
-import ForgotPassword from '@/pages/ForgotPassword';
 import PageNotFound from '@/pages/PageNotFound';
 import Bookmark from '@/pages/Bookmark';
 // import Profile from "@/pages/Profile";
@@ -11,6 +10,7 @@ import Bookmark from '@/pages/Bookmark';
 import Home from '@/pages/Home';
 import ResetPassword from './pages/ResetPassword';
 import MainLayout from './layout/MainLayout';
+import VerifyingEmail from './pages/VerifyingEmail';
 
 const router = createBrowserRouter([
   {
@@ -46,10 +46,6 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: '/*',
-    element: <PageNotFound />,
-  },
-  {
     path: '/register',
     element: <Register />,
   },
@@ -58,18 +54,22 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: '/forgot-password',
-    element: <ForgotPassword />,
-  },
-  {
     path: '/reset-password',
     element: <ResetPassword />,
+  },
+  {
+    path: '/verify-email',
+    element: <VerifyingEmail />,
+  },
+  {
+    path: '*',
+    element: <PageNotFound />,
   },
 ]);
 
 const App = () => {
   return (
-    <div className=" relative bg-black">
+    <div className="relative bg-black h-full w-full min-h-[100vh]">
       <RouterProvider router={router} />
     </div>
   );

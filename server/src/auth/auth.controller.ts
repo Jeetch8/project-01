@@ -11,10 +11,13 @@ import {
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { addTimeToCurrentTime } from '@/utils/helpers';
-import { LocalLoginPayloadDto, RegisterPayloadDto } from './dto/auth.dto';
+import {
+  LocalLoginPayloadDto,
+  RegisterPayloadDto,
+  ResetPasswordDto,
+} from './dto/auth.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { app_user, auth_provider } from '@prisma/client';
+import { auth_provider } from '@prisma/client';
 import { GithubAuthGuard } from './guards/github-auth.guard';
 
 @Controller('auth')
@@ -22,7 +25,6 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login/local')
-  // @UseGuards(LocalAuthGuard)
   async login(@Res() res: Response, @Body() authPayload: LocalLoginPayloadDto) {
     const { accessToken, refreshToken } =
       await this.authService.validateLocalLogin(authPayload);
@@ -41,10 +43,33 @@ export class AuthController {
     return { access_token };
   }
 
+  @Post('verify-email')
+  async verifyEmail(@Body() { token }: { token: string }) {
+    await this.authService.validateEmailVerificationToken(token);
+    return { message: 'Email verified successfully' };
+  }
+
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token');
     return { message: 'Logged out successfully' };
+  }
+
+  @Post('request-reset-password')
+  async requestResetPassword(@Body() { email }: { email: string }) {
+    if (!email) throw new BadRequestException('Invalid email sent');
+    const res = await this.authService.sendResetPasswordToken(email);
+    return { msg: 'Email sent' };
+  }
+
+  @Post('reset-password')
+  async resetPasword(
+    @Body() { password, confirmPassword, token }: ResetPasswordDto
+  ) {
+    const res = await this.authService.resetUserPasswordWithtoken({
+      token,
+      password,
+    });
   }
 
   async attachRefreshToken(res: Response, refreshToken: string) {
