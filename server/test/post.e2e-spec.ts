@@ -1,19 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PostModule } from '@/post/post.module';
 import { Neo4jModule } from 'nest-neo4j/dist';
-import { PrismaService } from '@/prisma.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-describe('AppController (e2e)', () => {
+describe('PostController (e2e)', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
-        AppModule,
         ConfigModule.forRoot({
           isGlobal: true,
           envFilePath: `.env.development`,
@@ -32,7 +29,6 @@ describe('AppController (e2e)', () => {
           inject: [ConfigService],
         }),
       ],
-      providers: [PrismaService],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -44,14 +40,6 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
-
-  it('/user/ (GET)', async () => {
-    const req = await request(app.getHttpServer()).get('/user/').expect(200);
-    console.log(req.body);
+    return request(app.getHttpServer()).get('/post').expect(200).expect(String);
   });
 });

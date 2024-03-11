@@ -2,28 +2,28 @@ interface Props {
   fetchHomeFeed: () => void;
 }
 
-import React, { useState } from "react";
-import AvatarImage from "@/Components/Global/AvatarImage";
-import { IoImageOutline } from "react-icons/io5";
-import { useFetch } from "../../hooks/useFetch";
-import { urlToBlobConverter } from "@/utils/url_to_blob_converter";
-import { base_url } from "../../utils/base_url";
-import toast from "react-hot-toast";
-import PostImages from "./PostImages";
-import { MdDeleteForever } from "react-icons/md";
+import React, { useState } from 'react';
+import AvatarImage from '@/Components/Global/AvatarImage';
+import { IoImageOutline } from 'react-icons/io5';
+import { useFetch } from '../../hooks/useFetch';
+import { urlToBlobConverter } from '@/utils/url_to_blob_converter';
+import { base_url } from '../../utils/base_url';
+import toast from 'react-hot-toast';
+import PostImages from './PostImages';
+import { MdDeleteForever } from 'react-icons/md';
 
 const CreatePost = ({ fetchHomeFeed }: Props) => {
-  const [userInput, setUserInput] = useState("");
+  const [userInput, setUserInput] = useState('');
   const [userSelectedImage, setUserSelectedImage] = useState<File | null>(null);
   const [userSelectedImageBlob, setUserSelectedImageBlob] =
     useState<Blob | null>(null);
   const { doFetch } = useFetch({
-    url: base_url + "/post",
-    method: "POST",
+    url: base_url + '/post',
+    method: 'POST',
     authorized: true,
     onSuccess: () => {
-      toast.success("Post created successfully");
-      setUserInput("");
+      toast.success('Post created successfully');
+      setUserInput('');
       setUserSelectedImage(null);
       fetchHomeFeed();
     },
@@ -31,9 +31,9 @@ const CreatePost = ({ fetchHomeFeed }: Props) => {
 
   const handlePostSubmit = () => {
     const formdata = new FormData();
-    formdata.append("description", userInput);
+    formdata.append('description', userInput);
     if (userSelectedImage) {
-      formdata.append("image", userSelectedImage);
+      formdata.append('image', userSelectedImage);
     }
     doFetch(formdata);
   };
@@ -51,9 +51,9 @@ const CreatePost = ({ fetchHomeFeed }: Props) => {
         <div className="flex items-start gap-x-5 mx-5 py-5 px-1">
           <AvatarImage
             url={
-              "https://img.freepik.com/free-vector/hand-drawn-one-line-art-illustration_23-2149279746.jpg?w=826&t=st=1715601394~exp=1715601994~hmac=8d768525d904e063a96a0c7025ee24738530d8b5493f0975347fccad297f1a76"
+              'https://img.freepik.com/free-vector/hand-drawn-one-line-art-illustration_23-2149279746.jpg?w=826&t=st=1715601394~exp=1715601994~hmac=8d768525d904e063a96a0c7025ee24738530d8b5493f0975347fccad297f1a76'
             }
-            diameter={"55px"}
+            diameter={'55px'}
           />
           <div>
             <textarea
@@ -63,7 +63,7 @@ const CreatePost = ({ fetchHomeFeed }: Props) => {
               id=""
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
-              className="bg-black border-[1px] border-zinc-700 rounded-md outline-none w-full px-4 py-4"
+              className="bg-black border-[1px] border-zinc-700 rounded-md outline-none w-full px-4 py-4 text-white"
             ></textarea>
           </div>
         </div>

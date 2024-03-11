@@ -79,7 +79,7 @@ export default function Sidebar() {
   const pathname = useLocation().pathname;
 
   return (
-    <nav className="border-r-[0.1px] flex justify-between flex-col h-screen border-zinc-500 bg-black text-white pl-6 max-w-[280px] w-full">
+    <nav className="border-r-[0.1px] flex justify-between flex-col h-screen border-zinc-700 bg-black text-white pl-6 max-w-[280px] w-fit">
       <div className="pr-4">
         {navigationLinks.map((link) => (
           <Link

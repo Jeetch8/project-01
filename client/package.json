@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@million/lint": "^1.0.0-rc.84",
+    "@tailwindcss/forms": "^0.5.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.12",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.2",
@@ -20,6 +22,7 @@
     "react-icons": "^5.2.1",
     "react-router-dom": "^6.26.0",
     "react-spinners": "^0.14.1",
+    "react-tailwindcss-datepicker": "^1.6.6",
     "server": "*",
     "tailwind-merge": "^2.4.0"
   },

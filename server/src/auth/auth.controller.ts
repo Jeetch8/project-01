@@ -7,12 +7,14 @@ import {
   Body,
   Get,
   BadRequestException,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { addTimeToCurrentTime } from '@/utils/helpers';
 import {
   LocalLoginPayloadDto,
+  RegisterLocalPayloadDto,
   RegisterPayloadDto,
   ResetPasswordDto,
 } from './dto/auth.dto';
@@ -24,21 +26,26 @@ import { GithubAuthGuard } from './guards/github-auth.guard';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @HttpCode(200)
   @Post('login/local')
-  async login(@Res() res: Response, @Body() authPayload: LocalLoginPayloadDto) {
-    const { accessToken, refreshToken } =
+  async login(
+    @Res({ passthrough: true }) res: Response,
+    @Body() authPayload: LocalLoginPayloadDto
+  ) {
+    const { access_token, refresh_token } =
       await this.authService.validateLocalLogin(authPayload);
-    this.attachRefreshToken(res, refreshToken);
-    return { accessToken };
+    this.attachRefreshToken(res, refresh_token);
+    return { access_token };
   }
 
   @Post('register/local')
   async register(
-    @Res() res: Response,
-    @Body() registerPayload: RegisterPayloadDto
+    @Res({ passthrough: true }) res: Response,
+    @Body() registerPayload: RegisterLocalPayloadDto
   ) {
-    const { access_token, refresh_token } =
-      await this.authService.registerUser(registerPayload);
+    const { access_token, refresh_token } = await this.authService.registerUser(
+      { ...registerPayload, auth_provider: 'local' }
+    );
     await this.attachRefreshToken(res, refresh_token);
     return { access_token };
   }

@@ -4,7 +4,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '@/user/user.service';
 import { PrismaService } from '@/prisma.service';
-import { Neo4jService } from 'nest-neo4j/dist';
 
 const mockNeo4jService = {
   read: jest.fn(),
@@ -13,12 +12,10 @@ const mockNeo4jService = {
 
 const mockPrismaService = {
   app_user: {
-    findMany: jest
-      .fn()
-      .mockResolvedValue({
-        email: 'jeetchawda@gmail.com',
-        password: 'password',
-      }),
+    findMany: jest.fn().mockResolvedValue({
+      email: 'jeetchawda@gmail.com',
+      password: 'password',
+    }),
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -36,7 +33,6 @@ describe('AuthService', () => {
         JwtService,
         UserService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: Neo4jService, useValue: mockNeo4jService },
         {
           provide: ConfigService,
           useValue: {

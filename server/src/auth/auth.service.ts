@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -7,7 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '@/user/user.service';
 import { ConfigService } from '@nestjs/config';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { jwtAuthTokenPayload } from './entities/auth.entity';
 import {
   LocalLoginPayloadDto,
@@ -34,7 +35,7 @@ export class AuthService {
   async validateLocalLogin({ email, password }: LocalLoginPayloadDto) {
     const user = await this.usersService.findOneAppUserByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('Unauthorized', {
+      throw new NotFoundException('NotFound', {
         description: 'User with this email does not exist',
       });
     }
@@ -44,15 +45,15 @@ export class AuthService {
     );
     if (isPasswordCorret) {
       const payload = { userId: user.id, email: user.email };
-      return {
-        accessToken: await this.generatedAccessToken(payload),
-        refreshToken: await this.generateRefreshToken(payload),
+      const tokens = {
+        refresh_token: await this.generateRefreshToken(payload),
+        access_token: await this.generatedAccessToken(payload),
       };
+      return tokens;
     } else {
-      throw new UnauthorizedException(
-        {},
-        { description: 'Password is incorrect' }
-      );
+      throw new UnauthorizedException('Unauthorized', {
+        description: 'Password is incorrect',
+      });
     }
   }
 
@@ -93,21 +94,20 @@ export class AuthService {
     return user;
   }
 
-
-  async sendResetPasswordToken(email:string){
+  async sendResetPasswordToken(email: string) {
     const doesUserExist = await this.usersService.findOneAppUserByEmail(email);
-    if(!doesUserExist){
-      throw new NotFoundException("User not found")
+    if (!doesUserExist) {
+      throw new NotFoundException('User not found');
     }
-    const payload = {email, userId: doesUserExist.id}
+    const payload = { email, userId: doesUserExist.id };
     const mailToken = await this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_PASSWORD_RESET_TOKEN'),
-      expiresIn:"1d"
+      expiresIn: '1d',
     });
     try {
-      await this.mailService.sendResetPasswordToken(email,mailToken )
+      await this.mailService.sendResetPasswordToken(email, mailToken);
     } catch (error) {
-      throw new BadRequestException("Something went wrong")
+      throw new BadRequestException('Something went wrong');
     }
   }
 
@@ -139,7 +139,7 @@ export class AuthService {
   async registerLocalUser(payload: RegisterLocalPayloadDto) {
     const user = await this.usersService.findOneAppUserByEmail(payload.email);
     if (user) {
-      throw new BadRequestException('User with this email already exists');
+      throw new HttpException('User with this email already exists', 409);
     }
     const hashedPassword = await this.createHashedPassword(payload.password);
     if (!hashedPassword) {

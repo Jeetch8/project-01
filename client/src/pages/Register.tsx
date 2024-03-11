@@ -23,6 +23,8 @@ const Register = () => {
     defaultValues: {
       email: '',
       name: '',
+      gender: 'none',
+      date_of_birth: new Date(),
       password: '',
       confirmPassword: '',
     },
@@ -105,6 +107,28 @@ const Register = () => {
                 placeholder="Email"
                 errors={errors.email}
               />
+            </div>
+            <div className="max-w-[300px] w-full mt-4">
+              <label className="font-semibold" htmlFor="date_of_birth">
+                Date of birth
+              </label>
+              <HookFormInput
+                register={register}
+                fieldName="date_of_birth"
+                fieldRules={{
+                  required: {
+                    value: true,
+                    message: 'Date of birth is required',
+                  },
+                }}
+                errors={errors.date_of_birth}
+                inputType="date"
+              />
+            </div>
+            <div className="max-w-[300px] w-full mt-4">
+              <label className="font-semibold" htmlFor="date_of_birth">
+                Date of birth
+              </label>
             </div>
             <div className="w-full max-w-[300px] mt-4">
               <label className="font-semibold" htmlFor="password">

@@ -94,6 +94,7 @@ export const useFetch = <TData = unknown, TError = ApiError>({
             return;
           }
           fetchHeaders.set('Authorization', `Bearer ${token}`);
+          fetchHeaders.set('credentials', 'include');
         }
 
         const fetchOptions: RequestInit = {

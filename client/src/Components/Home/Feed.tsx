@@ -1,7 +1,12 @@
-import React, { useEffect } from "react";
-import Post from "./Post";
+interface Props {
+  fetchHomeFeed: () => void;
+  data: any;
+}
 
-const Feed = ({ fetchHomeFeed, data }) => {
+import React, { useEffect } from 'react';
+import Post from './Post';
+
+const Feed = ({ fetchHomeFeed, data }: Props) => {
   useEffect(() => {
     fetchHomeFeed();
   }, []);

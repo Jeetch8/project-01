@@ -7,6 +7,7 @@ type InputProps = {
   inputClassName?: string;
   placeholder?: string;
   inputName?: string;
+  inputType?: React.HTMLInputTypeAttribute;
 };
 
 import { FieldError, RegisterOptions } from 'react-hook-form';
@@ -21,11 +22,12 @@ const HookFormInput = ({
   inputClassName,
   placeholder,
   inputName,
+  inputType = 'text',
 }: InputProps) => {
   return (
     <>
       <input
-        type="text"
+        type={inputType}
         placeholder={placeholder}
         {...register(fieldName, fieldRules)}
         className={twMerge(

@@ -5,16 +5,12 @@ import {
 } from '@nestjs/common';
 import { AppUserDto, UserProfileDto } from './dto/create-user.dto';
 import { PrismaService } from '@/prisma.service';
-import { Neo4jService } from 'nest-neo4j/dist';
 import { handlePrismaError } from '@/utils/prisma-error-handler';
 import { app_user } from '@prisma/client';
 
 @Injectable()
 export class UserService {
-  constructor(
-    private prismaService: PrismaService,
-    private neo4jService: Neo4jService
-  ) {}
+  constructor(private prismaService: PrismaService) {}
 
   async create_app_user(
     { email, password, auth_provider }: AppUserDto,
@@ -57,22 +53,19 @@ export class UserService {
         profile_img,
       },
     });
-    await this.neo4jService.write(
-      `CREATE (u:User {id: "${res.id}", full_name: "${res.full_name}"})`
-    );
     return res;
   }
 
   async findAllUsers(query: string) {
     return this.prismaService.user_profile.findMany({
-      where: {
-        username: {
-          contains: query,
-        },
-        full_name: {
-          contains: query,
-        },
-      },
+      // where: {
+      //   username: {
+      //     contains: query,
+      //   },
+      //   full_name: {
+      //     contains: query,
+      //   },
+      // },
     });
   }
 
@@ -129,5 +122,9 @@ export class UserService {
         data,
       })
     );
+  }
+
+  async tempService() {
+    return 'somethign';
   }
 }

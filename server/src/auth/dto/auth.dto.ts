@@ -1,7 +1,9 @@
 import {
   IsDateString,
+  IsEmail,
   IsEnum,
   IsJWT,
+  IsNotEmpty,
   IsString,
   IsStrongPassword,
   IsUrl,
@@ -10,10 +12,10 @@ import {
 } from 'class-validator';
 import { emailRegex, passwordRegex } from '@/utils/Regex';
 import { auth_provider, gender } from '@prisma/client';
-import { OmitType, PickType } from '@nestjs/mapped-types';
+import { OmitType } from '@nestjs/mapped-types';
 
 export class LocalLoginPayloadDto {
-  @Matches(emailRegex, { message: 'Invalid email' })
+  @IsEmail({}, { message: 'Invalid email' })
   email: string;
 
   @Matches(passwordRegex, {
@@ -24,24 +26,29 @@ export class LocalLoginPayloadDto {
 }
 
 export class RegisterPayloadDto {
-  @Matches(emailRegex, { message: 'Invalid email' })
+  @IsNotEmpty({ message: 'Email is required' })
+  @IsEmail({}, { message: 'Invalid email' })
   email: string;
 
+  @IsNotEmpty({ message: 'Password is required' })
   @Matches(passwordRegex, {
     message:
       'Password should have 1 number, 1 symbol, 1 lowercase and uppercase letter',
   })
   password: string;
 
+  @IsNotEmpty({ message: 'First name is required' })
   @IsString({ message: 'First name is invalid' })
   first_name: string;
 
+  @IsNotEmpty({ message: 'Last name is required' })
   @IsString({ message: 'Last naem is invalid' })
   last_name: string;
 
   @IsDateString({}, { message: 'Date of birth is invalid' })
   date_of_birth?: string;
 
+  @IsNotEmpty({ message: 'Username is required' })
   @IsUrl({}, { message: 'Profile image is not valid' })
   profile_img: string;
 
@@ -74,7 +81,9 @@ export class ResetPasswordDto {
   )
   password: string;
 
-  @ValidateIf((o) => o.password === o.confirmPassword, {message:"Passwords are not equal"})
+  @ValidateIf((o) => o.password === o.confirmPassword, {
+    message: 'Passwords are not equal',
+  })
   confirmPassword: string;
 
   @IsJWT()

@@ -1,13 +1,13 @@
-import React from "react";
+import React from 'react';
 
 export default function NewsCard() {
   return (
-    <div className="flex justify-between py-3 hover:bg-zinc-700 cursor-pointer px-5">
+    <div className="flex justify-between py-3 cursor-pointer px-5">
       {/* left side/ text side */}
       <div>
         <h3 className="font-bold text-[16px]">Paris Fashio Week Fall 2024</h3>
-        <p className="text-sm">Fashion · Live</p>
-        <p className="text-sm">
+        <p className="text-sm text-zinc-500">Fashion · Live</p>
+        <p className="text-sm text-zinc-500">
           Trending with <span className="text-blue-400">#ParisFashionWeek</span>
         </p>
       </div>
