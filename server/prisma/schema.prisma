@@ -33,13 +33,13 @@ model app_user {
 }
 
 model user_tokens {
-  id                           String    @id @default(cuid())
-  app_user_id                  String    @unique
+  id                           String   @id @default(cuid())
+  app_user_id                  String   @unique
   forgot_password_token        String?
-  forgot_password_token_expiry DateTime?
+  forgot_password_token_expiry String?
   email_verification_token     String?
-  email_verification_expiry    DateTime?
-  app_user                     app_user  @relation(fields: [app_user_id], references: [id], onDelete: Cascade)
+  email_verification_expiry    String?
+  app_user                     app_user @relation(fields: [app_user_id], references: [id], onDelete: Cascade)
 }
 
 enum gender {

@@ -8,6 +8,7 @@ import {
   Get,
   BadRequestException,
   HttpCode,
+  Patch,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
@@ -16,6 +17,7 @@ import {
   LocalLoginPayloadDto,
   RegisterLocalPayloadDto,
   RegisterPayloadDto,
+  RequestResetPasswordDto,
   ResetPasswordDto,
 } from './dto/auth.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -43,54 +45,45 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body() registerPayload: RegisterLocalPayloadDto
   ) {
-    const { access_token, refresh_token } = await this.authService.registerUser(
-      { ...registerPayload, auth_provider: 'local' }
-    );
-    await this.attachRefreshToken(res, refresh_token);
-    return { access_token };
+    await this.authService.registerLocalUser(registerPayload);
+    return { message: 'user registered' };
   }
 
+  @HttpCode(200)
   @Post('verify-email')
   async verifyEmail(@Body() { token }: { token: string }) {
+    if (!token) throw new BadRequestException('Invalid token provided');
     await this.authService.validateEmailVerificationToken(token);
     return { message: 'Email verified successfully' };
   }
 
-  @Post('logout')
+  @Patch('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('refresh_token');
+    res.clearCookie('AUTH_REFRESH_TOKEN', {
+      httpOnly: true,
+      secure: true, // use secure in production
+      sameSite: 'strict',
+    });
     return { message: 'Logged out successfully' };
   }
 
-  @Post('request-reset-password')
-  async requestResetPassword(@Body() { email }: { email: string }) {
-    if (!email) throw new BadRequestException('Invalid email sent');
-    const res = await this.authService.sendResetPasswordToken(email);
+  @Patch('request-reset-password')
+  async requestResetPassword(@Body() { email }: RequestResetPasswordDto) {
+    await this.authService.sendResetPasswordToken({ email });
     return { msg: 'Email sent' };
   }
 
   @Post('reset-password')
-  async resetPasword(
-    @Body() { password, confirmPassword, token }: ResetPasswordDto
-  ) {
+  async resetPasword(@Body() { password, token }: ResetPasswordDto) {
     const res = await this.authService.resetUserPasswordWithtoken({
       token,
       password,
     });
   }
 
-  async attachRefreshToken(res: Response, refreshToken: string) {
-    res.cookie('AUTH_REFRESH_TOKEN', refreshToken, {
-      httpOnly: true,
-      secure: true, // use secure in production
-      sameSite: 'strict',
-      maxAge: addTimeToCurrentTime(7, 'days').valueOf(),
-    });
-  }
-
   @Get('login/google')
   @UseGuards(GoogleAuthGuard)
-  async loginGoogle(@Req() req: Request) {}
+  async loginGoogle() {}
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
@@ -125,5 +118,15 @@ export class AuthController {
     this.attachRefreshToken(req.res, refresh_token);
     // return { access_token };
     return res.redirect('http://localhost:5173');
+  }
+
+  async attachRefreshToken(res: Response, refreshToken: string) {
+    res.cookie('AUTH_REFRESH_TOKEN', refreshToken, {
+      httpOnly: true,
+      secure: true, // use secure in production
+      sameSite: 'strict',
+      maxAge: addTimeToCurrentTime(7, 'days').valueOf(),
+      expires: addTimeToCurrentTime(7, 'days'),
+    });
   }
 }

@@ -15,10 +15,11 @@ import {
   RegisterLocalPayloadDto,
   RegisterPayloadDto,
   RegisterSSOPayloadDto,
+  RequestResetPasswordDto,
 } from './dto/auth.dto';
 import { generateFromEmail } from 'unique-username-generator';
 import { auth_provider } from '@prisma/client';
-
+import * as dayjs from 'dayjs';
 import { MailService } from '@/lib/mail/mail.service';
 import { PrismaService } from '@/prisma.service';
 
@@ -58,15 +59,19 @@ export class AuthService {
   }
 
   async validateEmailVerificationToken(token: string) {
-    const isJWTValid = await this.jwtService.verify(token, {
-      secret: this.configService.get('JWT_VERIFY_EMAIL_SECRET'),
-    });
+    const isJWTValid = await this.verifyEmailToken(token);
+    if (!isJWTValid) throw new UnauthorizedException('Invalid token');
     const user = await this.usersService.findOneAppUser(isJWTValid.userId);
-    if (!user) {
-      throw new BadRequestException('User does not exist');
-    }
+    if (!user) throw new UnauthorizedException('Invalid Token');
+    const user_tokens = await this.prismaService.user_tokens.findFirst({
+      where: {
+        app_user_id: user.id,
+      },
+    });
+    if (user_tokens.email_verification_token !== token)
+      throw new UnauthorizedException('Invalid token');
     if (user.email_verified) {
-      throw new BadRequestException('Email has been already');
+      throw new BadRequestException('Email has already been verified');
     }
     await this.usersService.updateAppUser(user.id, { email_verified: true });
     return user;
@@ -79,28 +84,33 @@ export class AuthService {
     token: string;
     password: string;
   }) {
-    const isJWTValid = await this.jwtService.verify(token, {
-      secret: this.configService.get('JWT_PASSWORD_RESET_TOKEN'),
-    });
+    const isJWTValid = await this.verifyPasswordResetToken(token);
+    if (!isJWTValid) throw new UnauthorizedException('Invalid token provided');
     const user = await this.usersService.findOneAppUser(isJWTValid.userId);
     if (!user) {
       throw new BadRequestException('User does not exist');
     }
-    if (user.email_verified) {
-      throw new BadRequestException('Email has been already');
-    }
+    const user_tokens = await this.prismaService.user_tokens.findFirst({
+      where: {
+        app_user_id: user.id,
+      },
+    });
+    if (user_tokens.forgot_password_token !== token)
+      throw new UnauthorizedException('Unauthorized', {
+        description: 'Invalid token provided',
+      });
     const newHashedPass = await this.createHashedPassword(password);
     await this.usersService.updateAppUser(user.id, { password: newHashedPass });
     return user;
   }
 
-  async sendResetPasswordToken(email: string) {
+  async sendResetPasswordToken({ email }: RequestResetPasswordDto) {
     const doesUserExist = await this.usersService.findOneAppUserByEmail(email);
     if (!doesUserExist) {
       throw new NotFoundException('User not found');
     }
     const payload = { email, userId: doesUserExist.id };
-    const mailToken = await this.jwtService.sign(payload, {
+    const mailToken = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_PASSWORD_RESET_TOKEN'),
       expiresIn: '1d',
     });
@@ -145,20 +155,23 @@ export class AuthService {
     if (!hashedPassword) {
       throw new Error('Could not hash password');
     }
-    const result = await this.registerUser({
+    const newUser = await this.registerUser({
       ...payload,
       password: hashedPassword,
       auth_provider: auth_provider.local,
     });
-    const verifyEmailToken = await this.jwtService.sign(payload, {
+    const jwtPaylaod = { userId: newUser.app_user.id, email: payload.email };
+    const verifyEmailToken = await this.jwtService.sign(jwtPaylaod, {
       secret: this.configService.get('JWT_VERIFY_EMAIL_SECRET'),
       expiresIn: '30d',
     });
     await this.prismaService.user_tokens.create({
       data: {
-        app_user_id: result.app_user.id,
+        app_user_id: newUser.app_user.id,
         email_verification_token: verifyEmailToken,
-        email_verification_expiry: '30d',
+        email_verification_expiry: dayjs(new Date())
+          .add(30, 'days')
+          .format('DD-MM-YYYY'),
       },
     });
     await this.mailService.sendEmailVerificationEmail(
@@ -221,6 +234,28 @@ export class AuthService {
       });
     } catch (error) {
       return undefined;
+    }
+  }
+
+  async verifyEmailToken(token: string) {
+    try {
+      return await this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_VERIFY_EMAIL_SECRET'),
+      });
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async verifyPasswordResetToken(token: string) {
+    try {
+      return await this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_PASSWORD_RESET_TOKEN'),
+      });
+    } catch (error) {
+      console.log(error);
+      return null;
     }
   }
 }

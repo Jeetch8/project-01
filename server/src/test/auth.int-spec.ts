@@ -11,9 +11,15 @@ import { AuthModule } from '@/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
-import { MailModule } from '@/lib/mail/mail.module';
 import { hashPassword } from '@/utils/helpers';
 import * as jwt from 'jsonwebtoken';
+import { MailModule } from '@/lib/mail/mail.module';
+import { MailService } from '@/lib/mail/mail.service';
+
+const mockMailService = {
+  sendEmailVerificationEmail: jest.fn().mockResolvedValueOnce(true),
+  sendResetPasswordToken: jest.fn().mockResolvedValueOnce(true),
+};
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -34,10 +40,15 @@ describe('AuthController (e2e)', () => {
         JwtModule.register({}),
         AuthModule,
         UserModule,
-        MailModule,
+        TestingModule,
       ],
       providers: [PrismaService],
-    }).compile();
+    })
+      .overrideModule(MailModule)
+      .useModule(TestingModule)
+      .overrideProvider(MailService)
+      .useValue(mockMailService)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -73,7 +84,7 @@ describe('AuthController (e2e)', () => {
     profile_img?: string;
   }) => {
     const hashed = await hashPassword('JEetk8035!@');
-    await prismaClient.app_user.create({
+    return await prismaClient.app_user.create({
       data: {
         email: 'jeet@gmail.com' ?? email,
         password: password ?? hashed,
@@ -157,11 +168,6 @@ describe('AuthController (e2e)', () => {
           });
         }
       );
-
-      afterAll(async () => {
-        await prismaClient.app_user.deleteMany({});
-        await prismaClient.user_profile.deleteMany({});
-      });
     });
 
     it('Should return error if email is not registered', async () => {
@@ -185,6 +191,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('Should return access_token and refresh_token if email and password are correct', async () => {
+      await createUser({});
       const res = await requestLoginRoute({});
       expect(res.body).toMatchObject({
         access_token: expect.any(String),
@@ -206,7 +213,6 @@ describe('AuthController (e2e)', () => {
       last_name,
       username,
       expectedStatus,
-      deleteData,
     }: {
       email?: string;
       password?: string;
@@ -214,12 +220,7 @@ describe('AuthController (e2e)', () => {
       last_name?: string;
       username?: string;
       expectedStatus?: number;
-      deleteData?: boolean;
     }) => {
-      if (deleteData) {
-        await prismaClient.app_user.deleteMany({});
-        await prismaClient.user_profile.deleteMany({});
-      }
       return await request(app.getHttpServer())
         .post('/auth/register/local')
         .send({
@@ -258,9 +259,7 @@ describe('AuthController (e2e)', () => {
     );
 
     it('Should not throw email validation error when email is valid', async () => {
-      const res = await requestRegisterRoute({
-        deleteData: true,
-      });
+      await requestRegisterRoute({});
     });
 
     it.each([
@@ -286,21 +285,157 @@ describe('AuthController (e2e)', () => {
     );
 
     it('Should not throw password validation error when password is strong', async () => {
-      await requestRegisterRoute({ deleteData: true });
+      await requestRegisterRoute({});
     });
 
     it('Should return 409 error if email is already registered', async () => {
+      await createUser({});
       await requestRegisterRoute({ expectedStatus: 409 });
+    });
+
+    it('Should register user', async () => {
+      await requestRegisterRoute({});
+      expect(mockMailService.sendEmailVerificationEmail).toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /auth/verify-email', () => {
+    const requestVerifyEmailRoute = async ({
+      token,
+      expectedStatus,
+      userId,
+      email,
+      verified = false,
+    }: {
+      token?: string;
+      expectedStatus?: number;
+      userId?: string;
+      email?: string;
+      verified?: boolean;
+    }) => {
+      const user = await createUser({});
+      const emailToken = jwt.sign(
+        { userId: userId ?? user.id, email: email ?? user.email },
+        process.env.JWT_VERIFY_EMAIL_SECRET as string,
+        {
+          expiresIn: '30d',
+        }
+      );
+      const user_tokens = await prismaClient.user_tokens.create({
+        data: {
+          app_user_id: user.id,
+          email_verification_token: token ?? emailToken,
+          email_verification_expiry: '30d',
+        },
+      });
+      if (verified)
+        await prismaClient.app_user.update({
+          where: { email: 'jeet@gmail.com' },
+          data: { email_verified: true },
+        });
+      const res = await request(app.getHttpServer())
+        .post('/auth/verify-email')
+        .send({ token: token ?? emailToken })
+        .expect(expectedStatus ?? 200);
+      return { res, emailToken, user_tokens };
+    };
+
+    it('Should throw error if token is invalid', async () => {
+      await requestVerifyEmailRoute({
+        token: 'token',
+        expectedStatus: 401,
+      });
+    });
+
+    it('Should throw error if user is not registered', async () => {
+      await requestVerifyEmailRoute({
+        userId: '123123',
+        email: 'test@gmail.com',
+        expectedStatus: 401,
+      });
+    });
+
+    it('Should throw error if another token is provided', async () => {
+      await requestVerifyEmailRoute({
+        userId: '123123',
+        email: 'test@gmail.com',
+        expectedStatus: 401,
+        token: 'token',
+      });
+    });
+
+    it('Should throw error if email has already been verified', async () => {
+      await requestVerifyEmailRoute({
+        expectedStatus: 400,
+        verified: true,
+      });
+    });
+
+    it('Should verify the email', async () => {
+      await requestVerifyEmailRoute({
+        expectedStatus: 200,
+      });
+    });
+  });
+
+  describe('POST /auth/request-reset-password', () => {
+    const requestRequestResetPassword = async ({
+      email,
+      expectedStatus,
+    }: {
+      email?: string;
+      expectedStatus?: number;
+    }) => {
+      const res = await request(app.getHttpServer())
+        .patch('/auth/request-reset-password')
+        .send({ email: email ?? 'jeet@gmail.com' })
+        .expect(expectedStatus ?? 200);
+      return { res };
+    };
+    it.each([
+      { testmail: 'jeet' },
+      { testmail: 'jeet.com' },
+      { testmail: 'jeet1232.com' },
+      { testmail: 'jeet$sadksa.csdas' },
+    ])('Should throw if invalid email is provided', async ({ testmail }) => {
+      await requestRequestResetPassword({
+        email: testmail,
+        expectedStatus: 400,
+      });
+    });
+
+    it('Should throw error if user not found', async () => {
+      await createUser({ email: 'jeet@gmail.com' });
+      await requestRequestResetPassword({
+        email: 'test@gmail.com',
+        expectedStatus: 404,
+      });
+    });
+
+    it("Should send email to the user's inbox", async () => {
+      await createUser({});
+      await requestRequestResetPassword({ expectedStatus: 200 });
+      expect(mockMailService.sendResetPasswordToken).toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /auth/logout', () => {
+    it('Should request clear cookies', async () => {
+      const res = await request(app.getHttpServer()).patch('/auth/logout');
+      expect(
+        res.header['set-cookie'][0].startsWith('AUTH_REFRESH_TOKEN=')
+      ).toBeTruthy();
     });
   });
 
   afterEach(async () => {
+    await prismaClient.app_user.deleteMany({});
+    await prismaClient.user_profile.deleteMany({});
+    await prismaClient.user_tokens.deleteMany({});
     await app.close();
   });
 
   afterAll(async () => {
-    await prismaClient.app_user.deleteMany({});
-    await prismaClient.user_profile.deleteMany({});
     await prismaClient.$disconnect();
   });
 });

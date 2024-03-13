@@ -89,3 +89,8 @@ export class ResetPasswordDto {
   @IsJWT()
   token: string;
 }
+
+export class RequestResetPasswordDto {
+  @IsEmail({}, { message: 'Invalid email' })
+  email: string;
+}
