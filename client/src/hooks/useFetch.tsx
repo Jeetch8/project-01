@@ -39,11 +39,10 @@ interface UseFetchProps<TData, TError> {
   onError?: (error: TError) => void;
 }
 
-interface ApiResponse<TData> {
-  status: 'success' | 'error';
-  data: TData;
-  message: string;
-}
+// interface ApiResponse<TData> {
+//   data: TData;
+//   message?: string;
+// }
 
 export interface ApiError {
   message: string | string[];
@@ -116,12 +115,12 @@ export const useFetch = <TData = unknown, TError = ApiError>({
           console.log(url, err, 'usefetch err');
           if (req.statusText) throw new CustomError(err.message, req.status);
         }
-        const res: ApiResponse<TData> = await req.json();
+        const res: TData = await req.json();
         if (onSuccess) {
-          onSuccess(res.data);
+          onSuccess(res);
         }
         setFetchState(FetchStates.SUCCESS);
-        dataRef.current = res.data;
+        dataRef.current = res;
       } catch (error) {
         console.error(error, 'error from useFetch', url);
         setFetchState(FetchStates.ERROR);

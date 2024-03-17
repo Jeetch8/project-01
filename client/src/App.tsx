@@ -8,7 +8,7 @@ import Bookmark from '@/pages/Bookmark';
 // import Notifications from "@/pages/Notifications";
 // import Messages from "@/pages/Messages";
 import Home from '@/pages/Home';
-import ResetPassword from './pages/ResetPassword';
+import ResetPassword from '@/pages/PasswordReset';
 import MainLayout from './layout/MainLayout';
 import VerifyingEmail from './pages/VerifyingEmail';
 

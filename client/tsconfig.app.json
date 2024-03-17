@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": [
@@ -16,12 +14,13 @@
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "moduleDetection": "force",
     "noEmit": true,
-    "noImplicitAny": false,
     "jsx": "react-jsx",
+    "types": [
+      "vitest/globals"
+    ],
     /* Linting */
-    "strict": false,
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
@@ -30,12 +29,18 @@
       "@/*": [
         "src/*"
       ],
-      "@server/*": [
-        "../server/*"
-      ],
+      "@test/*": [
+        "src/__test__/*"
+      ]
     }
   },
   "include": [
-    "src"
+    "src",
+    "src/__test__"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
   ]
 }

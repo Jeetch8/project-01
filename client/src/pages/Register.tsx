@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { base_url } from '../utils/base_url';
 import toast from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ScaleLoader from 'react-spinners/ScaleLoader';
 import { useForm } from 'react-hook-form';
 import ErrorDisplayComp from '@/Components/Form/ErrorDisplayComp';
@@ -12,7 +12,6 @@ import HookFormInput from '@/Components/Form/HookFormInput';
 import EmailSentModal from '@/Components/Modals/EmailSent.modal';
 
 const Register = () => {
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const {
     formState: { errors },
@@ -36,10 +35,9 @@ const Register = () => {
     method: 'POST',
     authorized: false,
     onSuccess: () => {
-      // setTokenInLocalStorage(res.token);
       toast.success('Registeration success');
       setTimeout(() => {
-        navigate('/');
+        setIsModalOpen(true);
       }, 2000);
     },
     onError: (err) => {
@@ -114,6 +112,7 @@ const Register = () => {
               </label>
               <HookFormInput
                 register={register}
+                placeholder="dd/mm/yyyy"
                 fieldName="date_of_birth"
                 fieldRules={{
                   required: {
@@ -124,11 +123,6 @@ const Register = () => {
                 errors={errors.date_of_birth}
                 inputType="date"
               />
-            </div>
-            <div className="max-w-[300px] w-full mt-4">
-              <label className="font-semibold" htmlFor="date_of_birth">
-                Date of birth
-              </label>
             </div>
             <div className="w-full max-w-[300px] mt-4">
               <label className="font-semibold" htmlFor="password">

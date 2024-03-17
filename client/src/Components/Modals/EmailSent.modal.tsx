@@ -1,8 +1,9 @@
 interface Props {
   isModalOpen: boolean;
-  setIsModalOpen: (value: boolean) => void;
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
+import { Dispatch, SetStateAction } from 'react';
 import Modal from './Modal';
 
 const EmailSentModal = ({ isModalOpen, setIsModalOpen }: Props) => {

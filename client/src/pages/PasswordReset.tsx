@@ -11,7 +11,7 @@ const PasswordReset = () => {
   const [getUrlPrama] = useSearchParams();
   const { doFetch } = useFetch({
     url: base_url + '/auth/reset-password',
-    method: 'POST',
+    method: 'PATCH',
     onSuccess: () => {
       toast.success('Password reseted');
     },
@@ -33,20 +33,32 @@ const PasswordReset = () => {
 
   return (
     <div className="flex items-center justify-center h-screen">
-      <div className="border-2 border-white rounded-lg">
+      <div className="border-2 border-white rounded-lg px-10 py-5">
         <form
           onSubmit={handleSubmit(async (data) => {
+            const token = getUrlPrama.get('token');
+            if (!token) {
+              toast.error('Token is required');
+              return;
+            }
             await doFetch({
               token: getUrlPrama.get('token'),
               password: data.password,
             });
           })}
         >
-          <div>
-            <label htmlFor="new_password">New Password</label>
+          <p className="text-wrap font-semibold text-lg text-white">
+            Please Enter a new password to change <br /> your existing password
+          </p>
+          <div className="text-white mt-6">
+            <label htmlFor="new_password" className="font-semibold">
+              New Password
+            </label>
             <PasswordInput
+              outerClassName="mt-1 font-semibold"
               register={register}
               fieldName="password"
+              placeholder="New password"
               fieldRules={{
                 required: { value: true, message: 'Password is required' },
                 pattern: {
@@ -57,10 +69,17 @@ const PasswordReset = () => {
               errors={errors.password}
             />
           </div>
-          <div>
-            <label htmlFor="confirm_new_password">Confirm new password</label>
+          <div className="mt-4">
+            <label
+              htmlFor="confirm_new_password font-semibold"
+              className="text-white font-semibold"
+            >
+              Confirm new password
+            </label>
             <PasswordInput
+              outerClassName="mt-1"
               register={register}
+              placeholder="Confirm new password"
               fieldName="confirmPassword"
               fieldRules={{
                 required: {
@@ -73,7 +92,13 @@ const PasswordReset = () => {
               errors={errors.confirmPassword}
             />
           </div>
-          <Button typeof="submit" variant="secondary" size="lg" type="submit">
+          <Button
+            typeof="submit"
+            variant="default"
+            size="lg"
+            type="submit"
+            className="mt-4"
+          >
             Change
           </Button>
         </form>

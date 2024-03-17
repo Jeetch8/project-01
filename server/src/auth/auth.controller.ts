@@ -16,7 +16,6 @@ import { addTimeToCurrentTime } from '@/utils/helpers';
 import {
   LocalLoginPayloadDto,
   RegisterLocalPayloadDto,
-  RegisterPayloadDto,
   RequestResetPasswordDto,
   ResetPasswordDto,
 } from './dto/auth.dto';
@@ -50,7 +49,7 @@ export class AuthController {
   }
 
   @HttpCode(200)
-  @Post('verify-email')
+  @Patch('verify-email')
   async verifyEmail(@Body() { token }: { token: string }) {
     if (!token) throw new BadRequestException('Invalid token provided');
     await this.authService.validateEmailVerificationToken(token);
@@ -73,12 +72,13 @@ export class AuthController {
     return { msg: 'Email sent' };
   }
 
-  @Post('reset-password')
+  @Patch('reset-password')
   async resetPasword(@Body() { password, token }: ResetPasswordDto) {
-    const res = await this.authService.resetUserPasswordWithtoken({
+    await this.authService.resetUserPasswordWithtoken({
       token,
       password,
     });
+    return { message: 'Password reseted' };
   }
 
   @Get('login/google')

@@ -25,7 +25,7 @@ const Login = () => {
   });
   const navigate = useNavigate();
   const { fetchState, doFetch } = useFetch<{ token: string }>({
-    url: base_url + '/auth/login',
+    url: base_url + '/auth/login/local',
     method: 'POST',
     authorized: false,
     onSuccess: (res) => {
@@ -49,7 +49,6 @@ const Login = () => {
         <div className="border-2 px-10 w-fit py-10 rounded-md">
           <form
             onSubmit={handleSubmit(async (data) => {
-              console.log(data);
               await doFetch(data);
             })}
           >
@@ -110,12 +109,6 @@ const Login = () => {
             </button>
           </form>
           <RequestPasswordResetModal />
-          {/* <Link
-            to={'/forgot-password'}
-            className="text-blue-500 underline block text-center"
-          >
-            Forgot password ?
-          </Link> */}
           <Link
             to={'/register'}
             className="text-blue-500 underline block text-center"
