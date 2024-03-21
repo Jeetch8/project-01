@@ -1,5 +1,6 @@
 import { cn } from '@/utils/helpers';
 import { memo } from 'react';
+import AvatarTemplate from '@/assets/AvatarTemplate.png';
 
 const AvatarImage = memo(
   ({
@@ -8,11 +9,12 @@ const AvatarImage = memo(
     className,
     fallback,
   }: {
-    url: string;
+    url?: string;
     diameter: string;
     className?: string;
     fallback?: string;
   }) => {
+    const toShowrl = fallback ?? AvatarTemplate;
     return (
       <div
         className={cn(className)}
@@ -24,10 +26,7 @@ const AvatarImage = memo(
           backgroundSize: 'cover',
           overflow: 'hidden',
           borderRadius: '100%',
-          backgroundImage:
-            `url(${url})` ??
-            fallback ??
-            'https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small_2x/user-profile-icon-free-vector.jpg',
+          backgroundImage: `url(${url}), url(${toShowrl})`,
         }}
       ></div>
     );

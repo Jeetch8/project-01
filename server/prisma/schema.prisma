@@ -72,6 +72,7 @@ model user_profile {
   followers             follower[]              @relation("followed_user")
   following             follower[]              @relation("following_user")
   replies               replies[]
+  post_likes            post_likes[]
 }
 
 model user_session {
@@ -193,9 +194,9 @@ model post {
   repost_count         Int                    @default(0)
   created_at           DateTime               @default(now())
   updated_at           DateTime               @default(now())
-  replies_allowed_by   replies_allwed_by
+  replies_allowed_by   replies_allwed_by      @default(everyone)
   published            Boolean                @default(false)
-  schedule_at          DateTime
+  schedule_at          DateTime?
   position_number      Int                    @default(0)
   active               Boolean                @default(true)
   liked_post           liked_post[]
@@ -206,13 +207,22 @@ model post {
   creator              user_profile           @relation(fields: [creator_id], references: [id], onDelete: Cascade)
   post_media           post_media[]
   post_poll            post_poll?
+  post_likes           post_likes[]
+}
+
+model post_likes {
+  id      String       @id @default(cuid())
+  post_id String
+  user_id String
+  post    post         @relation(fields: [post_id], references: [id])
+  user    user_profile @relation(fields: [user_id], references: [id])
 }
 
 model post_poll {
   id          String        @id @default(cuid())
   post_id     String        @unique
   ends_on     DateTime
-  post        post?         @relation(fields: [post_id], references: [id])
+  post        post?         @relation(fields: [post_id], references: [id], onDelete: Cascade)
   post_choice post_choice[]
 }
 
@@ -221,7 +231,7 @@ model post_choice {
   post_poll_id   String
   title          String
   selected_count Int
-  post_poll      post_poll @relation(fields: [post_poll_id], references: [id])
+  post_poll      post_poll @relation(fields: [post_poll_id], references: [id], onDelete: Cascade)
 }
 
 enum media_type {
@@ -240,8 +250,8 @@ model post_media {
   original_media_url String
   modified_media_url String
   creator_id         String
-  post               post         @relation(fields: [post_id], references: [id])
-  creator            user_profile @relation(fields: [creator_id], references: [id])
+  post               post         @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  creator            user_profile @relation(fields: [creator_id], references: [id], onDelete: Cascade)
 }
 
 model notification {

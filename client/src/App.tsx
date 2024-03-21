@@ -11,6 +11,7 @@ import Home from '@/pages/Home';
 import ResetPassword from '@/pages/PasswordReset';
 import MainLayout from './layout/MainLayout';
 import VerifyingEmail from './pages/VerifyingEmail';
+import { Toast, Toaster } from 'react-hot-toast';
 
 const router = createBrowserRouter([
   {
@@ -71,6 +72,7 @@ const App = () => {
   return (
     <div className="relative bg-black h-full w-full min-h-[100vh]">
       <RouterProvider router={router} />
+      <Toaster />
     </div>
   );
 };

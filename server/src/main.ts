@@ -13,7 +13,6 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
-  app.use(cookieParser());
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({
@@ -29,6 +28,7 @@ async function bootstrap() {
       },
     })
   );
+  app.use(cookieParser());
   await app.listen(5000);
 }
 bootstrap();

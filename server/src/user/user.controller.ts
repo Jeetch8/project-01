@@ -8,11 +8,15 @@ import {
   Delete,
   Req,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { app_user } from '@prisma/client';
 import { Request } from 'express';
+import { jwtAuthTokenPayload } from '@/auth/entities/auth.entity';
+import { JwtAuthGuard } from '@/auth/guards/jwt.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -25,8 +29,21 @@ export class UserController {
 
   @Get('me')
   async getMe(@Req() req: Request) {
-    const user = req.user as app_user;
-    return this.userService.findOneAppUser(user.id);
+    const user = req.user as jwtAuthTokenPayload;
+    const result = await this.userService.findUser({ email: user.email });
+    const resAppUser = result.app_user;
+    const resProfileUser = result.user_profile;
+    return {
+      user: {
+        profile_img: resProfileUser.profile_img,
+        id: resAppUser.id,
+        first_name: resProfileUser.first_name,
+        last_name: resProfileUser.last_name,
+        full_name: resProfileUser.full_name,
+        email: resAppUser.email,
+        username: resProfileUser.username,
+      },
+    };
   }
 
   // @Get(':id')

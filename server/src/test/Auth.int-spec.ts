@@ -190,18 +190,15 @@ describe('AuthController (e2e)', () => {
       });
     });
 
-    it('Should return access_token and refresh_token if email and password are correct', async () => {
+    it('Should return access_token if email and password are correct', async () => {
       await createUser({});
       const res = await requestLoginRoute({});
       expect(res.body).toMatchObject({
-        access_token: expect.any(String),
+        message: expect.any(String),
       });
-      expect(
-        jwt.verify(res.body.access_token, process.env.JWT_ACCESS_TOKEN_SECRET)
-      ).toBeTruthy();
-      expect(
-        res.header['set-cookie'][0].startsWith('AUTH_REFRESH_TOKEN=')
-      ).toBeTruthy();
+      const access_token = res.header['set-cookie'][0];
+      console.log(access_token);
+      expect(access_token.startsWith('AUTH_ACCESS_TOKEN=')).toBe(true);
     });
   });
 
@@ -334,7 +331,7 @@ describe('AuthController (e2e)', () => {
           data: { email_verified: true },
         });
       const res = await request(app.getHttpServer())
-        .post('/auth/verify-email')
+        .patch('/auth/verify-email')
         .send({ token: token ?? emailToken })
         .expect(expectedStatus ?? 200);
       return { res, emailToken, user_tokens };
@@ -423,7 +420,7 @@ describe('AuthController (e2e)', () => {
     it('Should request clear cookies', async () => {
       const res = await request(app.getHttpServer()).patch('/auth/logout');
       expect(
-        res.header['set-cookie'][0].startsWith('AUTH_REFRESH_TOKEN=')
+        res.header['set-cookie'][0].startsWith('AUTH_ACCESS_TOKEN=')
       ).toBeTruthy();
     });
   });

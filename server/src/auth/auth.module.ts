@@ -10,9 +10,15 @@ import { GoogleStrategy } from './strategy/google.strategy';
 import { GithubStrategy } from './strategy/github.strategy';
 import { MailService } from '@/lib/mail/mail.service';
 import { MailModule } from '@/lib/mail/mail.module';
+import { JwtStrategy } from './strategy/jwt.strategy';
 
 @Module({
-  imports: [UserModule, PassportModule, JwtModule.register({}), MailModule],
+  imports: [
+    UserModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.register({}),
+    MailModule,
+  ],
   controllers: [AuthController],
   providers: [
     AuthService,
@@ -21,6 +27,7 @@ import { MailModule } from '@/lib/mail/mail.module';
     GoogleStrategy,
     GithubStrategy,
     MailService,
+    JwtStrategy,
   ],
   exports: [AuthService],
 })

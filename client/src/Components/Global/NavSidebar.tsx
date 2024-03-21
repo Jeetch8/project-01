@@ -17,6 +17,7 @@ import AvatarImage from '@/Components/Global/AvatarImage';
 import { IoIosMore } from 'react-icons/io';
 import { Button } from '@/Components/Global/Button';
 import { FiFeather } from 'react-icons/fi';
+import { useGlobalContext } from '@/context/GlobalContext';
 
 const navigationLinks = [
   {
@@ -77,6 +78,7 @@ const navigationLinks = [
 
 export default function Sidebar() {
   const pathname = useLocation().pathname;
+  const { user } = useGlobalContext();
 
   return (
     <nav className="border-r-[0.1px] flex justify-between flex-col h-screen border-zinc-700 bg-black text-white pl-6 max-w-[280px] w-fit">
@@ -106,13 +108,10 @@ export default function Sidebar() {
       </div>
       <div className="flex justify-between items-center mx-2 mb-2 py-2  px-2 hover:bg-zinc-900 rounded-full cursor-pointer">
         <div className="flex items-center space-x-2">
-          <AvatarImage
-            url="https://miro.medium.com/v2/resize:fit:1358/1*JyYin7G7aGwgD9zpYBZ12Q.png"
-            diameter="40px"
-          />
+          <AvatarImage url={user?.profile_img} diameter="40px" />
           <div className="hidden xl:inline-block">
             <p className="font-bold">Jeet Chawda</p>
-            <p className="text-xs text-slate-500">@jeetchawla</p>
+            <p className="text-xs text-slate-500">@{user?.username}</p>
           </div>
         </div>
         <button className="hidden xl:inline-block">

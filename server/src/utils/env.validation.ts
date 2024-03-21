@@ -48,14 +48,14 @@ class EnvironmentVariables {
   @IsString()
   JWT_ACCESS_TOKEN_SECRET: string;
 
-  @IsString()
-  JWT_REFRESH_TOKEN_SECRET: string;
+  // @IsString()
+  // JWT_REFRESH_TOKEN_SECRET: string;
+
+  // @IsString()
+  // JWT_REFRESH_TOKEN_EXPIRY: string;
 
   @IsString()
   JWT_ACCESS_TOKEN_EXPIRY: string;
-
-  @IsString()
-  JWT_REFRESH_TOKEN_EXPIRY: string;
 
   @IsString()
   GOOGLE_AUTH_CLIENT_ID: string;

@@ -34,7 +34,7 @@ export class AuthService {
   ) {}
 
   async validateLocalLogin({ email, password }: LocalLoginPayloadDto) {
-    const user = await this.usersService.findOneAppUserByEmail(email);
+    const user = await this.usersService.findUser({ email });
     if (!user) {
       throw new NotFoundException('NotFound', {
         description: 'User with this email does not exist',
@@ -42,13 +42,15 @@ export class AuthService {
     }
     const isPasswordCorret = await this.checkIfPasswordIsCorrect(
       password,
-      user.password
+      user.app_user.password
     );
     if (isPasswordCorret) {
-      const payload = { userId: user.id, email: user.email };
+      const payload = {
+        userId: user.user_profile.id,
+        email: user.app_user.email,
+      };
       const tokens = {
-        refresh_token: await this.generateRefreshToken(payload),
-        access_token: await this.generatedAccessToken(payload),
+        access_token: await this.generateAccessToken(payload),
       };
       return tokens;
     } else {
@@ -134,8 +136,7 @@ export class AuthService {
         email: doesUserExist.email,
       };
       return {
-        refresh_token: await this.generateRefreshToken(tokenPayload),
-        access_token: await this.generatedAccessToken(tokenPayload),
+        access_token: await this.generateAccessToken(tokenPayload),
       };
     }
     const tokens = await this.registerUser({
@@ -193,8 +194,7 @@ export class AuthService {
     );
     const tokenPayload = { userId: newAppUser.id, email: newAppUser.email };
     return {
-      refresh_token: await this.generateRefreshToken(tokenPayload),
-      access_token: await this.generatedAccessToken(tokenPayload),
+      access_token: await this.generateAccessToken(tokenPayload),
       app_user: newAppUser,
       user_profile: newProfileUser,
     };
@@ -216,21 +216,11 @@ export class AuthService {
     }
   }
 
-  async generatedAccessToken(payload: jwtAuthTokenPayload) {
+  async generateAccessToken(payload: jwtAuthTokenPayload) {
     try {
       return await this.jwtService.sign(payload, {
         secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
         expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRY'),
-      });
-    } catch (error) {
-      return undefined;
-    }
-  }
-  async generateRefreshToken(payload: jwtAuthTokenPayload) {
-    try {
-      return await this.jwtService.sign(payload, {
-        secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),
-        expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRY'),
       });
     } catch (error) {
       return undefined;
@@ -241,6 +231,17 @@ export class AuthService {
     try {
       return await this.jwtService.verify(token, {
         secret: this.configService.get('JWT_VERIFY_EMAIL_SECRET'),
+      });
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async validateAccessToken(token: string) {
+    try {
+      return await this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
       });
     } catch (error) {
       console.log(error);

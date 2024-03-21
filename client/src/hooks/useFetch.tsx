@@ -66,7 +66,7 @@ export const useFetch = <TData = unknown, TError = ApiError>({
 
   const handleUnAuthorisedAccessError = useCallback(() => {
     setFetchState(FetchStates.ERROR);
-    toast.error('Please login again');
+    toast.error('Please login');
     navigate('/login');
     localStorage.clear();
   }, []);

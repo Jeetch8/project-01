@@ -7,16 +7,20 @@ import { AppUserDto, UserProfileDto } from './dto/create-user.dto';
 import { PrismaService } from '@/prisma.service';
 import { handlePrismaError } from '@/utils/prisma-error-handler';
 import { app_user } from '@prisma/client';
+import { Neo4jService } from 'nest-neo4j/dist';
 
 @Injectable()
 export class UserService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private neo4jService: Neo4jService
+  ) {}
 
   async create_app_user(
     { email, password, auth_provider }: AppUserDto,
     user_profile_id: string
   ) {
-    return handlePrismaError(() =>
+    const res = await handlePrismaError(() =>
       this.prismaService.app_user.create({
         data: {
           email: email.toLowerCase(),
@@ -26,15 +30,8 @@ export class UserService {
         },
       })
     );
-  }
-
-  async findUser({ email, userId }: { email?: string; userId?: string }) {
-    let app_user = email
-      ? await this.findOneAppUserByEmail(email)
-      : await this.findOneAppUser(userId);
-    if (!app_user) throw new NotFoundException('User not found');
-    let user_profile = await this.findUserProfileById(app_user.user_profile_id);
-    return { app_user, user_profile };
+    await this.neo4jService.write(``);
+    return res;
   }
 
   async create_user_profile({
@@ -44,16 +41,32 @@ export class UserService {
     gender,
     profile_img,
   }: UserProfileDto) {
+    const username = await this.generate_unique_username(first_name, last_name);
     const res = await this.prismaService.user_profile.create({
       data: {
-        username: await this.generate_unique_username(first_name, last_name),
+        username,
         full_name: first_name + ' ' + last_name,
         first_name,
         last_name,
         profile_img,
+        gender,
+        date_of_birth,
       },
     });
+    await this.neo4jService.write(
+      `CREATE (user:USER {first_name: ${first_name}, last_name:${last_name}, profile_img:${profile_img}, gender:${gender}, date_of_birth:${date_of_birth}, username: ${username}})
+      RETURN user`
+    );
     return res;
+  }
+
+  async findUser({ email, userId }: { email?: string; userId?: string }) {
+    let app_user = email
+      ? await this.findOneAppUserByEmail(email)
+      : await this.findOneAppUser(userId);
+    if (!app_user) throw new NotFoundException('User not found');
+    let user_profile = await this.findUserProfileById(app_user.user_profile_id);
+    return { app_user, user_profile };
   }
 
   async findAllUsers(query: string) {

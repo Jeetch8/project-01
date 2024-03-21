@@ -37,8 +37,15 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  it('/user/ (GET)', async () => {
-    const req = await request(app.getHttpServer()).get('/user/').expect(200);
-    console.log(req.body);
+  // it('/user/ (GET)', async () => {
+  //   const req = await request(app.getHttpServer()).get('/user/').expect(200);
+  //   console.log(req.body);
+  // });
+
+  it('/auth/test', async () => {
+    const req = await request(app.getHttpServer())
+      .get('/auth/test')
+      .expect(200);
+    console.log(req);
   });
 });

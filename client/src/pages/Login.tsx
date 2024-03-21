@@ -24,12 +24,12 @@ const Login = () => {
     },
   });
   const navigate = useNavigate();
-  const { fetchState, doFetch } = useFetch<{ token: string }>({
+  const { fetchState, doFetch } = useFetch<{ access_token: string }>({
     url: base_url + '/auth/login/local',
     method: 'POST',
     authorized: false,
     onSuccess: (res) => {
-      setTokenInLocalStorage(res.token);
+      setTokenInLocalStorage(res.access_token);
       toast.success('Logged in');
       setTimeout(() => {
         navigate('/');
@@ -49,6 +49,7 @@ const Login = () => {
         <div className="border-2 px-10 w-fit py-10 rounded-md">
           <form
             onSubmit={handleSubmit(async (data) => {
+              console.log(data);
               await doFetch(data);
             })}
           >

@@ -9,6 +9,7 @@ import {
   BadRequestException,
   HttpCode,
   Patch,
+  Put,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
@@ -22,10 +23,19 @@ import {
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { auth_provider } from '@prisma/client';
 import { GithubAuthGuard } from './guards/github-auth.guard';
+import { Neo4jService } from 'nest-neo4j/dist';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private neo4jService: Neo4jService
+  ) {}
+
+  @Get('test')
+  async testroute() {
+    return await this.neo4jService.read('MATCH (n:Person) RETURN n');
+  }
 
   @HttpCode(200)
   @Post('login/local')
@@ -33,10 +43,10 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Body() authPayload: LocalLoginPayloadDto
   ) {
-    const { access_token, refresh_token } =
+    const { access_token } =
       await this.authService.validateLocalLogin(authPayload);
-    this.attachRefreshToken(res, refresh_token);
-    return { access_token };
+    // this.attachAccessToken(res, access_token);
+    return { message: 'Logged in successfully', access_token };
   }
 
   @Post('register/local')
@@ -58,12 +68,22 @@ export class AuthController {
 
   @Patch('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('AUTH_REFRESH_TOKEN', {
-      httpOnly: true,
-      secure: true, // use secure in production
-      sameSite: 'strict',
-    });
+    // res.clearCookie('AUTH_ACCESS_TOKEN', {
+    //   httpOnly: true,
+    //   secure: true, // use secure in production
+    //   sameSite: 'strict',
+    // });
     return { message: 'Logged out successfully' };
+  }
+
+  @Get('check-token')
+  async checkToken(@Req() req: Request) {
+    const token = req.cookies['AUTH_ACCESS_TOKEN'];
+    if (!token) {
+      throw new BadRequestException('No token found');
+    }
+    await this.authService.validateAccessToken(token);
+    return { message: 'Token is valid' };
   }
 
   @Patch('request-reset-password')
@@ -89,13 +109,11 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async handleGoogleRedirect(@Req() req: Request, @Res() res: Response) {
     const user = req.user as any;
-    const { refresh_token, access_token } =
-      await this.authService.handleSSORegisterORLogin(
-        user,
-        auth_provider.google
-      );
-    this.attachRefreshToken(req.res, refresh_token);
-    // return { access_token };
+    const { access_token } = await this.authService.handleSSORegisterORLogin(
+      user,
+      auth_provider.google
+    );
+    this.attachAccessToken(req.res, access_token);
     return res.redirect('http://localhost:5173');
   }
 
@@ -110,18 +128,17 @@ export class AuthController {
     if (!user.email) {
       throw new BadRequestException('Github Email is not visible');
     }
-    const { refresh_token, access_token } =
-      await this.authService.handleSSORegisterORLogin(
-        user,
-        auth_provider.google
-      );
-    this.attachRefreshToken(req.res, refresh_token);
+    const { access_token } = await this.authService.handleSSORegisterORLogin(
+      user,
+      auth_provider.google
+    );
+    this.attachAccessToken(req.res, access_token);
     // return { access_token };
     return res.redirect('http://localhost:5173');
   }
 
-  async attachRefreshToken(res: Response, refreshToken: string) {
-    res.cookie('AUTH_REFRESH_TOKEN', refreshToken, {
+  async attachAccessToken(res: Response, refreshToken: string) {
+    res.cookie('AUTH_ACCESS_TOKEN', refreshToken, {
       httpOnly: true,
       secure: true, // use secure in production
       sameSite: 'strict',
