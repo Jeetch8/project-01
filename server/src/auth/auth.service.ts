@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   HttpException,
   Injectable,
   NotFoundException,
@@ -17,11 +18,10 @@ import {
   RegisterSSOPayloadDto,
   RequestResetPasswordDto,
 } from './dto/auth.dto';
-import { generateFromEmail } from 'unique-username-generator';
-import { auth_provider } from '@prisma/client';
 import * as dayjs from 'dayjs';
 import { MailService } from '@/lib/mail/mail.service';
-import { PrismaService } from '@/prisma.service';
+import { AuthProvider, User } from '@/user/user.entity';
+import { Neo4jService } from 'nest-neo4j/dist';
 
 @Injectable()
 export class AuthService {
@@ -30,11 +30,12 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailService: MailService,
-    private prismaService: PrismaService
+    private neo4jService: Neo4jService
   ) {}
 
   async validateLocalLogin({ email, password }: LocalLoginPayloadDto) {
-    const user = await this.usersService.findUser({ email });
+    const result = await this.usersService.getUser({ email });
+    const user = result.user;
     if (!user) {
       throw new NotFoundException('NotFound', {
         description: 'User with this email does not exist',
@@ -42,12 +43,12 @@ export class AuthService {
     }
     const isPasswordCorret = await this.checkIfPasswordIsCorrect(
       password,
-      user.app_user.password
+      user.password
     );
     if (isPasswordCorret) {
       const payload = {
-        userId: user.user_profile.id,
-        email: user.app_user.email,
+        userId: user.id,
+        email: user.email,
       };
       const tokens = {
         access_token: await this.generateAccessToken(payload),
@@ -63,19 +64,20 @@ export class AuthService {
   async validateEmailVerificationToken(token: string) {
     const isJWTValid = await this.verifyEmailToken(token);
     if (!isJWTValid) throw new UnauthorizedException('Invalid token');
-    const user = await this.usersService.findOneAppUser(isJWTValid.userId);
-    if (!user) throw new UnauthorizedException('Invalid Token');
-    const user_tokens = await this.prismaService.user_tokens.findFirst({
-      where: {
-        app_user_id: user.id,
-      },
+    const result = await this.usersService.getUser({
+      email: isJWTValid.email,
+      userId: isJWTValid.userId,
     });
-    if (user_tokens.email_verification_token !== token)
+    const user = result.user;
+    const userTokens = result.userTokens;
+    if (!userTokens?.email_verification_token)
+      throw new UnauthorizedException('Invalid Token');
+    if (userTokens?.email_verification_token !== token)
       throw new UnauthorizedException('Invalid token');
     if (user.email_verified) {
       throw new BadRequestException('Email has already been verified');
     }
-    await this.usersService.updateAppUser(user.id, { email_verified: true });
+    await this.usersService.updateUser(user.id, { email_verified: true });
     return user;
   }
 
@@ -88,26 +90,23 @@ export class AuthService {
   }) {
     const isJWTValid = await this.verifyPasswordResetToken(token);
     if (!isJWTValid) throw new UnauthorizedException('Invalid token provided');
-    const user = await this.usersService.findOneAppUser(isJWTValid.userId);
+    const result = await this.usersService.getUser(isJWTValid.userId);
+    const user = result.user;
+    const userAuth = result.userTokens;
     if (!user) {
       throw new BadRequestException('User does not exist');
     }
-    const user_tokens = await this.prismaService.user_tokens.findFirst({
-      where: {
-        app_user_id: user.id,
-      },
-    });
-    if (user_tokens.forgot_password_token !== token)
+    if (userAuth?.forgot_password_token !== token)
       throw new UnauthorizedException('Unauthorized', {
         description: 'Invalid token provided',
       });
     const newHashedPass = await this.createHashedPassword(password);
-    await this.usersService.updateAppUser(user.id, { password: newHashedPass });
+    await this.usersService.updateUser(user.id, { password: newHashedPass });
     return user;
   }
 
   async sendResetPasswordToken({ email }: RequestResetPasswordDto) {
-    const doesUserExist = await this.usersService.findOneAppUserByEmail(email);
+    const doesUserExist = (await this.usersService.getUser({ email })).user;
     if (!doesUserExist) {
       throw new NotFoundException('User not found');
     }
@@ -125,11 +124,13 @@ export class AuthService {
 
   async handleSSORegisterORLogin(
     payload: RegisterSSOPayloadDto,
-    auth_provider: auth_provider
+    auth_provider: AuthProvider
   ) {
-    const doesUserExist = await this.usersService.findOneAppUserByEmail(
-      payload.email
-    );
+    const doesUserExist = (
+      await this.usersService.getUser({
+        email: payload.email,
+      })
+    ).user;
     if (doesUserExist) {
       const tokenPayload = {
         userId: doesUserExist.id,
@@ -148,9 +149,10 @@ export class AuthService {
   }
 
   async registerLocalUser(payload: RegisterLocalPayloadDto) {
-    const user = await this.usersService.findOneAppUserByEmail(payload.email);
+    const user = (await this.usersService.getUser({ email: payload.email }))
+      .user;
     if (user) {
-      throw new HttpException('User with this email already exists', 409);
+      throw new ConflictException('User with this email already exists');
     }
     const hashedPassword = await this.createHashedPassword(payload.password);
     if (!hashedPassword) {
@@ -159,22 +161,28 @@ export class AuthService {
     const newUser = await this.registerUser({
       ...payload,
       password: hashedPassword,
-      auth_provider: auth_provider.local,
+      auth_provider: AuthProvider.LOCAL,
     });
-    const jwtPaylaod = { userId: newUser.app_user.id, email: payload.email };
-    const verifyEmailToken = await this.jwtService.sign(jwtPaylaod, {
-      secret: this.configService.get('JWT_VERIFY_EMAIL_SECRET'),
-      expiresIn: '30d',
-    });
-    await this.prismaService.user_tokens.create({
-      data: {
-        app_user_id: newUser.app_user.id,
+    const jwtPaylaod = {
+      userId: newUser.user.id,
+      email: payload.email,
+    };
+    const verifyEmailToken =
+      await this.createEmailVerificationToken(jwtPaylaod);
+    const newUserTokens = await this.usersService.create_user_token(
+      {
         email_verification_token: verifyEmailToken,
         email_verification_expiry: dayjs(new Date())
           .add(30, 'days')
           .format('DD-MM-YYYY'),
       },
-    });
+      { userId: newUser.user.id }
+    );
+    await this.neo4jService.write(
+      `MATCH (user:USER {id: $userId}), (token:USER_TOKEN {id: $tokensId})
+      CREATE (user) -[:TOKENS]-> (token)`,
+      { userId: newUser.user.id, tokensId: newUserTokens.id }
+    );
     await this.mailService.sendEmailVerificationEmail(
       payload.email,
       verifyEmailToken
@@ -183,20 +191,11 @@ export class AuthService {
   }
 
   async registerUser(payload: RegisterPayloadDto) {
-    const username = await generateFromEmail(payload.email, 4);
-    const newProfileUser = await this.usersService.create_user_profile({
-      ...payload,
-      username,
-    });
-    const newAppUser = await this.usersService.create_app_user(
-      { ...payload },
-      newProfileUser.id
-    );
+    const newAppUser = await this.usersService.create_user({ ...payload });
     const tokenPayload = { userId: newAppUser.id, email: newAppUser.email };
     return {
       access_token: await this.generateAccessToken(tokenPayload),
-      app_user: newAppUser,
-      user_profile: newProfileUser,
+      user: newAppUser,
     };
   }
 
@@ -233,7 +232,7 @@ export class AuthService {
         secret: this.configService.get('JWT_VERIFY_EMAIL_SECRET'),
       });
     } catch (error) {
-      console.log(error);
+      console.log(error, token);
       return null;
     }
   }
@@ -253,6 +252,18 @@ export class AuthService {
     try {
       return await this.jwtService.verify(token, {
         secret: this.configService.get('JWT_PASSWORD_RESET_TOKEN'),
+      });
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async createEmailVerificationToken(payload: jwtAuthTokenPayload) {
+    try {
+      return await this.jwtService.sign(payload, {
+        secret: this.configService.get('JWT_VERIFY_EMAIL_SECRET'),
+        expiresIn: '30d',
       });
     } catch (error) {
       console.log(error);

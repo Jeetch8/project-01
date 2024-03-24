@@ -11,8 +11,8 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { emailRegex, passwordRegex } from '@/utils/Regex';
-import { auth_provider, gender } from '@prisma/client';
 import { OmitType } from '@nestjs/mapped-types';
+import { AuthProvider, Gender } from '@/user/user.entity';
 
 export class LocalLoginPayloadDto {
   @IsEmail({}, { message: 'Invalid email' })
@@ -52,11 +52,11 @@ export class RegisterPayloadDto {
   @IsUrl({}, { message: 'Profile image is not valid' })
   profile_img: string;
 
-  @IsEnum(auth_provider, { message: 'Invalid auth provider' })
-  auth_provider: auth_provider;
+  @IsEnum(AuthProvider, { message: 'Invalid auth provider' })
+  auth_provider: AuthProvider;
 
-  @IsEnum(gender, { message: 'Gender is required' })
-  gender?: gender;
+  @IsEnum(Gender, { message: 'Gender is required' })
+  gender?: Gender;
 }
 
 export class RegisterLocalPayloadDto extends OmitType(RegisterPayloadDto, [

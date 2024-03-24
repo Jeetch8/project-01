@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { PrismaService } from '@/prisma.service';
 import { ConfigModule } from '@nestjs/config';
 import { Neo4jService } from 'nest-neo4j/dist';
 
@@ -40,10 +39,6 @@ describe('UserController', () => {
       controllers: [UserController],
       providers: [
         UserService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
         {
           provide: Neo4jService,
           useValue: mockNeo4jService,

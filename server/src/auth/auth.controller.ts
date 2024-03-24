@@ -21,9 +21,9 @@ import {
   ResetPasswordDto,
 } from './dto/auth.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
-import { auth_provider } from '@prisma/client';
 import { GithubAuthGuard } from './guards/github-auth.guard';
 import { Neo4jService } from 'nest-neo4j/dist';
+import { AuthProvider } from '@/user/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -111,7 +111,7 @@ export class AuthController {
     const user = req.user as any;
     const { access_token } = await this.authService.handleSSORegisterORLogin(
       user,
-      auth_provider.google
+      AuthProvider.GOOGLE
     );
     this.attachAccessToken(req.res, access_token);
     return res.redirect('http://localhost:5173');
@@ -130,7 +130,7 @@ export class AuthController {
     }
     const { access_token } = await this.authService.handleSSORegisterORLogin(
       user,
-      auth_provider.google
+      AuthProvider.GOOGLE
     );
     this.attachAccessToken(req.res, access_token);
     // return { access_token };

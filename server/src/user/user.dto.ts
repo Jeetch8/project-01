@@ -3,14 +3,39 @@ import {
   IsEmail,
   IsEnum,
   IsJWT,
-  IsOptional,
   IsString,
   IsUrl,
   Matches,
 } from 'class-validator';
-import { auth_provider as AuthProvider, gender } from '@prisma/client';
+import { AuthProvider, Gender } from './user.entity';
 
-export class UserProfileDto {
+export class UserAuthDto {
+  @IsString({ message: 'password is required' })
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/,
+    {
+      message: 'Password is too weak',
+    }
+  )
+  password: string;
+
+  @IsEnum(AuthProvider)
+  auth_provider: AuthProvider;
+
+  @IsJWT()
+  forgot_password_token?: string;
+
+  @IsDateString()
+  forgot_password_token_expiry?: string;
+
+  @IsJWT()
+  email_verification_token?: string;
+
+  @IsDateString()
+  email_verification_expiry?: string;
+}
+
+export class UserDto {
   @IsString({ message: 'first_name is required' })
   first_name: string;
 
@@ -26,24 +51,11 @@ export class UserProfileDto {
   @IsUrl()
   profile_img: string;
 
-  @IsEnum(gender, { message: 'Gender is required' })
-  gender?: gender;
-}
+  @IsEnum(Gender, { message: 'Gender is required' })
+  gender?: Gender;
 
-export class AppUserDto {
   @IsEmail({}, { message: 'email is required' })
   email: string;
-
-  @IsString({ message: 'password is required' })
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/,
-    {
-      message: 'Password is too weak',
-    }
-  )
-  password: string;
-
-  auth_provider: AuthProvider;
 }
 
 // export class CreateUserDto {

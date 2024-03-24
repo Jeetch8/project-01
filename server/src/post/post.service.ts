@@ -1,16 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PrismaService } from '@/prisma.service';
 import { FileUploadService } from '@/file_upload/file_upload.service';
 import { CloudinaryService } from '@/lib/cloudinary/cloudinary.service';
 import { jwtAuthTokenPayload } from '@/auth/entities/auth.entity';
 import { Neo4jService } from 'nest-neo4j/dist';
+import {
+  MediaType,
+  PostCon,
+  PostMedia,
+  PostMediaCon,
+  Post,
+} from './entities/post.entity';
 
 @Injectable()
 export class PostService {
   constructor(
-    private prismaService: PrismaService,
     private cloudinaryService: CloudinaryService,
     private neo4jService: Neo4jService
   ) {}
@@ -23,37 +28,42 @@ export class PostService {
     caption: string;
     media: (Express.Multer.File | string)[];
     requestUser: jwtAuthTokenPayload;
-  }) {
-    const newPost = await this.prismaService.post.create({
-      data: {
-        caption,
-        creator_id: requestUser.userId,
-      },
-    });
+  }): Promise<Post> {
+    const newPost = await this.neo4jService
+      .write(
+        `MATCH (user:USER {id:$creatorid})
+      CREATE (post:POST {caption:$caption}) -[:CREATED_BY]-> (user)
+      RETURN post
+      `,
+        {
+          caption,
+          creatorid: requestUser.userId,
+        }
+      )
+      .then((res) => {
+        const record = res.records[0];
+        return new PostCon(record.get('post')).getObject();
+      });
     for (let i = 0; i < media.length; i++) {
       const item = media[i];
       if (typeof item !== 'string') {
         if (item instanceof Blob) {
           const uploadedItem = await this.cloudinaryService.uploadImage(item);
-          await this.prismaService.post_media.create({
-            data: {
-              post_id: newPost.id,
-              media_type: 'image',
-              creator_id: requestUser.userId,
-              modified_media_url: uploadedItem.secure_url,
-              original_media_url: uploadedItem.secure_url,
-            },
+          await this.createPostMedia({
+            post_id: newPost.id,
+            media_type: MediaType.IMAGE,
+            creator_id: requestUser.userId,
+            modified_media_url: uploadedItem.url,
+            original_media_url: uploadedItem.url,
           });
         }
       } else {
-        await this.prismaService.post_media.create({
-          data: {
-            modified_media_url: item,
-            original_media_url: item,
-            creator_id: requestUser.userId,
-            media_type: 'image',
-            post_id: newPost.id,
-          },
+        await this.createPostMedia({
+          post_id: newPost.id,
+          media_type: MediaType.IMAGE,
+          creator_id: requestUser.userId,
+          modified_media_url: item,
+          original_media_url: item,
         });
       }
     }
@@ -61,29 +71,117 @@ export class PostService {
   }
 
   async deletePost(postid: string) {
-    if (postid) await this.prismaService.post.delete({ where: { id: postid } });
+    const res = await this.neo4jService.write(
+      `MATCH (post:POST {id:$postid})
+      MATCH (post_media:POST_MEDIA) -[:MEDIA_OF]-> (post)
+      DETACH DELETE post
+      `,
+      {
+        postid,
+      }
+    );
+    if (res.records[0].get('deleted') === 0) {
+      throw new Error('Post not found');
+    }
+    return res.records[0].get('deleted');
+  }
+
+  // async likePost(postId: string, userId: string) {
+  //   const post = await this.neo4jService
+  //     .read(
+  //       `MATCH (post:POST {id:$postId})
+  //     RETURN post
+  //     `,
+  //       {
+  //         postId,
+  //       }
+  //     )
+  //     .then((res) => {
+  //       return res.records.map((record) => {
+  //         return new PostCon(record.get('post')).getObject();
+  //       });
+  //     });
+  //   // const post = await this.prismaService.post.findUnique({
+  //   //   where: { id: postId },
+  //   // });
+  //   if (!post) throw new Error('Post not found');
+  //   const like = await this.neo4jService
+  //     .read(
+  //       `MATCH (post:POST {id:$postId}) -[likes:LIKED]-> (user:USER {id:$userId})
+  //     RETURN user, likes
+  //     `,
+  //       {
+  //         postId,
+  //         userId,
+  //       }
+  //     )
+  //     .then((res) => {
+  //       return res.records.map((record) => {
+  //         return new PostCon(record.get('user')).getObject();
+  //       });
+  //     });
+  // }
+
+  async disLikePost(postId: string, userId: string) {
+    const res = await this.neo4jService.write(
+      `MATCH (post:POST {id:$postId}) -[likes:LIKED]-> (user:USER {id:$userId})
+      DELETE likes
+      `,
+      {
+        postId,
+        userId,
+      }
+    );
+    if (res.records[0].get('deleted') === 0) {
+      throw new Error('Like not found');
+    }
+    return res.records[0].get('deleted');
   }
 
   async likePost(postId: string, userId: string) {
-    const post = await this.prismaService.post.findUnique({
-      where: { id: postId },
-    });
-    if (!post) throw new Error('Post not found');
-    const like = await this.prismaService.post_likes.findFirst({
-      where: {
-        post_id: postId,
-        user_id: userId,
-      },
-    });
-    if (like) {
-      await this.prismaService.post_likes.delete({ where: { id: like.id } });
-    } else {
-      await this.prismaService.post_likes.create({
-        data: {
-          post_id: postId,
-          user_id: userId,
-        },
+    const res = await this.neo4jService.write(
+      `MATCH (post:POST {id:$postId})
+      MATCH (user:USER {id:$userId})
+      CREATE (user) -[:LIKED]-> (post)
+      RETURN post.likes
+      `,
+      {
+        postId,
+        userId,
+      }
+    );
+    return res.records[0].get('likes');
+  }
+
+  async createPostMedia(payload: Omit<PostMedia, 'id'>) {
+    const {
+      post_id,
+      media_type,
+      creator_id,
+      modified_media_url,
+      original_media_url,
+    } = payload;
+    return this.neo4jService
+      .write(
+        `MATCH (post:POST {id:$post_id})
+      CREATE (post_media:POST_MEDIA {media_type:$media_type,creator_id:$creator_id,modified_media_url:$modified_media_url,original_media_url:$original_media_url}) -[:MEDIA_OF]-> (post)
+      RETURN post_media, post
+      `,
+        {
+          post_id,
+          media_type,
+          creator_id,
+          modified_media_url,
+          original_media_url,
+        }
+      )
+      .then((res) => {
+        return res.records.map((record) => {
+          return {
+            post: record.get('post'),
+            post_media: new PostMediaCon(record.get('post_media')).getObject(),
+          };
+        });
       });
-    }
   }
 }

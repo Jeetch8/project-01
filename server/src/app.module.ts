@@ -19,15 +19,15 @@ import { FileUploadModule } from './file_upload/file_upload.module';
     }),
     Neo4jModule.forRootAsync({
       imports: [ConfigModule],
-      global: true,
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         scheme: configService.get('NEO4J_DB_SCHEME'),
         host: configService.get('NEO4J_DB_HOST'),
         port: configService.get('NEO4J_DB_PORT'),
         username: configService.get('NEO4J_DB_USERNAME'),
         password: configService.get('NEO4J_DB_PASSWORD'),
+        database: configService.get('NEO4J_DB_DATABASE'),
       }),
-      inject: [ConfigService],
     }),
     AuthModule,
     UserModule,

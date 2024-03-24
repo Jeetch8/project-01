@@ -5,7 +5,6 @@ import { AuthService } from './auth.service';
 import { UserModule } from '@/user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UserService } from '@/user/user.service';
-import { PrismaService } from '@/prisma.service';
 import { GoogleStrategy } from './strategy/google.strategy';
 import { GithubStrategy } from './strategy/github.strategy';
 import { MailService } from '@/lib/mail/mail.service';
@@ -23,7 +22,6 @@ import { JwtStrategy } from './strategy/jwt.strategy';
   providers: [
     AuthService,
     UserService,
-    PrismaService,
     GoogleStrategy,
     GithubStrategy,
     MailService,
