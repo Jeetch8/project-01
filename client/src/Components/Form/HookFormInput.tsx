@@ -8,6 +8,8 @@ type InputProps = {
   placeholder?: string;
   inputName?: string;
   inputType?: React.HTMLInputTypeAttribute;
+  defaultValue?: string;
+  shouldShowError?: boolean;
 };
 
 import { FieldError, RegisterOptions } from 'react-hook-form';
@@ -18,17 +20,20 @@ const HookFormInput = ({
   register,
   fieldName,
   fieldRules,
+  defaultValue,
   errors,
   inputClassName,
   placeholder,
   inputName,
   inputType = 'text',
+  shouldShowError = true,
 }: InputProps) => {
   return (
     <>
       <input
         type={inputType}
         placeholder={placeholder}
+        defaultValue={defaultValue}
         {...register(fieldName, fieldRules)}
         className={twMerge(
           'rounded-md outline-none text-black w-[300px] px-2 py-1 border-2 mt-1',
@@ -37,7 +42,7 @@ const HookFormInput = ({
         id={inputName ?? fieldName}
         name={inputName ?? fieldName}
       />
-      <ErrorDisplayComp error={errors} />
+      {shouldShowError && <ErrorDisplayComp error={errors} />}
     </>
   );
 };

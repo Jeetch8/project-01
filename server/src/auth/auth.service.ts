@@ -22,6 +22,7 @@ import * as dayjs from 'dayjs';
 import { MailService } from '@/lib/mail/mail.service';
 import { AuthProvider, User } from '@/user/user.entity';
 import { Neo4jService } from 'nest-neo4j/dist';
+import { createId } from '@paralleldrive/cuid2';
 
 @Injectable()
 export class AuthService {
@@ -167,21 +168,21 @@ export class AuthService {
       userId: newUser.user.id,
       email: payload.email,
     };
+    const emailTokenExpiry = dayjs(new Date())
+      .add(30, 'days')
+      .format('DD-MM-YYYY');
     const verifyEmailToken =
       await this.createEmailVerificationToken(jwtPaylaod);
-    const newUserTokens = await this.usersService.create_user_token(
-      {
+    const userTokensStr =
+      await this.usersService.createUserTokenPropertiesString({
         email_verification_token: verifyEmailToken,
-        email_verification_expiry: dayjs(new Date())
-          .add(30, 'days')
-          .format('DD-MM-YYYY'),
-      },
-      { userId: newUser.user.id }
-    );
+        email_verification_expiry: emailTokenExpiry,
+        id: createId(),
+      });
     await this.neo4jService.write(
-      `MATCH (user:USER {id: $userId}), (token:USER_TOKEN {id: $tokensId})
-      CREATE (user) -[:TOKENS]-> (token)`,
-      { userId: newUser.user.id, tokensId: newUserTokens.id }
+      `MATCH (user:USER {id: $userId})
+      CREATE (user) -[:TOKENS]-> (token:USER_TOKEN {${userTokensStr}})`,
+      { userId: newUser.user.id }
     );
     await this.mailService.sendEmailVerificationEmail(
       payload.email,

@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:int": "dotenv -e .env.test -- jest --watch .int-spec",
-    "test:e2e": "jest --config ./test/jest-e2e.json --watch --detectOpenHandles",
+    "test:e2e": "jest --config ./test/jest-e2e.json --watchAll --detectOpenHandles",
     "db:migrate": "dotenv -e .env.development -- prisma migrate dev",
     "pretest": "./scripts/start-docker.sh",
     "posttest": "./scripts/stop-docker.sh"

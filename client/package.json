@@ -12,13 +12,21 @@
     "test:preview": "vitest-preview"
   },
   "dependencies": {
-    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/forms": "^0.5.8",
+    "boring-avatars": "^1.11.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "core-js-pure": "^3.38.1",
     "dayjs": "^1.11.13",
+    "embla-carousel": "^8.2.0",
+    "embla-carousel-autoplay": "^8.2.0",
+    "embla-carousel-fade": "^8.2.0",
+    "embla-carousel-react": "^8.2.0",
     "emoji-picker-react": "^4.11.1",
     "gif-picker-react": "^1.3.3",
+    "prop-types": "^15.8.1",
     "react": "^18.3.1",
+    "react-avatar": "^5.0.3",
     "react-circular-progressbar": "^2.1.0",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.2",
@@ -30,7 +38,8 @@
     "react-tailwindcss-datepicker": "^1.7.0",
     "react-textarea-autosize": "^8.5.3",
     "server": "*",
-    "tailwind-merge": "^2.5.2"
+    "tailwind-merge": "^2.5.2",
+    "unique-username-generator": "^1.3.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
