@@ -1,5 +1,54 @@
 import { Node } from 'neo4j-driver';
 
+export interface Post {
+  id: string;
+  caption: string;
+  likes_count: number;
+  created_on: Date;
+  updated_on: Date;
+}
+
+export enum MediaType {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+  DOCUMENT = 'document',
+}
+
+export interface PostMedia {
+  id: string;
+  post_id: string;
+  media_type: MediaType;
+  tags?: string;
+  alt?: string;
+  original_media_url: string;
+  modified_media_url: string;
+  creator_id: string;
+}
+
+export interface UserSession {
+  id: string;
+  device: string;
+  browser: string;
+  location: string;
+  ip_address: string;
+  operating_system: string;
+  last_seen_on: Date;
+  signed_in_on: Date;
+}
+
+interface Notification {
+  id: string;
+  type?: string;
+  reference_id?: string;
+}
+
+interface PostComment {
+  id: string;
+  caption: string;
+  likes_count: number;
+}
+
 export class PostMediaCon {
   constructor(private readonly node: Node) {}
 
@@ -46,34 +95,11 @@ export class PostCon {
       id,
       caption,
       likes_count,
-      creator_id,
       created_on,
       updated_on,
     };
   }
 }
-
-export interface Post {
-  id: string;
-  caption: string;
-  likes_count: number;
-  creator_id: string;
-  created_on: Date;
-  updated_on: Date;
-}
-
-// interface UserSession {
-//   id: string;
-//   browser: string;
-//   device: string;
-//   ip_address: string;
-//   os: string;
-//   signed_in_on: Date;
-//   userid: string;
-//   access_token?: string;
-//   refresh_token?: string;
-//   user: AppUser;
-// }
 
 // //   interface Community {
 // //     id: string;
@@ -86,20 +112,6 @@ export interface Post {
 // //     creator: UserProfile;
 // //     thread_posts_mapping: ThreadPostsMapping[];
 // //   }
-
-// interface PostComment {
-//   id: string;
-//   caption: string;
-//   comment_by: string;
-//   post_id: string;
-//   likes_count: number;
-//   parent_comment_id?: string;
-//   post: Post;
-//   comment_by_user: UserProfile;
-//   parent_comment?: PostComment;
-//   child_comments: PostComment[];
-//   replies: Replies[];
-// }
 
 // interface LikedPost {
 //   id: string;
@@ -156,27 +168,3 @@ export interface Post {
 //     user: UserProfile;
 //     community: Community;
 //   }
-
-export enum MediaType {
-  IMAGE = 'image',
-  VIDEO = 'video',
-  AUDIO = 'audio',
-  DOCUMENT = 'document',
-}
-
-export interface PostMedia {
-  id: string;
-  post_id: string;
-  media_type: MediaType;
-  tags?: string;
-  alt?: string;
-  original_media_url: string;
-  modified_media_url: string;
-  creator_id: string;
-}
-
-interface Notification {
-  id: string;
-  type?: string;
-  reference_id?: string;
-}

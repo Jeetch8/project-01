@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 interface ISearchResults {
   id: string;
@@ -7,12 +7,12 @@ interface ISearchResults {
   username: string;
 }
 
-import { useEffect, useRef, useState } from "react";
-import { RiSearchLine } from "react-icons/ri";
-import { twMerge } from "tailwind-merge";
+import { useEffect, useRef, useState } from 'react';
+import { RiSearchLine } from 'react-icons/ri';
+import { twMerge } from 'tailwind-merge';
 
 export default function SearchInput() {
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState('');
   const [searchResults, setSearchResults] = useState<ISearchResults[]>([]);
   const [boxResultsBoxOpen, setResultsBoxOpen] = useState(false);
   const searchInputRef = useRef<HTMLDivElement>(null);
@@ -27,9 +27,9 @@ export default function SearchInput() {
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [searchInputRef]);
 
@@ -37,21 +37,21 @@ export default function SearchInput() {
     <div className="relative" ref={searchInputRef}>
       <div
         className={twMerge(
-          "flex items-center bg-zinc-800 px-5 rounded-full py-2 space-x-4 border-[0.5px] border-zinc-800 z-50",
-          boxResultsBoxOpen && "border-blue-400"
+          'flex items-center bg-zinc-800 px-5 rounded-full  space-x-4 border-[0.5px] border-zinc-800 z-50',
+          boxResultsBoxOpen && 'border-blue-400'
         )}
       >
         <RiSearchLine
           className={twMerge(
-            "text-zinc-400",
-            boxResultsBoxOpen && "text-blue-400"
+            'text-zinc-400',
+            boxResultsBoxOpen && 'text-blue-400'
           )}
         />
         <input
           onClick={() => setResultsBoxOpen(true)}
           type="text"
           placeholder="Search"
-          className="bg-transparent w-full outline-none text-white placeholder-zinc-400"
+          className="bg-transparent w-full outline-none text-white placeholder-zinc-400 border-0"
         />
       </div>
       {boxResultsBoxOpen && (

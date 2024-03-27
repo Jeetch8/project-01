@@ -81,7 +81,7 @@ export default function Sidebar() {
   const { user } = useGlobalContext();
 
   return (
-    <nav className="border-r-[0.1px] flex justify-between flex-col h-screen border-zinc-700 bg-black text-white pl-6 max-w-[280px] w-fit">
+    <nav className="border-r-[0.1px] flex justify-between flex-col h-screen border-zinc-700 bg-black text-white pl-6 max-w-[280px] w-fit sticky top-0">
       <div className="pr-4">
         {navigationLinks.map((link) => (
           <Link

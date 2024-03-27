@@ -118,6 +118,7 @@ export default function CreateNewPostBox() {
             maxWidth: '600px',
             width: '100%',
             fontSize: '1.5rem',
+            border: 'none',
           }}
         />
         <ExtraAssestsBox
