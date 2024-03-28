@@ -77,7 +77,32 @@ export function makeServer({ environment = 'development' }) {
       this.get('/user/me', async (schema, request) => {
         return { user: schema.db.users[0] };
       });
+      this.patch('/post/:id/togglelike', (schema, request) => {
+        const post = schema.db.posts.find(request.params.id);
+        const isLiked = post.liked;
+        const likesCount = isLiked
+          ? post.likes_count - 1
+          : post.likes_count + 1;
 
+        this.db.posts.update(request.params.id, {
+          likes_count: likesCount,
+        });
+
+        post.liked = !isLiked;
+        post.likes_count = likesCount;
+
+        return { post };
+      });
+      this.patch('/post/:id/bookmark', (schema, request) => {
+        const post = schema.db.posts.find(request.params.id);
+        const isBookmarked = post.bookmarked;
+        this.db.posts.update(request.params.id, {
+          bookmarked: !isBookmarked,
+        });
+
+        post.bookmarked = !isBookmarked;
+        return { post };
+      });
       this.post('/auth/login/local', (schema, request) => {
         return { token: 'testtoken' };
       });
@@ -93,6 +118,31 @@ export function makeServer({ environment = 'development' }) {
       this.post('/auth/register/local', (schema, request) => {
         return { message: 'user registered' };
       });
+
+      this.put('/post/:id/comment', (schema, request) => {
+        const postId = request.params.id;
+        const { comment } = JSON.parse(request.requestBody);
+
+        const post = schema.db.posts.find(postId);
+        if (!post) {
+          return new Response(null, {
+            status: 404,
+            statusText: 'Post not found',
+          });
+        }
+
+        const newComment = {
+          id: faker.string.uuid(),
+          content: comment,
+          created_at: new Date().toISOString(),
+          user: schema.db.users[0], // Assuming the first user is the current user
+        };
+
+        post.comments = [...(post.comments || []), newComment];
+
+        return { post };
+      });
+      this.passthrough('https://tenor.googleapis.com/*');
     },
   });
   return server;

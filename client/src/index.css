@@ -13,3 +13,11 @@
   flex: 0 0 100%;
   min-width: 0;
 }
+
+textarea:focus,
+input:focus {
+  outline: none;
+}
+*:focus {
+  outline: none;
+}

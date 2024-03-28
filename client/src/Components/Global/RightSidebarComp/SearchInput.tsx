@@ -51,7 +51,7 @@ export default function SearchInput() {
           onClick={() => setResultsBoxOpen(true)}
           type="text"
           placeholder="Search"
-          className="bg-transparent w-full outline-none text-white placeholder-zinc-400 border-0"
+          className="bg-transparent w-full outline-none text-white placeholder-zinc-400 border-0 focus:outline-none shadow-none"
         />
       </div>
       {boxResultsBoxOpen && (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 // import ImgsViewer from "react-images-viewer";
 import 'react-photo-view/dist/react-photo-view.css';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
@@ -22,7 +22,7 @@ export default function ExtraAssestsBox({
     <PhotoProvider className="">
       <div
         className={twMerge(
-          'grid grid-cols-2 grid-rows-1 gap-3 w-full h-[320px] mb-6',
+          'grid grid-cols-2 grid-rows-1 gap-3 w-full h-[320px]',
           extraAssetsState.length <= 2 ? 'grid-rows-1' : 'grid-rows-2',
           extraAssetsState.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
         )}

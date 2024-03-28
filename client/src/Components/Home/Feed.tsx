@@ -1,17 +1,16 @@
 interface Props {
   fetchHomeFeed: () => void;
-  data: IPost[] | undefined;
+  data: IFeedPost[] | undefined;
 }
 
 import React, { useEffect } from 'react';
 import Post from './Post';
-import { IPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/utils/interfaces';
 
 const Feed = ({ fetchHomeFeed, data }: Props) => {
   useEffect(() => {
     fetchHomeFeed();
   }, []);
-  console.log(data);
 
   return (
     <div>

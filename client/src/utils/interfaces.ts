@@ -65,18 +65,28 @@ export interface IPostMedia {
 
 export interface IPost {
   id: string;
+  caption: string;
+  likes_count: number;
+  comments_count: number;
+  created_on: string;
+  updated_on: string;
+}
+
+export interface IFeedPost {
+  id: string;
   creator: Pick<
     IUser,
     'id' | 'first_name' | 'last_name' | 'profile_img' | 'username' | 'full_name'
   >;
   media: IPostMedia[];
-  comments: IPostComment[];
   caption: string;
   liked: boolean;
   bookmarked: boolean;
+  comments_count: number;
   likes_count: number;
   created_on: string;
   updated_on: string;
+  timeAgo: string;
 }
 
 export interface IPostComment {

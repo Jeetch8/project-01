@@ -1,3 +1,12 @@
+interface Props
+  extends PropsWithChildren<{
+    isModalOpen: boolean;
+    setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+    canClose?: boolean;
+    dialogClassName?: string;
+    blackScreenClassName?: string;
+  }> {}
+
 import {
   Dispatch,
   PropsWithChildren,
@@ -15,12 +24,8 @@ const Modal = ({
   setIsModalOpen,
   dialogClassName,
   canClose = true,
-}: PropsWithChildren<{
-  isModalOpen: boolean;
-  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
-  canClose?: boolean;
-  dialogClassName?: string;
-}>) => {
+  blackScreenClassName,
+}: Props) => {
   const blackScreenRef = useRef(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const handleClickOutside = useCallback((event: any) => {
@@ -48,7 +53,10 @@ const Modal = ({
       {isModalOpen && (
         <div
           role="black_screen"
-          className="h-[100vh] w-[100vw] top-0 left-0 fixed bg-[rgba(0,0,0,0.4)] flex items-center justify-center z-[100]"
+          className={twMerge(
+            'h-[100vh] w-[100vw] top-0 left-0 fixed bg-[rgba(0,0,0,0.4)] flex items-center justify-center z-[100]',
+            blackScreenClassName
+          )}
           ref={blackScreenRef}
         >
           <div
@@ -63,7 +71,10 @@ const Modal = ({
               {canClose && (
                 <div className="flex justify-end">
                   <button
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsModalOpen(false);
+                    }}
                     aria-label="btn_close"
                   >
                     <IoClose size={22} />

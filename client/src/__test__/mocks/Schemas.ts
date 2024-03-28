@@ -8,6 +8,7 @@ import {
   IGender,
   IAuthProvider,
   IUserSession,
+  IFeedPost,
 } from '@/utils/interfaces';
 
 export const UserSchema = Factory.extend<IUser>({
@@ -81,13 +82,13 @@ export const UserTokensSchema = Factory.extend({
 });
 
 export const PostSchema = Factory.extend<
-  Omit<IPost, 'creator' | 'comments' | 'media'>
+  Omit<IFeedPost, 'creator' | 'comments' | 'media'>
 >({
   id() {
     return faker.string.uuid();
   },
   caption() {
-    return faker.lorem.sentence();
+    return faker.lorem.sentences({ min: 1, max: 4 });
   },
   likes_count() {
     return faker.number.int({ max: 1000 });
@@ -103,6 +104,12 @@ export const PostSchema = Factory.extend<
   },
   bookmarked() {
     return faker.datatype.boolean();
+  },
+  timeAgo() {
+    return '2h';
+  },
+  comments_count() {
+    return faker.number.int({ max: 1000 });
   },
 });
 
