@@ -13,11 +13,23 @@ import { twMerge } from 'tailwind-merge';
 interface PostExtraAssetProps {
   extraAssetsState: string[];
   handleAddExtraAssets: (assets: string[]) => void;
+  showImage?: boolean;
+  showGif?: boolean;
+  showList?: boolean;
+  showEmoji?: boolean;
+  showCalendar?: boolean;
+  showLocation?: boolean;
 }
 
 const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
   handleAddExtraAssets,
   extraAssetsState,
+  showImage = true,
+  showGif = true,
+  showList = true,
+  showEmoji = true,
+  showCalendar = true,
+  showLocation = true,
 }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const inputBoxRef = useRef<HTMLInputElement>(null);
@@ -44,44 +56,74 @@ const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
     handleAddExtraAssets([emojiObject.emoji]);
   };
 
+  if (
+    !showImage &&
+    !showGif &&
+    !showList &&
+    !showEmoji &&
+    !showCalendar &&
+    !showLocation
+  ) {
+    return null;
+  }
+
   return (
     <span className="flex space-x-2">
-      <label
-        htmlFor="imageInput"
-        className="disabled:cursor-not-allowed disabled:opacity-50 text-blue-400 text-xl"
-      >
-        <IoImageOutline
-          className={twMerge(
-            extraAssetsState.length >= 4
-              ? 'cursor-not-allowed opacity-50'
-              : 'cursor-pointer'
-          )}
+      {showImage && (
+        <label
+          htmlFor="imageInput"
+          className="disabled:cursor-not-allowed disabled:opacity-50 text-blue-400 text-xl"
+        >
+          <IoImageOutline
+            className={twMerge(
+              extraAssetsState.length >= 4
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer'
+            )}
+          />
+        </label>
+      )}
+      {showImage && (
+        <input
+          ref={inputBoxRef}
+          multiple
+          disabled={extraAssetsState.length >= 4}
+          className="hidden"
+          type="file"
+          accept="image/*"
+          onChange={handleImageAdd}
+          id="imageInput"
         />
-      </label>
-      <input
-        ref={inputBoxRef}
-        multiple
-        disabled={extraAssetsState.length >= 4}
-        className="hidden"
-        type="file"
-        accept="image/*"
-        onChange={handleImageAdd}
-        id="imageInput"
-      />
-      <GifPickerModal
-        handleGifAdd={handleGifAdd}
-        extraAssetsState={extraAssetsState}
-      />
-      <PiListChecks className="text-xl cursor-pointer text-blue-400" />
-      <GrEmoji
-        className="text-xl cursor-pointer text-blue-400"
-        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-      />
-      <div ref={emojiPickerRef} style={{ position: 'absolute' }}>
-        <EmojiPicker open={showEmojiPicker} onEmojiClick={handleEmojiClick} />
-      </div>
-      <LuCalendarClock className="text-xl cursor-pointer text-blue-400" />
-      <CiLocationOn className="text-xl cursor-pointer text-blue-400" />
+      )}
+      {showGif && (
+        <GifPickerModal
+          handleGifAdd={handleGifAdd}
+          extraAssetsState={extraAssetsState}
+        />
+      )}
+      {showList && (
+        <PiListChecks className="text-xl cursor-pointer text-blue-400" />
+      )}
+      {showEmoji && (
+        <>
+          <GrEmoji
+            className="text-xl cursor-pointer text-blue-400"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          />
+          <div ref={emojiPickerRef} style={{ position: 'absolute' }}>
+            <EmojiPicker
+              open={showEmojiPicker}
+              onEmojiClick={handleEmojiClick}
+            />
+          </div>
+        </>
+      )}
+      {showCalendar && (
+        <LuCalendarClock className="text-xl cursor-pointer text-blue-400" />
+      )}
+      {showLocation && (
+        <CiLocationOn className="text-xl cursor-pointer text-blue-400" />
+      )}
     </span>
   );
 };

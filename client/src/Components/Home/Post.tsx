@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import AvatarImage from '@/Components/Global/AvatarImage';
 import { SlOptions } from 'react-icons/sl';
 import { TbHeartFilled, TbMessage } from 'react-icons/tb';
@@ -11,8 +12,16 @@ import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import { IFeedPost } from '@/utils/interfaces';
 import CommentPostModal from '@/Components/Modals/CommentPostModal';
+import { twMerge } from 'tailwind-merge';
 
-const Post = ({ post }: { post: IFeedPost }) => {
+const Post = ({
+  post,
+  outerClassName,
+}: {
+  post: IFeedPost;
+  outerClassName?: string;
+}) => {
+  const navigate = useNavigate();
   const [isCommentModalOpen, setIsCommentModalOpen] =
     React.useState<boolean>(false);
 
@@ -36,7 +45,12 @@ const Post = ({ post }: { post: IFeedPost }) => {
   });
 
   return (
-    <div className="border-b-[1px] border-zinc-700 px-4 pt-3 pb-3 text-white">
+    <div
+      className={twMerge(
+        'border-b-[2px] border-zinc-900 px-4 pt-3 pb-3 text-white',
+        outerClassName
+      )}
+    >
       <div className="flex gap-x-2 items-start w-full">
         <div>
           <AvatarImage url={post?.creator?.profile_img} diameter={'42px'} />
@@ -55,9 +69,16 @@ const Post = ({ post }: { post: IFeedPost }) => {
             </div>
             <SlOptions color="rgb(113 113 112)" />
           </div>
-          <p>{post.caption}</p>
+          <p
+            className="cursor-pointer"
+            onClick={() => {
+              navigate(`/${post?.creator?.username}/status/${post.id}`);
+            }}
+          >
+            {post.caption}
+          </p>
           {post?.media?.length > 0 && (
-            <div className="rounded-xl overflow-hidden mt-2">
+            <div className="rounded-xl overflow-hidden mt-2 mb-[-15px]">
               <PostImages media={post.media} />
             </div>
           )}

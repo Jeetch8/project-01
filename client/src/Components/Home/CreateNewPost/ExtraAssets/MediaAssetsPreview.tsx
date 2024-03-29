@@ -1,5 +1,4 @@
 import React from 'react';
-// import ImgsViewer from "react-images-viewer";
 import 'react-photo-view/dist/react-photo-view.css';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import { twMerge } from 'tailwind-merge';

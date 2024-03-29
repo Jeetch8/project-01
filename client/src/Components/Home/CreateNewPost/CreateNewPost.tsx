@@ -47,7 +47,7 @@ export default function CreateNewPostBox() {
   };
 
   return (
-    <div className="flex w-[600px] space-x-3 px-4 mt-4 border-zinc-600 border-b-[0.5px] text-white">
+    <div className="flex w-[600px] space-x-3 px-4 mt-4 border-zinc-900 border-b-[2px] text-white">
       <div>
         <AvatarImage diameter="50px" url={user?.profile_img} />
       </div>
@@ -74,7 +74,7 @@ export default function CreateNewPostBox() {
           extraAssetsState={extraAssetsState}
           setExtraAssetsState={setExtraAssetsState}
         />
-        <div className=" border-t-[0.1px] border-zinc-700 py-2 px-1 flex justify-between items-center relative">
+        <div className=" border-t-[2px] border-zinc-900 py-2 px-1 flex justify-between items-center relative">
           <PostExtraAsset
             extraAssetsState={extraAssetsState}
             handleAddExtraAssets={handleAddExtraAssets}

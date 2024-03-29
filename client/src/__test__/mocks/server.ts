@@ -5,8 +5,25 @@ import {
   UserSchema,
   UserTokensSchema,
 } from './Schemas';
-import { IMediaType, IPost, IPostMedia } from '@/utils/interfaces';
+import {
+  IFeedPost,
+  IMediaType,
+  IPost,
+  ISchemaPost,
+  IUser,
+} from '@/utils/interfaces';
 import { faker } from '@faker-js/faker';
+
+const createPostMedia = () => {
+  return {
+    id: faker.string.uuid(),
+    media_type: IMediaType.IMAGE,
+    tags: faker.lorem.words(),
+    alt: faker.lorem.words(),
+    original_media_url: faker.image.urlPicsumPhotos(),
+    modified_media_url: faker.image.urlPicsumPhotos(),
+  };
+};
 
 export function makeServer({ environment = 'development' }) {
   const server = createServer({
@@ -33,8 +50,9 @@ export function makeServer({ environment = 'development' }) {
       server.create('user_token');
       for (let i = 0; i < 10; i++) {
         const user = server.create('user');
-        // const media = server.createList('media', 4);
-        server.create('post', { user });
+        server.create('post', {
+          user,
+        });
       }
     },
 
@@ -43,33 +61,15 @@ export function makeServer({ environment = 'development' }) {
       this.namespace = '/api/v1';
 
       this.get('/post/feed', (schema, request) => {
-        const posts = schema.db.posts;
-        const arr: IPost[] = [];
+        const posts: (ISchemaPost & { userId: string })[] = schema.db.posts;
+        const arr: IFeedPost[] = [];
         for (let i = 0; i < posts.length; i++) {
           const postMedia = [];
           for (let j = 0; j < faker.number.int({ min: 0, max: 4 }); j++) {
-            postMedia.push({
-              id: faker.string.uuid(),
-              media_type: IMediaType.IMAGE,
-              tags: faker.lorem.words(),
-              alt: faker.lorem.words(),
-              original_media_url: faker.image.urlPicsumPhotos(),
-              modified_media_url: faker.image.urlPicsumPhotos(),
-            });
+            postMedia.push(createPostMedia());
           }
           const user = schema.db.users.findBy({ id: posts[i].userId });
-          arr.push({
-            ...posts[i],
-            creator: {
-              id: user.id,
-              full_name: user.full_name,
-              first_name: user.first_name,
-              last_name: user.last_name,
-              username: user.username,
-              profile_img: user.profile_img,
-            },
-            media: postMedia,
-          });
+          arr.push({ ...posts[i], media: postMedia, creator: user });
         }
         return { feed: arr };
       });
@@ -135,13 +135,31 @@ export function makeServer({ environment = 'development' }) {
           id: faker.string.uuid(),
           content: comment,
           created_at: new Date().toISOString(),
-          user: schema.db.users[0], // Assuming the first user is the current user
+          user: schema.db.users[0],
         };
 
         post.comments = [...(post.comments || []), newComment];
 
         return { post };
       });
+
+      this.get('/post/:id', (schema, request) => {
+        const post = schema.db.posts[0];
+        const user = schema.db.users[0];
+        post.creator = user;
+        const postMedia = [];
+        for (let j = 0; j < faker.number.int({ min: 0, max: 4 }); j++) {
+          postMedia.push(createPostMedia());
+        }
+        post.media = postMedia;
+        const comments = [];
+        for (let i = 0; i < schema.db.posts.length; i++) {
+          comments.push({ ...schema.db.posts[i], creator: user });
+        }
+        post.comments = comments;
+        return { post };
+      });
+
       this.passthrough('https://tenor.googleapis.com/*');
     },
   });

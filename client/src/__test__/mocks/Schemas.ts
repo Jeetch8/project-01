@@ -9,11 +9,12 @@ import {
   IAuthProvider,
   IUserSession,
   IFeedPost,
+  ISchemaPost,
 } from '@/utils/interfaces';
 
 export const UserSchema = Factory.extend<IUser>({
   id() {
-    return faker.string.uuid();
+    return faker.string.alphanumeric(20);
   },
   full_name() {
     return faker.person.fullName();
@@ -47,7 +48,7 @@ export const UserSchema = Factory.extend<IUser>({
     return faker.image.avatarGitHub();
   },
   username() {
-    return faker.internet.userName();
+    return faker.internet.userName().toLowerCase();
   },
   gender() {
     return faker.helpers.arrayElement([IGender.FEMALE, IGender.MALE]);
@@ -65,7 +66,7 @@ export const UserSchema = Factory.extend<IUser>({
 
 export const UserTokensSchema = Factory.extend({
   id() {
-    return faker.string.uuid();
+    return faker.string.alphanumeric(20);
   },
   forgotPasswordToken() {
     return faker.string.alpha({ length: 32 });
@@ -81,11 +82,9 @@ export const UserTokensSchema = Factory.extend({
   },
 });
 
-export const PostSchema = Factory.extend<
-  Omit<IFeedPost, 'creator' | 'comments' | 'media'>
->({
+export const PostSchema = Factory.extend<ISchemaPost>({
   id() {
-    return faker.string.uuid();
+    return faker.string.alphanumeric(20);
   },
   caption() {
     return faker.lorem.sentences({ min: 1, max: 4 });
@@ -115,7 +114,7 @@ export const PostSchema = Factory.extend<
 
 export const MediaSchema = Factory.extend<IPostMedia>({
   id() {
-    return faker.string.uuid();
+    return faker.string.alphanumeric(20);
   },
   media_type() {
     return faker.helpers.arrayElement([
@@ -141,7 +140,7 @@ export const MediaSchema = Factory.extend<IPostMedia>({
 
 export const UserSessionSchema = Factory.extend<IUserSession>({
   id() {
-    return faker.string.uuid();
+    return faker.string.alphanumeric(20);
   },
   device() {
     return faker.helpers.arrayElement([

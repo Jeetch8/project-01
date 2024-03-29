@@ -12,6 +12,8 @@ import ResetPassword from '@/pages/PasswordReset';
 import MainLayout from './layout/MainLayout';
 import VerifyingEmail from './pages/VerifyingEmail';
 import { Toast, Toaster } from 'react-hot-toast';
+import Profile from './pages/Profile';
+import UserStatus from './pages/UserStatus';
 
 const router = createBrowserRouter([
   {
@@ -26,24 +28,20 @@ const router = createBrowserRouter([
             index: true,
             element: <Home />,
           },
+          {
+            path: '/bookmark',
+            element: <Bookmark />,
+          },
+          {
+            path: '/:username',
+            element: <Profile />,
+          },
+          {
+            path: '/:username/status/:postId',
+            element: <UserStatus />,
+          },
         ],
       },
-      {
-        path: '/bookmark',
-        element: <Bookmark />,
-      },
-      // {
-      //   path: "/profile",
-      //   element: <Profile />,
-      // },
-      // {
-      //   path: "/notifications",
-      //   element: <Notifications />,
-      // },
-      // {
-      //   path: "/messages",
-      //   element: <Messages />,
-      // },
     ],
   },
   {

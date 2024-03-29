@@ -89,8 +89,19 @@ export interface IFeedPost {
   timeAgo: string;
 }
 
-export interface IPostComment {
-  id: string;
-  caption: string;
-  likes_count: number;
+export interface IPostPage extends IFeedPost {
+  comments: IPostPage[];
 }
+
+export type ISchemaPost = Omit<IFeedPost, 'creator' | 'comments' | 'media'>;
+
+// export interface IPostComment {
+//   id: string;
+//   caption: string;
+//   likes_count: number;
+//   created_on: string;
+//   updated_on: string;
+//   bookmarked: boolean;
+//   liked: boolean;
+//   timeAgo: string;
+// }
