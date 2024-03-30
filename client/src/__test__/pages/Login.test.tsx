@@ -18,7 +18,7 @@ const wrapper = ({ children }: PropsWithChildren) => {
   );
 };
 
-vi.spyOn(Storage.prototype, 'getItem').mockResolvedValue('token');
+vi.spyOn(Storage.prototype, 'getItem').mockResolvedValue('access_token');
 const localStorageSetItem = vi.spyOn(Storage.prototype, 'setItem');
 
 const mockNavigate = vi.fn();
@@ -162,7 +162,10 @@ describe('Testing Login page', () => {
     vi.advanceTimersByTime(2000);
     await waitFor(() => {
       expect(localStorageSetItem).toHaveBeenCalledTimes(1);
-      expect(localStorageSetItem).toHaveBeenCalledWith('token', 'testtoken');
+      expect(localStorageSetItem).toHaveBeenCalledWith(
+        'access_token',
+        'access_token'
+      );
       expect(mockNavigate).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });

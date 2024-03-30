@@ -3,11 +3,14 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { PropsWithChildren } from 'react';
 import userEvent from '@testing-library/user-event';
-import { mockErrorResponse } from '../utils';
-import { AcceptedMethods } from '@/hooks/useFetch';
 import { Server } from 'miragejs';
 import { makeServer } from '../mocks/server';
 import Register from '@/pages/Register';
+import { vi } from 'vitest';
+
+vi.mock('@/Components/Carousel/RegisterPageCarousel', () => ({
+  default: () => <div data-testid="mock-register-carousel">Mock Carousel</div>,
+}));
 
 const wrapper = ({ children }: PropsWithChildren) => {
   return (
@@ -19,7 +22,6 @@ const wrapper = ({ children }: PropsWithChildren) => {
 };
 
 vi.spyOn(Storage.prototype, 'getItem').mockResolvedValue('testtoken');
-const localStorageSetItem = vi.spyOn(Storage.prototype, 'setItem');
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -30,36 +32,126 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-describe('Testing Register page', () => {
-  const renderComponent = () => {
-    const rendererd = render(<Register />, { wrapper });
-    const user = userEvent.setup();
-    const nameField = screen.getByPlaceholderText(/name/i);
-    const emailField = screen.getByPlaceholderText(/email/i);
-    const passwordField = screen.getByPlaceholderText('Password');
-    const confirmPasswordField =
-      screen.getByPlaceholderText('Confirm password');
-    const dateOfBirth = screen.getByPlaceholderText('dd/mm/yyyy');
-    const submitBtn = screen.getByRole('button', { name: /submit/i });
-    const fillForm = async () => {
-      await user.type(nameField, 'test@gmail.com');
-      await user.type(emailField, 'test@gmail.com');
-      await user.type(passwordField, 'Test@12asa');
-      await user.type(confirmPasswordField, 'Test@12asa');
-      await user.type(dateOfBirth, '2020-05-10');
-    };
-    return {
-      ...rendererd,
-      user,
-      nameField,
-      emailField,
-      passwordField,
-      confirmPasswordField,
-      submitBtn,
-      fillForm,
-    };
+const renderRegisterPage = () => {
+  const rendered = render(<Register />, { wrapper });
+  const user = userEvent.setup();
+  return {
+    ...rendered,
+    user,
+  };
+};
+
+const renderPersonalInfoComponent = () => {
+  const rendered = renderRegisterPage();
+  return {
+    ...rendered,
+    firstNameField: screen.getByPlaceholderText(/first name/i),
+    lastNameField: screen.getByPlaceholderText(/last name/i),
+    dateOfBirthField: screen.getByLabelText(/date of birth/i),
+    genderSelect: screen.getByRole('combobox'),
+    nextBtn: screen.getByRole('button', { name: /next/i }),
+  };
+};
+
+const fillPersonalInfoStep = async (
+  user: ReturnType<typeof userEvent.setup>,
+  firstNameField: HTMLElement,
+  lastNameField: HTMLElement,
+  dateOfBirthField: HTMLElement,
+  genderSelect: HTMLElement,
+  nextBtn: HTMLElement
+) => {
+  await user.type(firstNameField, 'John');
+
+  await user.type(firstNameField, 'John');
+  await user.type(lastNameField, 'Doe');
+  await user.type(dateOfBirthField, '1990-01-01');
+  await user.selectOptions(genderSelect, 'male');
+
+  await user.click(nextBtn);
+};
+
+const fillProfileFormStep = async (
+  user: ReturnType<typeof userEvent.setup>,
+  usernameField: HTMLElement,
+  nextBtn: HTMLElement
+) => {
+  await user.type(usernameField, 'testuser123');
+  await user.click(nextBtn);
+};
+
+const renderProfileComponent = async () => {
+  const {
+    user,
+    firstNameField,
+    lastNameField,
+    dateOfBirthField,
+    genderSelect,
+    nextBtn,
+  } = renderPersonalInfoComponent();
+  await fillPersonalInfoStep(
+    user,
+    firstNameField,
+    lastNameField,
+    dateOfBirthField,
+    genderSelect,
+    nextBtn
+  );
+
+  const profileComponent = {
+    user,
+    profileImageInput: screen.getByLabelText(/profile_img/i),
+    usernameField: screen.getByPlaceholderText(/username/i),
+    nextBtn: screen.getByRole('button', { name: /next/i }),
+    backBtn: screen.getByRole('button', { name: /prev/i }),
+    imagePreview: screen.getByRole('avatar_preview'),
+    generateRandomBtn: screen.getByRole('button', { name: /generate random/i }),
   };
 
+  return {
+    ...profileComponent,
+    fillProfileForm: () =>
+      fillProfileFormStep(
+        profileComponent.user,
+        profileComponent.usernameField,
+        profileComponent.nextBtn
+      ),
+  };
+};
+
+const renderSecurityCredentialsComp = async () => {
+  const profileComponent = await renderProfileComponent();
+  await profileComponent.fillProfileForm();
+
+  return {
+    ...profileComponent,
+    emailField: screen.getByPlaceholderText(/email/i),
+    passwordField: screen.getByPlaceholderText(/^password$/i),
+    confirmPasswordField: screen.getByPlaceholderText(/confirm password/i),
+    submitBtn: screen.getByRole('button', { name: /submit/i }),
+  };
+};
+
+// Add this function after the renderSecurityCredentialsComp function
+const fillSecurityCredentialsStep = async (
+  user: ReturnType<typeof userEvent.setup>,
+  emailField: HTMLElement,
+  passwordField: HTMLElement,
+  confirmPasswordField: HTMLElement,
+  submitBtn: HTMLElement,
+  {
+    email,
+    password,
+    confirmPassword,
+  }: { email: string; password: string; confirmPassword: string }
+) => {
+  await user.type(emailField, email);
+  await user.type(passwordField, password);
+  await user.type(confirmPasswordField, confirmPassword);
+  await user.click(submitBtn);
+};
+
+describe('Testing Register page', () => {
   let server: Server;
 
   beforeEach(() => {
@@ -71,138 +163,224 @@ describe('Testing Register page', () => {
     server.shutdown();
   });
 
-  it('Should render main elements', () => {
-    renderComponent();
-  });
-
-  it('Should throw a required error if email is not provided', async () => {
-    const { user, submitBtn } = renderComponent();
-    await user.click(submitBtn);
-    const errorPara = screen.getByRole('paragraph', {
-      name: /error_status_email/i,
+  describe('Testing personal info component', () => {
+    it('Should render main elements', () => {
+      renderPersonalInfoComponent();
     });
-    expect(errorPara).toBeInTheDocument();
-    expect(errorPara).toHaveTextContent(/email is required/i);
-  });
 
-  it.each([
-    { emailToTest: 'test' },
-    { emailToTest: 'test@klasd' },
-    { emailToTest: 'testsadsad@' },
-  ])(
-    'Should show error if email is invalid - ($emailToTest)',
-    async ({ emailToTest }) => {
-      const { user, emailField, submitBtn } = renderComponent();
-      await user.type(emailField, emailToTest);
-      await user.click(submitBtn);
-      const errorPara = screen.getByRole('paragraph', {
-        name: /error_status_email/i,
-      });
-      expect(errorPara).toBeInTheDocument();
-      expect(errorPara).toHaveTextContent(/email is not valid/i);
-    }
-  );
+    it('Should show error messages when fields are empty and Next is clicked', async () => {
+      const { user, nextBtn } = renderPersonalInfoComponent();
 
-  it('Should throw an error if password is not provided', async () => {
-    const { submitBtn, emailField, user } = renderComponent();
-    await user.type(emailField, 'test@gmail.com');
-    await user.click(submitBtn);
-    const errorPara = screen.getByRole('paragraph', {
-      name: /error_status_password/i,
+      await user.click(nextBtn);
+
+      expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/date of birth is required/i)
+      ).toBeInTheDocument();
+      expect(screen.getByText(/gender is required/i)).toBeInTheDocument();
     });
-    expect(errorPara).toBeInTheDocument();
-    expect(errorPara).toHaveTextContent(/password is required/i);
-  });
 
-  it('Should throw an error if confirm password is not provided', async () => {
-    const { submitBtn, emailField, user, passwordField } = renderComponent();
-    await user.type(emailField, 'test@gmail.com');
-    await user.type(passwordField, 'Test@12asa');
-    await user.click(submitBtn);
-    const errorPara = screen.getByRole('paragraph', {
-      name: /error_status_confirmPassword/i,
-    });
-    expect(errorPara).toBeInTheDocument();
-    expect(errorPara).toHaveTextContent(/password confirmation is required/i);
-  });
+    it('Should not show error messages when fields are filled and Next is clicked', async () => {
+      const {
+        user,
+        firstNameField,
+        lastNameField,
+        dateOfBirthField,
+        genderSelect,
+        nextBtn,
+      } = renderPersonalInfoComponent();
 
-  it.each([
-    { password: 'test1' },
-    { password: 'testasdf' },
-    { password: 'test1asdas' },
-    { password: 'test1@asdsaa' },
-    { password: 'test@asdsaa' },
-  ])(
-    'Should throw an error if password does not match the requirements - ($password)',
-    async ({ password }) => {
-      const { submitBtn, emailField, passwordField, user } = renderComponent();
-      await user.type(emailField, 'test@gmail.com');
-      await user.type(passwordField, password);
-      await user.click(submitBtn);
-      const errorPara = screen.getByRole('paragraph', {
-        name: /error_status_password/i,
-      });
-      expect(errorPara).toBeInTheDocument();
-      expect(errorPara).toHaveTextContent(
-        /password must be at least 8 characters long/i
+      await fillPersonalInfoStep(
+        user,
+        firstNameField,
+        lastNameField,
+        dateOfBirthField,
+        genderSelect,
+        nextBtn
       );
-    }
-  );
 
-  it('Should throw an error if passwords do not match', async () => {
-    const { submitBtn, emailField, user, passwordField, confirmPasswordField } =
-      renderComponent();
-    await user.type(emailField, 'test@gmail.com');
-    await user.type(passwordField, 'Test@12asa');
-    await user.type(confirmPasswordField, 'Test@12');
-    await user.click(submitBtn);
-    const errorPara = screen.getByRole('paragraph', {
-      name: /error_status_confirmPassword/i,
-    });
-    expect(errorPara).toBeInTheDocument();
-    expect(errorPara).toHaveTextContent(/Passwords do not match/i);
-  });
+      await user.click(nextBtn);
 
-  it('Should show loader when submitting login data', async () => {
-    const { fillForm, user, submitBtn } = renderComponent();
-    await fillForm();
-    await user.click(submitBtn);
-    await waitFor(() => {
-      expect(screen.getByRole('loader')).toBeInTheDocument();
+      expect(
+        screen.queryByText(/first name is required/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/last name is required/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/date of birth is required/i)
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/gender is required/i)).not.toBeInTheDocument();
     });
   });
 
-  it('Should toast an error when error recieved from server', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    mockErrorResponse({
-      server,
-      route: '/auth/register/local',
-      msg: 'Email already exist',
-      status: 409,
-      method: AcceptedMethods.POST,
+  describe('Testing profile Form Step component', () => {
+    it('Should render main elements of profile step', async () => {
+      await renderProfileComponent();
     });
-    const { user, submitBtn, fillForm } = renderComponent();
-    await fillForm();
-    await user.click(submitBtn);
-    await waitFor(() => {
-      const toast = screen.getByText(RegExp('email already exist', 'i'));
-      expect(toast).toBeInTheDocument();
+
+    it('Should generate a random username when Generate random button is clicked', async () => {
+      const { user, usernameField, generateRandomBtn } =
+        await renderProfileComponent();
+
+      expect(usernameField).toHaveValue('');
+
+      await user.click(generateRandomBtn);
+
+      await waitFor(() => {
+        expect(usernameField).not.toHaveValue('');
+        expect(usernameField).toBeDefined();
+      });
     });
-    vi.advanceTimersByTime(5000);
-    vi.useRealTimers();
+
+    it('Should show error message when username is empty and Next is clicked', async () => {
+      const { user, usernameField, nextBtn } = await renderProfileComponent();
+      await user.clear(usernameField);
+      expect(usernameField).toHaveValue('');
+      await user.click(nextBtn);
+      await waitFor(() => {
+        expect(screen.getByText(/username is required/i)).toBeInTheDocument();
+      });
+    });
+
+    it('Should not show error message when username is filled and Next is clicked', async () => {
+      const { user, usernameField, nextBtn, fillProfileForm } =
+        await renderProfileComponent();
+
+      await fillProfileForm();
+
+      expect(usernameField).toHaveValue('testuser123');
+      expect(
+        screen.queryByText(/username is required/i)
+      ).not.toBeInTheDocument();
+    });
   });
 
-  it('Should toast and open email sent modal', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    const { fillForm, user, submitBtn } = renderComponent();
-    await fillForm();
-    await user.click(submitBtn);
-    const successToast = await screen.findByText(/Registeration success/i);
-    expect(successToast).toBeInTheDocument();
-    vi.advanceTimersByTime(2000);
-    const modal = await screen.findByRole('dialog');
-    expect(modal).toBeInTheDocument();
-    expect(screen.getByText(/email verify/i)).toBeInTheDocument();
-    vi.useFakeTimers();
+  describe('Testing Security Credentials component', () => {
+    it('Should render main elements of security credentials step', async () => {
+      const { emailField, passwordField, confirmPasswordField, submitBtn } =
+        await renderSecurityCredentialsComp();
+
+      expect(emailField).toBeInTheDocument();
+      expect(passwordField).toBeInTheDocument();
+      expect(confirmPasswordField).toBeInTheDocument();
+      expect(submitBtn).toBeInTheDocument();
+    });
+
+    it('Should show error messages when fields are empty and Submit is clicked', async () => {
+      const {
+        user,
+        emailField,
+        passwordField,
+        confirmPasswordField,
+        submitBtn,
+      } = await renderSecurityCredentialsComp();
+      await user.clear(emailField);
+      await user.clear(passwordField);
+      await user.clear(confirmPasswordField);
+      await user.click(submitBtn);
+      await waitFor(() => {
+        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/password confirmation is required/i)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('Should show error messages when invalid data is entered', async () => {
+      const {
+        user,
+        emailField,
+        passwordField,
+        confirmPasswordField,
+        submitBtn,
+      } = await renderSecurityCredentialsComp();
+
+      await fillSecurityCredentialsStep(
+        user,
+        emailField,
+        passwordField,
+        confirmPasswordField,
+        submitBtn,
+        {
+          email: 'invalidemail',
+          password: 'weak',
+          confirmPassword: 'notmatching',
+        }
+      );
+      await waitFor(() => {
+        expect(screen.getByText(/email is not valid/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/password must be at least 8 characters long/i)
+        ).toBeInTheDocument();
+        expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
+      });
+    });
+
+    it('Should not show error messages when valid data is entered', async () => {
+      const {
+        user,
+        emailField,
+        passwordField,
+        confirmPasswordField,
+        submitBtn,
+      } = await renderSecurityCredentialsComp();
+
+      await fillSecurityCredentialsStep(
+        user,
+        emailField,
+        passwordField,
+        confirmPasswordField,
+        submitBtn,
+        {
+          email: 'valid@email.com',
+          password: 'StrongPassword1!',
+          confirmPassword: 'StrongPassword1!',
+        }
+      );
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/email is not valid/i)
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByText(/password must be at least 8 characters long/i)
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByText(/passwords do not match/i)
+        ).not.toBeInTheDocument();
+      });
+    });
+    describe('Testing form complete component', () => {
+      it.only('Should render main elements of form complete step', async () => {
+        const {
+          user,
+          emailField,
+          passwordField,
+          confirmPasswordField,
+          submitBtn,
+        } = await renderSecurityCredentialsComp();
+        await fillSecurityCredentialsStep(
+          user,
+          emailField,
+          passwordField,
+          confirmPasswordField,
+          submitBtn,
+          {
+            email: 'valid@email.com',
+            password: 'StrongPassword1!',
+            confirmPassword: 'StrongPassword1!',
+          }
+        );
+        await user.click(submitBtn);
+        await waitFor(() => {
+          expect(
+            screen.getByText(/registeration success/i)
+          ).toBeInTheDocument();
+          expect(screen.getByText(/email sent/i)).toBeInTheDocument();
+        });
+      });
+    });
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import Post from '@/Components/Home/Post';
 import AvatarImage from '@/Components/Global/AvatarImage';
@@ -20,6 +20,8 @@ const UserStatus: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [extraAssetsState, setExtraAssetsState] = useState<string[]>([]);
   const { user } = useGlobalContext();
+  const replyBoxRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     doFetch: fetchPost,
@@ -47,6 +49,28 @@ const UserStatus: React.FC = () => {
   React.useEffect(() => {
     fetchPost();
   }, [postId]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting && isExpanded) {
+          setIsExpanded(false);
+          textareaRef.current?.blur(); // Remove focus from textarea
+        }
+      },
+      { threshold: 0 }
+    );
+
+    if (replyBoxRef.current) {
+      observer.observe(replyBoxRef.current);
+    }
+
+    return () => {
+      if (replyBoxRef.current) {
+        observer.unobserve(replyBoxRef.current);
+      }
+    };
+  }, [isExpanded]);
 
   const handleReply = () => {
     if (reply.trim()) {
@@ -87,16 +111,18 @@ const UserStatus: React.FC = () => {
 
       <Post post={dataRef.current.post} />
       <div
+        ref={replyBoxRef}
         className={twMerge(
           'border-b-[2px] border-zinc-900 px-4 py-5',
           isExpanded && 'py-2'
         )}
       >
-        <div className="flex items-start space-x-3 mb-3">
+        <div className="flex items-start space-x-3">
           <AvatarImage url={user?.profile_img} diameter="48px" />
           <div className="flex-grow">
             <div className="flex items-center">
               <TextareaAutoSize
+                ref={textareaRef} // Add this line
                 onClick={() => setIsExpanded(true)}
                 placeholder="Post your reply..."
                 minRows={isExpanded ? 3 : 1}

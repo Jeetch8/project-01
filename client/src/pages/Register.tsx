@@ -4,12 +4,7 @@ import { base_url } from '../utils/base_url';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import ScaleLoader from 'react-spinners/ScaleLoader';
-import {
-  FieldName,
-  FormProvider,
-  useForm,
-  useFormState,
-} from 'react-hook-form';
+import { FormProvider, useForm, useFormState } from 'react-hook-form';
 import EmailSentModal from '@/Components/Modals/EmailSent.modal';
 import RegisterPageCarousel from '@/Components/Carousel/RegisterPageCarousel';
 import { useMultistepForm } from '@/Components/Form/RegistrationForm/useMultiStepFormHook';
@@ -49,7 +44,6 @@ const stepsIndicator = [
 ];
 
 const Register = () => {
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const formMethods = useForm({
     defaultValues: registerFormDefaultValues,
   });
@@ -76,9 +70,7 @@ const Register = () => {
     authorized: false,
     onSuccess: () => {
       toast.success('Registeration success');
-      setTimeout(() => {
-        setIsModalOpen(true);
-      }, 2000);
+      goToFormStepIndex(3);
     },
     onError: (err) => {
       if (!Array.isArray(err.message)) {
@@ -209,10 +201,6 @@ const Register = () => {
           </Link>
         </div>
       </div>
-      <EmailSentModal
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
-      />
     </div>
   );
 };

@@ -3,8 +3,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { PropsWithChildren } from 'react';
 import userEvent from '@testing-library/user-event';
-import { mockErrorResponse } from '../utils';
-import { AcceptedMethods } from '@/hooks/useFetch';
 import { Server } from 'miragejs';
 import { makeServer } from '../mocks/server';
 import PasswordReset from '@/pages/PasswordReset';
@@ -19,7 +17,6 @@ const wrapper = ({ children }: PropsWithChildren) => {
 };
 
 vi.spyOn(Storage.prototype, 'getItem').mockResolvedValue('token');
-const localStorageSetItem = vi.spyOn(Storage.prototype, 'setItem');
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

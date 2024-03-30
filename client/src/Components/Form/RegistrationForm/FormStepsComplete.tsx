@@ -1,4 +1,3 @@
-import React from 'react';
 import TickGif from '@/assets/icons8-tick.gif';
 
 const Complete = () => {

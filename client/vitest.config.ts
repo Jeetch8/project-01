@@ -4,13 +4,18 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    // deps: {
-    //   inline: ['vitest-canvas-mock'],
-    // },
+    deps: {
+      inline: ['punycode'],
+    },
     // restoreMocks: true,
     environment: 'jsdom',
     globals: true,
     setupFiles: ['src/__test__/setup.ts'],
     css: true,
+  },
+  resolve: {
+    alias: {
+      punycode: 'punycode/',
+    },
   },
 });

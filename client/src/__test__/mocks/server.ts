@@ -104,7 +104,7 @@ export function makeServer({ environment = 'development' }) {
         return { post };
       });
       this.post('/auth/login/local', (schema, request) => {
-        return { token: 'testtoken' };
+        return { access_token: 'access_token' };
       });
       this.patch('/auth/request-reset-password', (schema, request) => {
         return { message: 'Email sent' };

@@ -2,13 +2,8 @@ import { registerFormDefaultValues } from '@/pages/Register';
 import { useFormContext } from 'react-hook-form';
 import AvatarImage from '@/Components/Global/AvatarImage';
 import HookFormInput from '../HookFormInput';
-// import Templateavatar from 'boring-avatars';
-import Templateavatar from 'react-avatar';
-import { uniqueUsernameGenerator } from 'unique-username-generator';
-import { useFetch } from '@/hooks/useFetch';
-import { useEffect } from 'react';
 import { Button } from '@/Components/Global/Button';
-import { generateUsername, generateFromEmail } from 'unique-username-generator';
+import { generateUsername } from 'unique-username-generator';
 import ErrorDisplayComp from '../ErrorDisplayComp';
 
 const PersonalizeProfile = () => {
@@ -19,7 +14,6 @@ const PersonalizeProfile = () => {
     setValue,
     formState: { errors },
   } = useFormContext<typeof registerFormDefaultValues>();
-
   const profileImageUrl = `https://api.multiavatar.com/${getValues('first_name')}+${getValues('last_name')}.png?apikey=${import.meta.env.MULTIAVATAR}`;
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,6 +52,7 @@ const PersonalizeProfile = () => {
               type="file"
               className="hidden"
               id="profile_img"
+              aria-label="profile_img"
               {...register('profile_img')}
               onChange={handleImageChange}
               accept="image/png, image/jpeg, image/jpg, image/avif"

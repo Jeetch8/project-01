@@ -19,7 +19,6 @@ const wrapper = ({ children }: PropsWithChildren) => {
 };
 
 vi.spyOn(Storage.prototype, 'getItem').mockResolvedValue('token');
-const localStorageSetItem = vi.spyOn(Storage.prototype, 'setItem');
 const mockSearchGet = vi.fn();
 
 const mockNavigate = vi.fn();

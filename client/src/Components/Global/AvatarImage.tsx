@@ -18,7 +18,7 @@ const AvatarImage = memo(
     return (
       <div
         className={cn(className)}
-        role="avatar"
+        role="avatar_preview"
         style={{
           width: diameter,
           height: diameter,
