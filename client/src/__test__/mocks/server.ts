@@ -159,7 +159,9 @@ export function makeServer({ environment = 'development' }) {
         post.comments = comments;
         return { post };
       });
-
+      this.post('/post', (schema, request) => {
+        return { post: schema.db.posts[0] };
+      });
       this.passthrough('https://tenor.googleapis.com/*');
     },
   });

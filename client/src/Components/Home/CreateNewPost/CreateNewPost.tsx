@@ -13,17 +13,22 @@ import { base_url } from '@/utils/base_url';
 import { toast } from 'react-hot-toast';
 import PostExtraAsset from './PostExtraAsset';
 
-export default function CreateNewPostBox() {
+export default function CreateNewPostBox({
+  fetchHomeFeed,
+}: {
+  fetchHomeFeed: () => void;
+}) {
   const { user } = useGlobalContext();
   const [inputText, setInputText] = useState('');
   const [extraAssetsState, setExtraAssetsState] = useState<string[]>([]);
   const { doFetch, fetchState } = useFetch({
-    url: base_url + '/post/create',
+    url: base_url + '/post',
     method: 'POST',
     authorized: true,
     onSuccess: () => {
       setInputText('');
       setExtraAssetsState([]);
+      fetchHomeFeed();
     },
     onError: (err) => {
       if (!Array.isArray(err.message)) toast.error(err.message);
@@ -35,6 +40,10 @@ export default function CreateNewPostBox() {
       return;
     }
     setExtraAssetsState((prev) => [...prev, ...assestsArr]);
+  };
+
+  const handleAddEmoji = (emoji: string) => {
+    setInputText((prev) => prev + emoji);
   };
 
   const handleCreateNewPost = async () => {
@@ -78,6 +87,7 @@ export default function CreateNewPostBox() {
           <PostExtraAsset
             extraAssetsState={extraAssetsState}
             handleAddExtraAssets={handleAddExtraAssets}
+            handleAddEmoji={handleAddEmoji} // Pass the new handler
           />
           <div className="flex items-center">
             <span className="w-[25px]">
@@ -89,7 +99,10 @@ export default function CreateNewPostBox() {
               />
             </span>
             <span className="h-[35px] ml-3 mr-2 bg-zinc-500 w-[0.5px]"></span>
-            <CiCirclePlus className="text-3xl cursor-pointer text-blue-400" />
+            <CiCirclePlus
+              className="text-3xl cursor-pointer text-blue-400"
+              aria-label="create-thread-icon"
+            />
             <button
               className="bg-[#199BF0] mx-2 py-1 px-4 rounded-2xl font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               disabled={fetchState === 'loading' || inputText.length === 0}

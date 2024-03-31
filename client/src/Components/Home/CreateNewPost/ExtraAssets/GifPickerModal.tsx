@@ -18,11 +18,13 @@ export default function GifPickerModal({
       <button
         className="disabled:opacity-50 disabled:cursor-not-allowed text-xl cursor-pointer text-blue-400"
         onClick={() => setIsModalOpen(true)}
+        aria-label="gif-button"
         disabled={extraAssetsState.length >= 4}
       >
         <HiOutlineGif />
       </button>
       <Modal
+        aria-label="gif-picker-modal"
         isModalOpen={isModalOpen}
         dialogClassName="py-2  px-3 m-0 text-black w-fit"
         setIsModalOpen={setIsModalOpen}

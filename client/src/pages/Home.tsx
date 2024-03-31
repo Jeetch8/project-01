@@ -1,5 +1,4 @@
 import Feed from '@/Components/Home/Feed';
-import CreatePost from '@/Components/Home/CreatePost';
 import { base_url } from '@/utils/base_url';
 import { useFetch } from '@/hooks/useFetch';
 import CreateNewPostBox from '@/Components/Home/CreateNewPost/CreateNewPost';
@@ -19,8 +18,7 @@ const Home = () => {
 
   return (
     <div className="border-r-[2px] border-zinc-900 bg-black max-w-[600px] inline w-full">
-      {/* <CreatePost fetchHomeFeed={fetchHomeFeed} /> */}
-      <CreateNewPostBox />
+      <CreateNewPostBox fetchHomeFeed={fetchHomeFeed} />
       <Feed fetchHomeFeed={fetchHomeFeed} data={homeFeedData.current?.feed} />
     </div>
   );

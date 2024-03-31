@@ -10,9 +10,10 @@ import GifPickerModal from './ExtraAssets/GifPickerModal';
 import { TenorImage } from 'gif-picker-react';
 import { twMerge } from 'tailwind-merge';
 
-interface PostExtraAssetProps {
+export interface PostExtraAssetProps {
   extraAssetsState: string[];
   handleAddExtraAssets: (assets: string[]) => void;
+  handleAddEmoji: (emoji: string) => void;
   showImage?: boolean;
   showGif?: boolean;
   showList?: boolean;
@@ -23,6 +24,7 @@ interface PostExtraAssetProps {
 
 const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
   handleAddExtraAssets,
+  handleAddEmoji, // New prop
   extraAssetsState,
   showImage = true,
   showGif = true,
@@ -53,7 +55,8 @@ const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
   };
 
   const handleEmojiClick = (emojiObject: any) => {
-    handleAddExtraAssets([emojiObject.emoji]);
+    handleAddEmoji(emojiObject.emoji); // Use the new handler
+    setShowEmojiPicker(false); // Close the emoji picker after selection
   };
 
   if (
@@ -89,6 +92,7 @@ const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
           multiple
           disabled={extraAssetsState.length >= 4}
           className="hidden"
+          aria-label="imageInput"
           type="file"
           accept="image/*"
           onChange={handleImageAdd}
@@ -102,16 +106,21 @@ const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
         />
       )}
       {showList && (
-        <PiListChecks className="text-xl cursor-pointer text-blue-400" />
+        <PiListChecks
+          className="text-xl cursor-pointer text-blue-400"
+          aria-label="poll-button"
+        />
       )}
       {showEmoji && (
         <>
           <GrEmoji
             className="text-xl cursor-pointer text-blue-400"
+            aria-label="emoji-button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           />
           <div ref={emojiPickerRef} style={{ position: 'absolute' }}>
             <EmojiPicker
+              aria-label="emoji-picker"
               open={showEmojiPicker}
               onEmojiClick={handleEmojiClick}
             />
@@ -119,10 +128,16 @@ const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
         </>
       )}
       {showCalendar && (
-        <LuCalendarClock className="text-xl cursor-pointer text-blue-400" />
+        <LuCalendarClock
+          className="text-xl cursor-pointer text-blue-400"
+          aria-label="calendar-button"
+        />
       )}
       {showLocation && (
-        <CiLocationOn className="text-xl cursor-pointer text-blue-400" />
+        <CiLocationOn
+          className="text-xl cursor-pointer text-blue-400"
+          aria-label="location-button"
+        />
       )}
     </span>
   );
