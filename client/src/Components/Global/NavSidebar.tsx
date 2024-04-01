@@ -87,7 +87,7 @@ export default function Sidebar() {
           <Link
             key={link.name}
             to={link.path}
-            className={`flex items-center rounded-full hover:bg-zinc-800 text-2xl delay-100 duration-150 w-fit px-3 py-3 my-2 ${
+            className={`flex items-center rounded-full hover:bg-zinc-800 text-[18px] delay-100 duration-150 w-fit px-3 py-3 my-2 ${
               pathname === link.path && 'font-bold'
             }`}
           >
@@ -99,12 +99,17 @@ export default function Sidebar() {
             <span className="ml-4 hidden xl:inline-block">{link.name}</span>
           </Link>
         ))}
-        <Button className="bg-[#199BF0] xl:w-full w-fit rounded-full text-xl h-14 hover:bg-[#1A8CD8] hover:shadow-lg cursor-pointer">
-          <span>
-            <FiFeather className="w-7 h-7 xl:hidden xl:mr-4" />
-            <span className="hidden xl:inline-block">Post</span>
-          </span>
-        </Button>
+        <div className="xl:mr-6">
+          <Button
+            className="bg-[#199BF0] xl:w-[210px] xl:h-12 w-fit rounded-full text-[18px] h-14 hover:bg-[#1A8CD8] hover:shadow-lg cursor-pointer"
+            variant="ghost"
+          >
+            <span>
+              <FiFeather className="w-7 h-7 xl:hidden xl:mr-4" />
+              <span className="hidden xl:inline-block">Post</span>
+            </span>
+          </Button>
+        </div>
       </div>
       <div className="flex justify-between items-center mx-2 mb-2 py-2  px-2 hover:bg-zinc-900 rounded-full cursor-pointer">
         <div className="flex items-center space-x-2">

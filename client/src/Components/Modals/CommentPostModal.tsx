@@ -53,6 +53,10 @@ const CommentPostModal: React.FC<CommentPostModalProps> = ({
     }
   };
 
+  const handleAddEmoji = (emoji: string) => {
+    setComment((prev) => prev + emoji);
+  };
+
   const handleAddExtraAssets = (assetsArr: string[]) => {
     if (extraAssetsState.length + assetsArr.length > 4) {
       return;
@@ -123,6 +127,7 @@ const CommentPostModal: React.FC<CommentPostModalProps> = ({
           <PostExtraAsset
             extraAssetsState={extraAssetsState}
             handleAddExtraAssets={handleAddExtraAssets}
+            handleAddEmoji={handleAddEmoji}
           />
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded-full self-end hover:bg-blue-600 transition"

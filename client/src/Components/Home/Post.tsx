@@ -6,7 +6,6 @@ import { TbHeartFilled, TbMessage } from 'react-icons/tb';
 import { CiHeart } from 'react-icons/ci';
 import { CiBookmark } from 'react-icons/ci';
 import PostImages from './PostImages';
-// import Comments from "./Comments";
 import { FaBookmark } from 'react-icons/fa';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
@@ -14,13 +13,12 @@ import { IFeedPost } from '@/utils/interfaces';
 import CommentPostModal from '@/Components/Modals/CommentPostModal';
 import { twMerge } from 'tailwind-merge';
 
-const Post = ({
-  post,
-  outerClassName,
-}: {
+interface Props {
   post: IFeedPost;
   outerClassName?: string;
-}) => {
+}
+
+const Post = ({ post, outerClassName }: Props) => {
   const navigate = useNavigate();
   const [isCommentModalOpen, setIsCommentModalOpen] =
     React.useState<boolean>(false);
@@ -87,6 +85,7 @@ const Post = ({
               <span
                 className="duration-200 hover:bg-gray-200/20 cursor-pointer px-1 py-1 rounded-full"
                 onClick={() => setIsCommentModalOpen(true)}
+                aria-label="comment-button"
               >
                 <TbMessage size={20} color="rgb(161 161 170)" />
               </span>
@@ -98,11 +97,20 @@ const Post = ({
                 onClick={() => {
                   toggleLikeFetch({ postId: post.id });
                 }}
+                aria-label="like-button"
               >
                 {post.liked ? (
-                  <TbHeartFilled size={22} color="rgb(161 161 170)" />
+                  <TbHeartFilled
+                    aria-label="liked-icon"
+                    size={22}
+                    color="rgb(161 161 170)"
+                  />
                 ) : (
-                  <CiHeart size={22} color="rgb(161 161 170)" />
+                  <CiHeart
+                    aria-label="unliked-icon"
+                    size={22}
+                    color="rgb(161 161 170)"
+                  />
                 )}
               </span>
               <span className="text-sm">{post.likes_count}</span>
@@ -113,11 +121,20 @@ const Post = ({
                 onClick={() => {
                   toggleBookmarkFetch({ postId: post.id });
                 }}
+                aria-label="bookmark-button"
               >
                 {post.bookmarked ? (
-                  <FaBookmark size={20} color="rgb(161 161 170)" />
+                  <FaBookmark
+                    size={20}
+                    color="rgb(161 161 170)"
+                    aria-label="bookmarked-icon"
+                  />
                 ) : (
-                  <CiBookmark size={20} color="rgb(161 161 170)" />
+                  <CiBookmark
+                    size={20}
+                    color="rgb(161 161 170)"
+                    aria-label="unbookmarked-icon"
+                  />
                 )}
               </span>
             </div>

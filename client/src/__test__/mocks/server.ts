@@ -61,6 +61,7 @@ export function makeServer({ environment = 'development' }) {
       this.namespace = '/api/v1';
 
       this.get('/post/feed', (schema, request) => {
+        const page = request.queryParams.page;
         const posts: (ISchemaPost & { userId: string })[] = schema.db.posts;
         const arr: IFeedPost[] = [];
         for (let i = 0; i < posts.length; i++) {
@@ -71,7 +72,12 @@ export function makeServer({ environment = 'development' }) {
           const user = schema.db.users.findBy({ id: posts[i].userId });
           arr.push({ ...posts[i], media: postMedia, creator: user });
         }
-        return { feed: arr };
+        return {
+          feed: arr,
+          hasMore: true,
+          currentPage: page,
+          nextPage: page ? Number(page) + 1 : 2,
+        };
       });
 
       this.get('/user/me', async (schema, request) => {
@@ -163,6 +169,43 @@ export function makeServer({ environment = 'development' }) {
         return { post: schema.db.posts[0] };
       });
       this.passthrough('https://tenor.googleapis.com/*');
+
+      this.get('/posts/comments', (schema, request) => {
+        const page = request.queryParams.page;
+        const user = schema.db.users[0];
+        const formattedPosts = schema.db.posts.map((post) => ({
+          ...post,
+          comments: [], // Assuming comments are not pre-loaded
+          creator: user,
+        }));
+
+        return {
+          posts: formattedPosts,
+          hasMore: true,
+          nextPage: Number(page) + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/post/bookmarks', (schema, request) => {
+        const page = request.queryParams.page;
+        const formattedPosts = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+        }));
+
+        return {
+          bookmarks: formattedPosts,
+          hasMore: true,
+          nextPage: Number(page) + 1,
+          currentPage: page,
+        };
+      });
+
+      // ... existing routes ...
     },
   });
   return server;

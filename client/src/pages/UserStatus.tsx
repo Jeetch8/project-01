@@ -5,13 +5,14 @@ import AvatarImage from '@/Components/Global/AvatarImage';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { useFetch, FetchStates } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { RingLoader } from 'react-spinners';
-import { IPostPage } from '@/utils/interfaces';
+import { BounceLoader, RingLoader } from 'react-spinners';
+import { IPostPage, IFeedPost } from '@/utils/interfaces';
 import { IoArrowBack } from 'react-icons/io5';
 import TextareaAutoSize from 'react-textarea-autosize';
 import PostExtraAsset from '@/Components/Home/CreateNewPost/PostExtraAsset';
 import MediaAssetsPreview from '@/Components/Home/CreateNewPost/ExtraAssets/MediaAssetsPreview';
 import { twMerge } from 'tailwind-merge';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 const UserStatus: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +23,10 @@ const UserStatus: React.FC = () => {
   const { user } = useGlobalContext();
   const replyBoxRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [comments, setComments] = useState<IFeedPost[]>([]);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const {
     doFetch: fetchPost,
@@ -46,8 +51,20 @@ const UserStatus: React.FC = () => {
     },
   });
 
+  const fetchComments = () => {
+    fetch(base_url + `/posts/comments?page=${currentPage}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setComments((prevComments) => [...prevComments, ...data.posts]);
+        setHasMore(data.hasMore);
+        setCurrentPage(data.nextPage);
+      })
+      .catch((err) => console.log(err));
+  };
+
   React.useEffect(() => {
     fetchPost();
+    fetchComments();
   }, [postId]);
 
   useEffect(() => {
@@ -83,6 +100,10 @@ const UserStatus: React.FC = () => {
       return;
     }
     setExtraAssetsState((prev) => [...prev, ...assetsArr]);
+  };
+
+  const handleAddEmoji = (emoji: string) => {
+    setReply((prev) => prev + emoji);
   };
 
   if (fetchState === FetchStates.LOADING) {
@@ -152,6 +173,7 @@ const UserStatus: React.FC = () => {
             {isExpanded && (
               <div className="flex justify-between items-center mt-3">
                 <PostExtraAsset
+                  handleAddEmoji={handleAddEmoji}
                   extraAssetsState={extraAssetsState}
                   handleAddExtraAssets={handleAddExtraAssets}
                   showImage={true}
@@ -172,11 +194,26 @@ const UserStatus: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="mb-[600px]">
-        {dataRef.current.post.comments.map((comment: IPostPage) => (
-          <Post key={comment.id} post={comment} outerClassName="" />
+      <InfiniteScroll
+        className="mb-[600px]"
+        dataLength={comments.length}
+        next={fetchComments}
+        hasMore={hasMore}
+        loader={
+          <div className="flex justify-center items-center p-5">
+            <BounceLoader color="#fff" />
+          </div>
+        }
+        endMessage={
+          <p style={{ textAlign: 'center' }}>
+            <b>No more comments</b>
+          </p>
+        }
+      >
+        {comments.map((comment: IFeedPost) => (
+          <Post key={comment.id} post={comment} />
         ))}
-      </div>
+      </InfiniteScroll>
     </div>
   );
 };
