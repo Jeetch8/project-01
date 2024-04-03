@@ -1,12 +1,3 @@
-interface Props
-  extends PropsWithChildren<{
-    isModalOpen: boolean;
-    setIsModalOpen: Dispatch<SetStateAction<boolean>>;
-    canClose?: boolean;
-    dialogClassName?: string;
-    blackScreenClassName?: string;
-  }> {}
-
 import {
   Dispatch,
   PropsWithChildren,
@@ -18,6 +9,16 @@ import {
 import { IoClose } from 'react-icons/io5';
 import { twMerge } from 'tailwind-merge';
 
+interface Props
+  extends PropsWithChildren<{
+    isModalOpen: boolean;
+    setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+    canClose?: boolean;
+    dialogClassName?: string;
+    blackScreenClassName?: string;
+    header?: React.ReactNode;
+  }> {}
+
 const Modal = ({
   children,
   isModalOpen,
@@ -25,9 +26,11 @@ const Modal = ({
   dialogClassName,
   canClose = true,
   blackScreenClassName,
+  header,
 }: Props) => {
   const blackScreenRef = useRef(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
   const handleClickOutside = useCallback((event: any) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
       setIsModalOpen(false);
@@ -35,10 +38,16 @@ const Modal = ({
   }, []);
 
   useEffect(() => {
-    const bodyEl = document.querySelector('body');
+    const bodyEl = document.body;
     if (isModalOpen) {
-      bodyEl?.classList.add('stop-scrolling');
-    } else bodyEl?.classList.remove('stop-scrolling');
+      bodyEl.style.overflow = 'hidden';
+    } else {
+      bodyEl.style.overflow = '';
+    }
+
+    return () => {
+      bodyEl.style.overflow = '';
+    };
   }, [isModalOpen]);
 
   useEffect(() => {
@@ -68,19 +77,21 @@ const Modal = ({
             ref={modalRef}
           >
             <div>
-              {canClose && (
-                <div className="flex justify-end">
+              <div className="flex justify-between items-center mb-4">
+                {header && <div className="flex-grow">{header}</div>}
+                {canClose && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsModalOpen(false);
                     }}
                     aria-label="btn_close"
+                    className="ml-auto"
                   >
                     <IoClose size={22} />
                   </button>
-                </div>
-              )}
+                )}
+              </div>
               {children}
             </div>
           </div>

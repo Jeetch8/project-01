@@ -3,12 +3,10 @@ import { faker } from '@faker-js/faker';
 import {
   IPostMedia,
   IMediaType,
-  IPost,
   IUser,
   IGender,
   IAuthProvider,
   IUserSession,
-  IFeedPost,
   ISchemaPost,
 } from '@/utils/interfaces';
 
@@ -56,8 +54,11 @@ export const UserSchema = Factory.extend<IUser>({
   date_of_birth() {
     return faker.date.past().toISOString();
   },
+  location() {
+    return faker.location.city();
+  },
   banner_img() {
-    return faker.image.urlPicsumPhotos();
+    return faker.image.urlPicsumPhotos({ width: 1920, height: 1080 });
   },
   bio() {
     return faker.lorem.sentence();

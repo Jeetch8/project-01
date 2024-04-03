@@ -14,6 +14,7 @@ import VerifyingEmail from './pages/VerifyingEmail';
 import { Toast, Toaster } from 'react-hot-toast';
 import Profile from './pages/Profile';
 import UserStatus from './pages/UserStatus';
+import Explore from '@/pages/Explore';
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <Home />,
+          },
+          {
+            path: '/explore',
+            element: <Explore />,
           },
           {
             path: '/bookmark',

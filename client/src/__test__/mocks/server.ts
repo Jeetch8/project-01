@@ -187,7 +187,7 @@ export function makeServer({ environment = 'development' }) {
         };
       });
 
-      this.get('/post/bookmarks', (schema, request) => {
+      this.get('/user/bookmarks', (schema, request) => {
         const page = request.queryParams.page;
         const formattedPosts = schema.db.posts.map((post) => ({
           ...post,
@@ -205,7 +205,123 @@ export function makeServer({ environment = 'development' }) {
         };
       });
 
-      // ... existing routes ...
+      this.get('/user/profile', (schema, request) => {
+        const formattedPosts = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+        }));
+
+        const firstUser = schema.db.users[0];
+
+        return {
+          posts: {
+            posts: formattedPosts,
+            hasMore: true,
+            nextPage: 2,
+            currentPage: 1,
+          },
+          user: firstUser,
+        };
+      });
+
+      this.get('/user/liked-posts', (schema, request) => {
+        const page = request.queryParams.page;
+        const formattedPosts = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+        }));
+
+        return {
+          posts: formattedPosts,
+          hasMore: true,
+          nextPage: Number(page) + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/user/posts', (schema, request) => {
+        const page = request.queryParams.page;
+        const formattedPosts = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+        }));
+
+        return {
+          posts: formattedPosts,
+          hasMore: true,
+          nextPage: Number(page) + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/post/:id', (schema, request) => {
+        const post = schema.db.posts[0];
+        const user = schema.db.users[0];
+        post.creator = user;
+        const postMedia = [];
+        for (let j = 0; j < faker.number.int({ min: 0, max: 4 }); j++) {
+          postMedia.push(createPostMedia());
+        }
+        post.media = postMedia;
+        const comments = [];
+        for (let i = 0; i < schema.db.posts.length; i++) {
+          comments.push({ ...schema.db.posts[i], creator: user });
+        }
+        post.comments = comments;
+        return { post };
+      });
+      this.post('/post', (schema, request) => {
+        return { post: schema.db.posts[0] };
+      });
+      this.passthrough('https://tenor.googleapis.com/*');
+
+      this.get('/posts/comments', (schema, request) => {
+        const page = request.queryParams.page;
+        const user = schema.db.users[0];
+        const formattedPosts = schema.db.posts.map((post) => ({
+          ...post,
+          comments: [], // Assuming comments are not pre-loaded
+          creator: user,
+        }));
+
+        return {
+          posts: formattedPosts,
+          hasMore: true,
+          nextPage: Number(page) + 1,
+          currentPage: page,
+        };
+      });
+
+      // this.get('/user/profile', (schema, request) => {
+      //   const formattedPosts = schema.db.posts.map((post) => ({
+      //     ...post,
+      //     creator: schema.db.users.find(post.userId),
+      //     media: Array(faker.number.int({ min: 0, max: 4 }))
+      //       .fill(null)
+      //       .map(() => createPostMedia()),
+      //   }));
+
+      //   const firstUser = schema.db.users[0];
+
+      //   return {
+      //     posts: {
+      //       post: formattedPosts,
+      //       hasMore: true,
+      //       nextPage: 2,
+      //       currentPage: 1,
+      //     },
+      //     user: firstUser,
+      //   };
+      // });
     },
   });
   return server;
