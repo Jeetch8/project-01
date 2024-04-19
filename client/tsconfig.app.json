@@ -27,12 +27,15 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "src/*",
       ],
       "@test/*": [
         "src/__test__/*"
+      ],
+      "@server/*": [
+        "../server/*"
       ]
-    }
+    },
   },
   "include": [
     "src",

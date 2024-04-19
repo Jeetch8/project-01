@@ -9,7 +9,12 @@ import { hashPassword } from '@/utils/helpers';
 import * as jwt from 'jsonwebtoken';
 import { AppModule } from '@/app.module';
 import { Neo4jModule, Neo4jService } from 'nest-neo4j/dist';
-import { UserCon, UserTokenCon } from '@/user/user.entity';
+import {
+  createUserPropertiesString,
+  createUserTokenPropertiesString,
+  UserCon,
+  UserTokenCon,
+} from '@/user/user.entity';
 import { UserService } from '@/user/user.service';
 import { createId } from '@paralleldrive/cuid2';
 import { MailService } from '@/lib/mail/mail.service';
@@ -95,7 +100,7 @@ describe('AuthController (e2e)', () => {
     const userId = createId();
     const userTokenId = createId();
     const hashed = await hashPassword('JEetk8035!@');
-    const userStr = await userService.createUserPropertiesString({
+    const userStr = createUserPropertiesString({
       id: userId,
       email,
       password: hashed,
@@ -109,7 +114,7 @@ describe('AuthController (e2e)', () => {
       email,
       userId,
     });
-    const userTokenStr = await userService.createUserTokenPropertiesString({
+    const userTokenStr = createUserTokenPropertiesString({
       id: userTokenId,
       email_verification_expiry: '30d',
       email_verification_token: emailToken ?? emailTokenJWT,

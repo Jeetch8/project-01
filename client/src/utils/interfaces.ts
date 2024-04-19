@@ -1,3 +1,5 @@
+import { IParticipant } from '@server/src/socket/socket.types';
+
 export enum IAuthProvider {
   LOCAL = 'local',
   GOOGLE = 'google',
@@ -45,6 +47,8 @@ export interface IUser {
   banner_img?: string;
   bio?: string;
   location?: string;
+  following_count?: number;
+  followers_count?: number;
 }
 
 export enum IMediaType {
@@ -94,14 +98,3 @@ export interface IPostPage extends IFeedPost {
 }
 
 export type ISchemaPost = Omit<IFeedPost, 'creator' | 'comments' | 'media'>;
-
-// export interface IPostComment {
-//   id: string;
-//   caption: string;
-//   likes_count: number;
-//   created_on: string;
-//   updated_on: string;
-//   bookmarked: boolean;
-//   liked: boolean;
-//   timeAgo: string;
-// }

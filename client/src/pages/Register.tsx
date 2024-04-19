@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { base_url } from '../utils/base_url';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import ScaleLoader from 'react-spinners/ScaleLoader';
 import { FormProvider, useForm, useFormState } from 'react-hook-form';
-import EmailSentModal from '@/Components/Modals/EmailSent.modal';
 import RegisterPageCarousel from '@/Components/Carousel/RegisterPageCarousel';
 import { useMultistepForm } from '@/Components/Form/RegistrationForm/useMultiStepFormHook';
 import PersonalInfoFormStep from '@/Components/Form/RegistrationForm/PersonalInfoFormStep';

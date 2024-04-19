@@ -1,24 +1,20 @@
-type GlobalContextType =
-  | {
-      id: string;
-      first_name: string;
-      last_name: string;
-      full_name: string;
-      email: string;
-      username: string;
-      profile_img: string;
-    }
-  | undefined;
+type GlobalContextType = Omit<IUser, 'password' | 'auth_provider'> | undefined;
 
 import React, { createContext, useContext, useEffect } from 'react';
 import { FetchStates, useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
+import { IUser } from '@/utils/interfaces';
 
 const defaultValues: GlobalContextType = undefined;
 const GlobalContext = createContext<{
   user: GlobalContextType;
   fetchstate: FetchStates;
-}>({ user: defaultValues, fetchstate: FetchStates.IDLE });
+  fetchMyProfile: () => void;
+}>({
+  user: defaultValues,
+  fetchstate: FetchStates.IDLE,
+  fetchMyProfile: () => {},
+});
 
 export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -33,7 +29,11 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <GlobalContext.Provider
-      value={{ user: dataRef.current?.user, fetchstate: fetchState }}
+      value={{
+        user: dataRef.current?.user,
+        fetchstate: fetchState,
+        fetchMyProfile: doFetch,
+      }}
     >
       {children}
     </GlobalContext.Provider>

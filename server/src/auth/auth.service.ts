@@ -20,9 +20,22 @@ import {
 } from './dto/auth.dto';
 import * as dayjs from 'dayjs';
 import { MailService } from '@/lib/mail/mail.service';
-import { AuthProvider, User } from '@/user/user.entity';
+import {
+  AuthProvider,
+  createUserTokenPropertiesString,
+  User,
+  AuthSession,
+  createAuthSessionPropertiesString,
+  UserToken,
+} from '@/user/user.entity';
 import { Neo4jService } from 'nest-neo4j/dist';
 import { createId } from '@paralleldrive/cuid2';
+import { Request } from 'express';
+import { UAParser } from 'ua-parser-js';
+import { IncomingHttpHeaders } from 'http';
+import { InjectModel } from '@nestjs/mongoose';
+import { Participant } from '@/schemas/Participant.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -31,22 +44,24 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailService: MailService,
-    private neo4jService: Neo4jService
+    private neo4jService: Neo4jService,
+    @InjectModel(Participant.name) private participantModel: Model<Participant>
   ) {}
 
-  async validateLocalLogin({ email, password }: LocalLoginPayloadDto) {
+  async validateLocalLogin(
+    { email, password }: LocalLoginPayloadDto,
+    req: Request
+  ) {
     const result = await this.usersService.getUser({ email });
     const user = result.user;
     if (!user) {
-      throw new NotFoundException('NotFound', {
-        description: 'User with this email does not exist',
-      });
+      throw new NotFoundException('Email not found');
     }
-    const isPasswordCorret = await this.checkIfPasswordIsCorrect(
+    const isPasswordCorrect = await this.checkIfPasswordIsCorrect(
       password,
       user.password
     );
-    if (isPasswordCorret) {
+    if (isPasswordCorrect) {
       const payload = {
         userId: user.id,
         email: user.email,
@@ -54,6 +69,7 @@ export class AuthService {
       const tokens = {
         access_token: await this.generateAccessToken(payload),
       };
+      await this.createAuthSession(user.id, req.headers, req.ip);
       return tokens;
     } else {
       throw new UnauthorizedException('Unauthorized', {
@@ -125,7 +141,9 @@ export class AuthService {
 
   async handleSSORegisterORLogin(
     payload: RegisterSSOPayloadDto,
-    auth_provider: AuthProvider
+    auth_provider: AuthProvider,
+    headers: IncomingHttpHeaders,
+    ip: string
   ) {
     const doesUserExist = (
       await this.usersService.getUser({
@@ -141,12 +159,24 @@ export class AuthService {
         access_token: await this.generateAccessToken(tokenPayload),
       };
     }
-    const tokens = await this.registerUser({
+    const newAppUser = await this.usersService.create_user_and_tokens({
       ...payload,
-      password: '',
       auth_provider,
+      full_name: `${payload.first_name} ${payload.last_name}`,
+      email_verified: true,
     });
-    return tokens;
+    await this.createAuthSession(newAppUser.user.id, headers, ip);
+    await this.createParticipant(newAppUser.user);
+    const access_token = this.generateAccessToken({
+      userId: newAppUser.user.id,
+      email: payload.email,
+    });
+    if (!access_token) {
+      throw new BadRequestException('Something went wrong');
+    }
+    return {
+      access_token,
+    };
   }
 
   async registerLocalUser(payload: RegisterLocalPayloadDto) {
@@ -159,30 +189,29 @@ export class AuthService {
     if (!hashedPassword) {
       throw new Error('Could not hash password');
     }
-    const newUser = await this.registerUser({
+    const newUser = await this.usersService.create_user({
       ...payload,
       password: hashedPassword,
       auth_provider: AuthProvider.LOCAL,
+      email_verified: false,
     });
-    const jwtPaylaod = {
-      userId: newUser.user.id,
-      email: payload.email,
-    };
     const emailTokenExpiry = dayjs(new Date())
       .add(30, 'days')
       .format('DD-MM-YYYY');
-    const verifyEmailToken =
-      await this.createEmailVerificationToken(jwtPaylaod);
-    const userTokensStr =
-      await this.usersService.createUserTokenPropertiesString({
-        email_verification_token: verifyEmailToken,
-        email_verification_expiry: emailTokenExpiry,
-        id: createId(),
-      });
+    const verifyEmailToken = await this.createEmailVerificationToken({
+      userId: newUser.id,
+      email: payload.email,
+    });
+    await this.createParticipant(newUser);
+    const userTokensStr = createUserTokenPropertiesString({
+      email_verification_token: verifyEmailToken,
+      email_verification_expiry: emailTokenExpiry,
+      id: createId(),
+    });
     await this.neo4jService.write(
       `MATCH (user:USER {id: $userId})
-      CREATE (user) -[:TOKENS]-> (token:USER_TOKEN {${userTokensStr}})`,
-      { userId: newUser.user.id }
+      CREATE (user) -[:TOKENS]-> (token:USER_TOKENS {${userTokensStr}})`,
+      { userId: newUser.id }
     );
     await this.mailService.sendEmailVerificationEmail(
       payload.email,
@@ -191,14 +220,7 @@ export class AuthService {
     return { msg: 'mail sent' };
   }
 
-  async registerUser(payload: RegisterPayloadDto) {
-    const newAppUser = await this.usersService.create_user({ ...payload });
-    const tokenPayload = { userId: newAppUser.id, email: newAppUser.email };
-    return {
-      access_token: await this.generateAccessToken(tokenPayload),
-      user: newAppUser,
-    };
-  }
+  // ------------------------------------------- UTILLS ---------------------------------------------
 
   async checkIfPasswordIsCorrect(password: string, hashedPassword: string) {
     try {
@@ -238,7 +260,9 @@ export class AuthService {
     }
   }
 
-  async validateAccessToken(token: string) {
+  async validateAccessToken(
+    token: string
+  ): Promise<jwtAuthTokenPayload | null> {
     try {
       return await this.jwtService.verify(token, {
         secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
@@ -270,5 +294,44 @@ export class AuthService {
       console.log(error);
       return null;
     }
+  }
+
+  async createParticipant(user: User) {
+    const participant = await this.participantModel.create({
+      name: user.full_name,
+      userid: user.id,
+      email: user.email,
+      profile_img: user.profile_img,
+      participatedRooms: [],
+    });
+    return participant;
+  }
+
+  async createAuthSession(
+    userId: string,
+    headers: IncomingHttpHeaders,
+    ip: string
+  ): Promise<AuthSession> {
+    const useragent = new UAParser(headers['user-agent']).getResult();
+    const authSession: AuthSession = {
+      id: createId(),
+      device_name: useragent.device.model || 'Unknown Device',
+      browser: useragent.browser.name || 'Unknown Browser',
+      os: useragent.os.name || 'Unknown OS',
+      ip_address: ip,
+      location: 'Unknown', // You might want to implement IP geolocation here
+      logged_in: true,
+      logged_in_date: new Date().toISOString(),
+      last_logged_in_date: new Date().toISOString(),
+    };
+
+    await this.neo4jService.write(
+      `MATCH (u:USER {id: $userId})
+       CREATE (u)-[:SESSION]->(a:AUTH_SESSION {${createAuthSessionPropertiesString(authSession)}})
+       RETURN a`,
+      { userId }
+    );
+
+    return authSession;
   }
 }

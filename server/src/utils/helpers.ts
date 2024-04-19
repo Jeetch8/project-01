@@ -31,3 +31,12 @@ export function addTimeToCurrentTime(
   }
   return currentDate;
 }
+
+export const createObjectPropertiesString = (obj: unknown) => {
+  let resultStr = '';
+  Object.entries(obj).forEach((e) => {
+    resultStr += e[1] === undefined ? `${e[0]}: "",` : `${e[0]}: "${e[1]}",`;
+  });
+  if (resultStr.endsWith(',')) resultStr = resultStr.slice(0, -1);
+  return resultStr;
+};

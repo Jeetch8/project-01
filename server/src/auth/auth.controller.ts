@@ -24,28 +24,24 @@ import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GithubAuthGuard } from './guards/github-auth.guard';
 import { Neo4jService } from 'nest-neo4j/dist';
 import { AuthProvider } from '@/user/user.entity';
+import { JwtAuthGuard } from './guards/jwt.guard';
+import { jwtAuthTokenPayload } from './entities/auth.entity';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private neo4jService: Neo4jService
-  ) {}
-
-  @Get('test')
-  async testroute() {
-    return await this.neo4jService.read('MATCH (n:Person) RETURN n');
-  }
+  constructor(private readonly authService: AuthService) {}
 
   @HttpCode(200)
   @Post('login/local')
   async login(
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Body() authPayload: LocalLoginPayloadDto
   ) {
-    const { access_token } =
-      await this.authService.validateLocalLogin(authPayload);
-    // this.attachAccessToken(res, access_token);
+    const { access_token } = await this.authService.validateLocalLogin(
+      authPayload,
+      req
+    );
     return { message: 'Logged in successfully', access_token };
   }
 
@@ -68,11 +64,6 @@ export class AuthController {
 
   @Patch('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    // res.clearCookie('AUTH_ACCESS_TOKEN', {
-    //   httpOnly: true,
-    //   secure: true, // use secure in production
-    //   sameSite: 'strict',
-    // });
     return { message: 'Logged out successfully' };
   }
 
@@ -111,10 +102,12 @@ export class AuthController {
     const user = req.user as any;
     const { access_token } = await this.authService.handleSSORegisterORLogin(
       user,
-      AuthProvider.GOOGLE
+      AuthProvider.GOOGLE,
+      req.headers,
+      req.ip
     );
-    this.attachAccessToken(req.res, access_token);
-    return res.redirect('http://localhost:5173');
+    const url = new URLSearchParams({ access_token: await access_token });
+    return res.redirect('http://localhost:5173/google/login?' + url.toString());
   }
 
   @Get('login/github')
@@ -130,11 +123,12 @@ export class AuthController {
     }
     const { access_token } = await this.authService.handleSSORegisterORLogin(
       user,
-      AuthProvider.GOOGLE
+      AuthProvider.GITHUB,
+      req.headers,
+      req.ip
     );
-    this.attachAccessToken(req.res, access_token);
-    // return { access_token };
-    return res.redirect('http://localhost:5173');
+    const url = new URLSearchParams({ access_token: await access_token });
+    return res.redirect('http://localhost:5173/github/login?' + url.toString());
   }
 
   async attachAccessToken(res: Response, refreshToken: string) {
@@ -145,5 +139,13 @@ export class AuthController {
       maxAge: addTimeToCurrentTime(7, 'days').valueOf(),
       expires: addTimeToCurrentTime(7, 'days'),
     });
+  }
+
+  @Post('create-session')
+  @UseGuards(JwtAuthGuard)
+  async createAuthSession(@Req() req: Request) {
+    const user = req.user as jwtAuthTokenPayload;
+    await this.authService.createAuthSession(user.userId, req.headers, req.ip);
+    return { message: 'Auth session created successfully' };
   }
 }

@@ -177,7 +177,7 @@ describe('Testing Login page', () => {
       const { user, ...rest } = renderComponent();
       const forgotPassword = screen.getByText(/forgot your password/i);
       await user.click(forgotPassword);
-      const dialog = screen.getByRole('dialog');
+      const dialog = screen.getByRole('dialog_modal');
       const emailBox = screen.getByPlaceholderText('Enter your email');
       const submitBtn = screen.getAllByRole('button', { name: /submit/i })[1];
       return { dialog, user, rest, emailBox, submitBtn };

@@ -9,6 +9,10 @@ import { MailModule } from './lib/mail/mail.module';
 import { Neo4jModule } from 'nest-neo4j';
 import { PostModule } from './post/post.module';
 import { FileUploadModule } from './file_upload/file_upload.module';
+import { SocketModule } from './socket/socket.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { MongooseModule } from '@nestjs/mongoose';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
   imports: [
@@ -34,6 +38,21 @@ import { FileUploadModule } from './file_upload/file_upload.module';
     MailModule,
     PostModule,
     FileUploadModule,
+    SocketModule,
+    RedisModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        url: configService.get('REDIS_URL'),
+        type: 'single',
+      }),
+    }),
+    CacheModule.register({
+      isGlobal: true,
+      modelOptions: {
+        ttl: 1000 * 60 * 60 * 24 * 7,
+      },
+    }),
+    MongooseModule.forRoot('mongodb://localhost:27017/social_media'),
   ],
   controllers: [AppController],
   providers: [AppService],

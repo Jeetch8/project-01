@@ -52,7 +52,7 @@ const UserStatus: React.FC = () => {
   });
 
   const fetchComments = () => {
-    fetch(base_url + `/posts/comments?page=${currentPage}`)
+    fetch(base_url + `/post/${postId}/comments?page=${currentPage}`)
       .then((response) => response.json())
       .then((data) => {
         setComments((prevComments) => [...prevComments, ...data.posts]);

@@ -61,7 +61,7 @@ const Modal = ({
     <>
       {isModalOpen && (
         <div
-          role="black_screen"
+          role="black_screen_modal"
           className={twMerge(
             'h-[100vh] w-[100vw] top-0 left-0 fixed bg-[rgba(0,0,0,0.4)] flex items-center justify-center z-[100]',
             blackScreenClassName
@@ -69,7 +69,7 @@ const Modal = ({
           ref={blackScreenRef}
         >
           <div
-            role="dialog"
+            role="dialog_modal"
             className={twMerge(
               'bg-white rounded-md px-6 py-6 max-w-[500px] w-full',
               dialogClassName
@@ -78,14 +78,18 @@ const Modal = ({
           >
             <div>
               <div className="flex justify-between items-center mb-4">
-                {header && <div className="flex-grow">{header}</div>}
+                {header && (
+                  <div className="flex-grow" aria-label="modal_header">
+                    {header}
+                  </div>
+                )}
                 {canClose && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsModalOpen(false);
                     }}
-                    aria-label="btn_close"
+                    aria-label="btn_close_modal"
                     className="ml-auto"
                   >
                     <IoClose size={22} />

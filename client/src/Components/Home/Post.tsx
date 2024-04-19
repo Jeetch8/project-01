@@ -34,7 +34,7 @@ const Post = ({ post, outerClassName }: Props) => {
   });
 
   const { doFetch: toggleBookmarkFetch } = useFetch({
-    url: base_url + `/post/${post.id}/bookmark`,
+    url: base_url + `/post/${post.id}/togglebookmark`,
     authorized: true,
     method: 'PATCH',
     onSuccess: (res: { post: IFeedPost }) => {

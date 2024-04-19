@@ -12,7 +12,7 @@ import {
 import { TbMailFilled, TbMail } from 'react-icons/tb';
 import { RiFileList2Line, RiFileListFill } from 'react-icons/ri';
 import { PiUsersFill, PiUsers, PiUser, PiUserFill } from 'react-icons/pi';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AvatarImage from '@/Components/Global/AvatarImage';
 import { IoIosMore } from 'react-icons/io';
 import { Button } from '@/Components/Global/Button';
@@ -42,7 +42,7 @@ const navigationLinks = [
     name: 'Messages',
     iconOnStale: TbMail,
     iconOnSelection: TbMailFilled,
-    path: '/message',
+    path: '/messages',
   },
   {
     name: 'Bookmarks',
@@ -77,6 +77,7 @@ const navigationLinks = [
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
   const pathname = useLocation().pathname;
   const { user } = useGlobalContext();
 
@@ -88,10 +89,10 @@ export default function Sidebar() {
             key={link.name}
             to={link.path}
             className={`flex items-center rounded-full hover:bg-zinc-800 text-[18px] delay-100 duration-150 w-fit px-3 py-3 my-2 ${
-              pathname === link.path && 'font-bold'
+              pathname.includes(link.path) && 'font-bold'
             }`}
           >
-            {pathname === link.path ? (
+            {pathname.includes(link.path) ? (
               <link.iconOnSelection className="w-7 h-7" />
             ) : (
               <link.iconOnStale className="w-7 h-7" />
@@ -101,8 +102,9 @@ export default function Sidebar() {
         ))}
         <div className="xl:mr-6">
           <Button
-            className="bg-[#199BF0] xl:w-[210px] xl:h-12 w-fit rounded-full text-[18px] h-14 hover:bg-[#1A8CD8] hover:shadow-lg cursor-pointer"
-            variant="ghost"
+            className="bg-[#199BF0] hover:bg-[#1A8CD8] xl:w-[210px] xl:h-12 w-fit rounded-full text-[18px] h-14 hover:shadow-lg cursor-pointer"
+            variant="link"
+            onClick={() => navigate('/')}
           >
             <span>
               <FiFeather className="w-7 h-7 xl:hidden xl:mr-4" />
@@ -115,7 +117,7 @@ export default function Sidebar() {
         <div className="flex items-center space-x-2">
           <AvatarImage url={user?.profile_img} diameter="40px" />
           <div className="hidden xl:inline-block">
-            <p className="font-bold">Jeet Chawda</p>
+            <p className="font-bold">{user?.full_name}</p>
             <p className="text-xs text-slate-500">@{user?.username}</p>
           </div>
         </div>

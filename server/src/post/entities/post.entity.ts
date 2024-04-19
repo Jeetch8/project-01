@@ -1,3 +1,4 @@
+import { createObjectPropertiesString } from '@/utils/helpers';
 import { Node } from 'neo4j-driver';
 
 export interface Post {
@@ -43,12 +44,6 @@ interface Notification {
   reference_id?: string;
 }
 
-interface PostComment {
-  id: string;
-  caption: string;
-  likes_count: number;
-}
-
 export class PostMediaCon {
   constructor(private readonly node: Node) {}
 
@@ -80,6 +75,31 @@ export class PostMediaCon {
   }
 }
 
+export const createPostObj = (post: Partial<Post>): Post => {
+  return {
+    id: post?.id,
+    caption: post?.caption,
+    likes_count: post?.likes_count,
+    created_on: post?.created_on,
+    updated_on: post?.updated_on,
+  };
+};
+
+export const createPostMediaObj = (
+  postMedia: Partial<PostMedia>
+): PostMedia => {
+  return {
+    id: postMedia?.id,
+    post_id: postMedia?.post_id,
+    media_type: postMedia?.media_type,
+    tags: postMedia?.tags,
+    alt: postMedia?.alt,
+    original_media_url: postMedia?.original_media_url,
+    modified_media_url: postMedia?.modified_media_url,
+    creator_id: postMedia?.creator_id,
+  };
+};
+
 export class PostCon {
   constructor(private readonly node: Node) {}
 
@@ -101,70 +121,12 @@ export class PostCon {
   }
 }
 
-// //   interface Community {
-// //     id: string;
-// //     user_joined_community: UserJoinedCommunity[];
-// //   }
+export const createPostPropertiesString = (post: Partial<Post>) => {
+  return createObjectPropertiesString(createPostObj(post));
+};
 
-// //   interface Thread {
-// //     id: string;
-// //     creator_id: string;
-// //     creator: UserProfile;
-// //     thread_posts_mapping: ThreadPostsMapping[];
-// //   }
-
-// interface LikedPost {
-//   id: string;
-//   post_id: string;
-//   user_id: string;
-//   post: Post;
-//   user: UserProfile;
-// }
-
-// interface Messages {
-//   id: string;
-// }
-
-// interface Follower {
-//   id: string;
-//   following_user_id: string;
-//   followee_user_id: string;
-//   following_user: UserProfile;
-//   followed_user: UserProfile;
-// }
-
-// interface BookmarkCategory {
-//   id: string;
-//   title: string;
-//   description?: string;
-//   user_id: string;
-//   user: UserProfile;
-//   bookmark: Bookmark[];
-// }
-
-// interface Bookmark {
-//   id: string;
-//   bookmark_category_id: string;
-//   post_id: string;
-//   bookmark_category: BookmarkCategory;
-//   post: Post;
-// }
-
-// interface Replies {
-//   id: string;
-//   user_id: string;
-//   comment_id: string;
-//   post_id: string;
-//   user: UserProfile;
-//   comment: PostComment;
-//   post: Post;
-// }
-
-//   interface UserJoinedCommunity {
-//     id: string;
-//     user_id: string;
-//     community_id: string;
-//     position?: number;
-//     user: UserProfile;
-//     community: Community;
-//   }
+export const createPostMediaPropertiesString = (
+  postMedia: Partial<PostMedia>
+) => {
+  return createObjectPropertiesString(createPostMediaObj(postMedia));
+};

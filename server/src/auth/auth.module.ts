@@ -10,6 +10,8 @@ import { GithubStrategy } from './strategy/github.strategy';
 import { MailService } from '@/lib/mail/mail.service';
 import { MailModule } from '@/lib/mail/mail.module';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { Participant, ParticipantSchema } from '@/schemas/Participant.schema';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -17,6 +19,9 @@ import { JwtStrategy } from './strategy/jwt.strategy';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
     MailModule,
+    MongooseModule.forFeature([
+      { name: Participant.name, schema: ParticipantSchema },
+    ]),
   ],
   controllers: [AuthController],
   providers: [

@@ -6,12 +6,15 @@ import { Dispatch, SetStateAction, useEffect } from 'react';
 import { TbCameraPlus } from 'react-icons/tb';
 import { Button } from '../Global/Button';
 import dayjs from 'dayjs';
+import { FetchStates } from '@/hooks/useFetch';
+import { MoonLoader } from 'react-spinners';
+import toast from 'react-hot-toast';
+import { base_url } from '@/utils/base_url';
+import { useGlobalContext } from '@/context/GlobalContext';
 
 interface Props {
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   modalIsOpen: boolean;
-  user: IUser;
-  fetchMyProfile: () => void;
 }
 
 interface FormData {
@@ -22,12 +25,8 @@ interface FormData {
   date_of_birth: string;
 }
 
-const EditProfileModal = ({
-  setIsOpen,
-  modalIsOpen,
-  user,
-  fetchMyProfile,
-}: Props) => {
+const EditProfileModal = ({ setIsOpen, modalIsOpen }: Props) => {
+  const { user, fetchMyProfile } = useGlobalContext();
   const methods = useForm<FormData>({
     defaultValues: {
       profile_img: user?.profile_img,
@@ -37,8 +36,14 @@ const EditProfileModal = ({
       date_of_birth: dayjs(user?.date_of_birth).format('YYYY-MM-DD'),
     },
   });
-
-  const { register, handleSubmit, setValue, watch, reset } = methods;
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { isDirty },
+  } = methods;
 
   useEffect(() => {
     reset({
@@ -50,12 +55,15 @@ const EditProfileModal = ({
     });
   }, [user]);
 
-  const { doFetch: updateUserProfileFetch } = useFetch({
-    url: '/user/',
+  const { doFetch: updateUserProfileFetch, fetchState } = useFetch({
+    url: base_url + '/user/profile',
     method: 'PUT',
-    onSuccess: (data) => {
+    onSuccess: () => {
       fetchMyProfile();
-      setIsOpen(false);
+      toast.success('Profile updated');
+      setTimeout(() => {
+        setIsOpen(false);
+      }, 2000);
     },
   });
 
@@ -71,6 +79,8 @@ const EditProfileModal = ({
         setValue(field, URL.createObjectURL(file), { shouldDirty: true });
       }
     };
+
+  const isButtonDisabled = !isDirty || fetchState === FetchStates.LOADING;
 
   return (
     <Modal
@@ -99,6 +109,7 @@ const EditProfileModal = ({
               <input
                 type="file"
                 id="bannerImgUpload"
+                aria-label="Banner image"
                 className="hidden"
                 onChange={handleImageChange('banner_img')}
               />
@@ -116,6 +127,7 @@ const EditProfileModal = ({
                 <input
                   type="file"
                   id="profilePicUpload"
+                  aria-label="Profile image"
                   className="hidden"
                   onChange={handleImageChange('profile_img')}
                 />
@@ -136,6 +148,7 @@ const EditProfileModal = ({
                 outline: 'none',
                 boxShadow: 'none',
               }}
+              aria-label="Full Name"
               type="text"
               className="bg-transparent px-2 pb-2 text-[17px] focus:outline-none"
             />
@@ -151,6 +164,7 @@ const EditProfileModal = ({
               }}
               cols={30}
               rows={3}
+              aria-label="Bio"
               className="bg-transparent px-2"
             ></textarea>
           </div>
@@ -160,15 +174,25 @@ const EditProfileModal = ({
               {...register('date_of_birth')}
               type="date"
               className="text-black text-[20px]"
+              aria-label="Birth date"
             />
           </div>
           <div className="flex justify-end items-center backdrop-blur-xl">
             <Button
               type="submit"
               variant="default"
-              className="bg-white rounded-full font-medium"
+              className={`rounded-full font-medium ${
+                isButtonDisabled
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-white hover:bg-gray-100'
+              }`}
+              disabled={isButtonDisabled}
             >
-              Save
+              {fetchState === FetchStates.LOADING ? (
+                <MoonLoader size={20} color="#000" aria-label="loading" />
+              ) : (
+                'Save'
+              )}
             </Button>
           </div>
         </form>

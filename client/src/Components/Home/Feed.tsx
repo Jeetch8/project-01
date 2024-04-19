@@ -7,10 +7,9 @@ interface Props {
 import Post from './Post';
 import { IFeedPost } from '@/utils/interfaces';
 import InfinteScroll from 'react-infinite-scroll-component';
-import BounceLoader from 'react-spinners/BounceLoader';
+import HashLoader from 'react-spinners/HashLoader';
 
 const Feed = ({ items, hasMore, fetchMoreData }: Props) => {
-  console.log(items);
   return (
     <div>
       <InfinteScroll
@@ -23,8 +22,8 @@ const Feed = ({ items, hasMore, fetchMoreData }: Props) => {
           </div>
         }
         loader={
-          <div className="flex justify-center items-center p-5">
-            <BounceLoader color="#fff" />
+          <div className="flex justify-center items-center p-5 mt-14">
+            <HashLoader color="#fff" />
           </div>
         }
       >

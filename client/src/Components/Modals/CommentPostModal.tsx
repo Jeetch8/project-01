@@ -8,6 +8,8 @@ import { base_url } from '@/utils/base_url';
 import TextareaAutoSize from 'react-textarea-autosize';
 import MediaAssetsPreview from '@/Components/Home/CreateNewPost/ExtraAssets/MediaAssetsPreview';
 import PostExtraAsset from '@/Components/Home/CreateNewPost/PostExtraAsset';
+import { MoonLoader } from 'react-spinners';
+import toast from 'react-hot-toast';
 
 interface CommentPostModalProps {
   isOpen: boolean;
@@ -24,14 +26,17 @@ const CommentPostModal: React.FC<CommentPostModalProps> = ({
   const [extraAssetsState, setExtraAssetsState] = useState<string[]>([]);
   const { user } = useGlobalContext();
 
-  const { doFetch: commentOnPostFetch } = useFetch({
+  const { doFetch: commentOnPostFetch, fetchState } = useFetch({
     url: base_url + `/post/${post.id}/comment`,
     authorized: true,
     method: 'PUT',
     onSuccess: (res: { post: IFeedPost }) => {
+      toast.success('Commented on post');
       setComment('');
       setExtraAssetsState([]);
-      setIsModalOpen(false);
+      setTimeout(() => {
+        setIsModalOpen(false);
+      }, 1000);
     },
   });
 
@@ -130,10 +135,15 @@ const CommentPostModal: React.FC<CommentPostModalProps> = ({
             handleAddEmoji={handleAddEmoji}
           />
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-full self-end hover:bg-blue-600 transition"
+            className="bg-blue-500 text-white px-4 py-2 rounded-full self-end hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSubmit}
+            disabled={fetchState === 'loading' || !comment.trim()}
           >
-            Reply
+            {fetchState === 'loading' ? (
+              <MoonLoader size={20} color="#fff" aria-label="loading" />
+            ) : (
+              'Reply'
+            )}
           </button>
         </div>
       </div>

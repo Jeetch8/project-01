@@ -36,8 +36,9 @@ const Login = () => {
       }, 2000);
     },
     onError: (err) => {
-      if (typeof err.message === 'string') {
-        toast.error(err.message);
+      console.log(err);
+      if (typeof err.error === 'string') {
+        toast.error(err.error);
       }
     },
   });

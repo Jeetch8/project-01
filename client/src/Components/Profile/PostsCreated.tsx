@@ -4,71 +4,45 @@ import { IFeedPost } from '@/utils/interfaces';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import BounceLoader from 'react-spinners/BounceLoader';
 import Post from '@/Components/Home/Post';
-import { getTokenFromLocalStorage } from '@/utils/localstorage';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { FetchStates, useFetch } from '@/hooks/useFetch';
 
-type Props = {
-  hasMore: boolean | undefined;
-  nextPage: number | undefined;
-  currentPage: number | undefined;
-  posts: IFeedPost[] | undefined;
-};
-
-const PostsCreated: React.FC<Props> = ({
-  posts: initialPosts,
-  hasMore: initialHasMore,
-  nextPage: initialNextPage,
-  currentPage: initialCurrentPage,
-}) => {
+const PostsCreated: React.FC = () => {
   const [posts, setPosts] = useState<IFeedPost[]>([]);
-  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
-  const navigate = useNavigate();
+
+  const { fetchState, doFetch } = useFetch<{
+    posts: IFeedPost[];
+    hasMore: boolean;
+    nextPage: number;
+  }>({
+    url: `${base_url}/user/posts?page=${currentPage}`,
+    method: 'GET',
+    authorized: true,
+    onSuccess: (data) => {
+      setPosts((prevPosts) => [...prevPosts, ...data.posts]);
+      setHasMore(data.hasMore);
+      setCurrentPage(data.nextPage);
+    },
+    onError: () => {
+      toast.error('Something went wrong');
+    },
+  });
 
   useEffect(() => {
-    setPosts(initialPosts || []);
-    setHasMore(initialHasMore || false);
-    setCurrentPage(initialCurrentPage || 0);
-  }, [initialPosts, initialHasMore, initialCurrentPage]);
+    doFetch();
+  }, []);
 
-  const fetchMoreData = () => {
-    const token = getTokenFromLocalStorage();
-    if (!token) {
-      toast.error('Please login');
-      navigate('/login');
-      return;
-    }
-
-    fetch(base_url + `/user/posts?page=${currentPage}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            toast.error('Please login');
-            navigate('/login');
-            throw new Error('Unauthorized');
-          }
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setPosts((prevPosts) => [...prevPosts, ...data.posts]);
-        setHasMore(data.hasMore);
-        setCurrentPage(data.nextPage);
-      })
-      .catch((err) => console.log(err));
-  };
+  if (fetchState === 'error') {
+    return <div className="h-[50vh]"></div>;
+  }
 
   return (
     <div className="border-r-[2px] border-zinc-900 bg-black max-w-[600px] inline w-full">
       <InfiniteScroll
         dataLength={posts.length}
-        next={fetchMoreData}
+        next={doFetch}
         hasMore={hasMore}
         loader={
           <div className="flex justify-center items-center p-5">
