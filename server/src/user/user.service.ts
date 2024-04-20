@@ -127,17 +127,24 @@ export class UserService {
   async getUser({
     email,
     userId,
+    username,
   }: {
     email?: string;
     userId?: string;
+    username?: string;
   }): Promise<{ user: User | undefined; userTokens: UserToken | undefined }> {
-    const searchWith = userId ? 'id: $userId' : 'email: $email';
+    let searchWith: string | undefined;
+    if (userId) searchWith = 'id: $userId';
+    else if (email) searchWith = 'email: $email';
+    else if (username) searchWith = 'username: $username';
+    else return { user: undefined, userTokens: undefined };
     const result = await this.neo4jService.read(
       `MATCH (user:USER {${searchWith}}) -[:TOKENS]-> (token:USER_TOKENS)
       RETURN user, token`,
       {
         userId,
         email: email?.toLocaleLowerCase(),
+        username,
       }
     );
     if (!result.records.length)
@@ -241,19 +248,24 @@ export class UserService {
 
   async getLikedPosts(
     userId: string,
+    username?: string,
     page: number = 0,
     limit: number = 10
   ): Promise<{ posts: Post[]; hasMore: boolean; nextPage: number }> {
     const skip = page * limit;
+    let searchWith: string;
+    if (userId) searchWith = 'id: $userId';
+    else if (username) searchWith = 'username: $username';
+    else return { posts: [], hasMore: false, nextPage: null };
     const result = await this.neo4jService.read(
-      `MATCH (user:USER {id: $userId})-[:LIKED]->(post:POST)
+      `MATCH (user:USER {${searchWith}})-[:LIKED]->(post:POST)
        OPTIONAL MATCH (post)-[:HAS_MEDIA]->(media:POST_MEDIA)
        WITH post, collect(media) as post_media
        ORDER BY post.created_on DESC
        SKIP ${skip}
        LIMIT ${limit + 1}
        RETURN post, post_media`,
-      { userId }
+      { userId, username }
     );
 
     const posts = result.records.map((record) => {
@@ -302,19 +314,24 @@ export class UserService {
   }
 
   async getUserFeed(
-    userId: string,
+    userId?: string,
+    username?: string,
     page: number = 0
   ): Promise<{ feed: Post[]; hasMore: boolean; nextPage: number }> {
     const limit = 10;
     const skip = page * limit;
+    let searchWith: string;
+    if (userId) searchWith = 'id: $userId';
+    else if (username) searchWith = 'username: $username';
+    else return { feed: [], hasMore: false, nextPage: null };
     const result = await this.neo4jService.read(
-      `MATCH (user:USER {id: $userId})-[:FOLLOWS]->(followedUser:USER)-[:POSTED]->(post:POST)
+      `MATCH (user:USER {${searchWith}})-[:FOLLOWS]->(followedUser:USER)-[:POSTED]->(post:POST)
        OPTIONAL MATCH (post)-[:HAS_MEDIA]->(media:POST_MEDIA)
        WITH post, collect(media) as post_media
        ORDER BY post.created_on DESC
        LIMIT ${limit + 1}
        RETURN post, post_media`,
-      { userId, skip }
+      { userId, username, skip }
     );
 
     const posts = result.records.map((record) => {
@@ -342,5 +359,22 @@ export class UserService {
       .select('-participatedRooms')
       .limit(10);
     return participants.filter((participant) => participant.userid !== userId);
+  }
+
+  async followUser(followerId: string, followeeId: string): Promise<boolean> {
+    const result = await this.neo4jService.write(
+      `
+      MATCH (follower:USER {id: $followerId})
+      MATCH (followee:USER {id: $followeeId})
+      WHERE NOT (follower)-[:FOLLOWS]->(followee) AND follower.id <> followee.id
+      CREATE (follower)-[:FOLLOWS]->(followee)
+      SET follower.following_count = follower.following_count + 1
+      SET followee.followers_count = followee.followers_count + 1
+      RETURN follower, followee
+      `,
+      { followerId, followeeId }
+    );
+
+    return result.records.length > 0;
   }
 }

@@ -11,13 +11,33 @@ import {
 } from './entities/post.entity';
 import { User } from '@/user/user.entity';
 import { createId } from '@paralleldrive/cuid2';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Redis } from 'ioredis';
+import VoyageAI, { VoyageAIClient } from 'voyageai';
+import { EmbedResponseDataItem } from 'voyageai/api';
 
 @Injectable()
 export class PostService {
   constructor(
     private cloudinaryService: CloudinaryService,
-    private neo4jService: Neo4jService
-  ) {}
+    private neo4jService: Neo4jService,
+    @InjectRedis() private readonly redis: Redis,
+    private voyageAIClient: VoyageAIClient
+  ) {
+    this.voyageAIClient = new VoyageAIClient({
+      apiKey: process.env.VOYAGE_API_KEY,
+    });
+  }
+
+  async getEmbedding(
+    text: string[]
+  ): Promise<EmbedResponseDataItem[] | undefined> {
+    const embedding = await this.voyageAIClient.embed({
+      input: text,
+      model: 'voyage-3-lite',
+    });
+    return embedding.data;
+  }
 
   async createPost({
     caption,
@@ -301,5 +321,43 @@ export class PostService {
 
     const updatedPost = await this.getPost(postId, userId);
     return updatedPost.post;
+  }
+
+  async getFeedPosts(
+    userId: string,
+    page: number = 0,
+    limit: number = 10
+  ): Promise<{ posts: Post[]; hasMore: boolean; nextPage: number }> {
+    const skip = page * limit;
+    const result = await this.neo4jService.write(
+      `MATCH (user:USER {id: $userId})
+       MATCH (post:POST)
+       WHERE NOT (user)-[:SEEN {seen_at: $seen_at}]->(post)
+       WITH post, user
+       ORDER BY post.likes_count DESC, post.created_on DESC
+       WITH post, user, collect(post)[toInteger($skip)..toInteger($skip + $limit)] AS paginatedPosts
+       UNWIND paginatedPosts AS paginatedPost
+       OPTIONAL MATCH (paginatedPost)-[:HAS_MEDIA]->(media:POST_MEDIA)
+       OPTIONAL MATCH (paginatedPost)<-[:POSTED]-(creator:USER)
+       WITH paginatedPost, collect(DISTINCT media) as post_media, creator, user
+       CREATE (user)-[:SEEN]->(paginatedPost)
+       RETURN paginatedPost, post_media, creator
+       LIMIT $limit`,
+      { userId, skip, limit: limit + 1, seen_at: new Date().toISOString() }
+    );
+
+    const posts = result.records.slice(0, limit).map((record) => {
+      const post = new PostCon(record.get('paginatedPost')).getObject();
+      const media = record
+        .get('post_media')
+        .map((m) => new PostMediaCon(m).getObject());
+      const creator = record.get('creator').properties;
+      return { ...post, post_media: media, creator };
+    });
+
+    const hasMore = result.records.length > limit;
+    const nextPage = hasMore ? page + 1 : null;
+
+    return { posts, hasMore, nextPage };
   }
 }

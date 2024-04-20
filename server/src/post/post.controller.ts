@@ -128,4 +128,19 @@ export class PostController {
     });
     return { message: 'Comment added successfully', post: result };
   }
+
+  @Get('feed')
+  async getFeedPosts(
+    @Req() req: AuthRequest,
+    @Query('page') page: number = 0,
+    @Query('limit') limit: number = 10
+  ) {
+    const requestUser: jwtAuthTokenPayload = req.user;
+    const result = await this.postService.getFeedPosts(
+      requestUser.userId,
+      page,
+      limit
+    );
+    return result;
+  }
 }

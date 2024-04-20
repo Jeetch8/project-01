@@ -1,26 +1,30 @@
-type GlobalContextType = Omit<IUser, 'password' | 'auth_provider'> | undefined;
+export type IGlobalContextUser =
+  | Omit<IUser, 'password' | 'auth_provider'>
+  | undefined;
+
+type IGlobalContext = {
+  user: IGlobalContextUser;
+  fetchstate: FetchStates;
+  fetchMyProfile: () => void;
+};
 
 import React, { createContext, useContext, useEffect } from 'react';
 import { FetchStates, useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import { IUser } from '@/utils/interfaces';
 
-const defaultValues: GlobalContextType = undefined;
-const GlobalContext = createContext<{
-  user: GlobalContextType;
-  fetchstate: FetchStates;
-  fetchMyProfile: () => void;
-}>({
-  user: defaultValues,
+const defaultValues: IGlobalContext = {
+  user: undefined,
   fetchstate: FetchStates.IDLE,
   fetchMyProfile: () => {},
-});
+};
+const GlobalContext = createContext<IGlobalContext>(defaultValues);
 
 export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { fetchState, doFetch, dataRef } = useFetch<{
-    user: GlobalContextType;
+    user: IGlobalContextUser;
   }>({ url: base_url + '/user/me', method: 'GET', authorized: true });
 
   useEffect(() => {

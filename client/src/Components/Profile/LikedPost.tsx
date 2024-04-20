@@ -5,13 +5,14 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import BounceLoader from 'react-spinners/BounceLoader';
 import Post from '@/Components/Home/Post';
 import { getTokenFromLocalStorage } from '@/utils/localstorage';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 const LikedPost = () => {
   const [posts, setPosts] = useState<IFeedPost[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
+  const { username: paramsUserName } = useParams();
   const navigate = useNavigate();
 
   const fetchMoreData = () => {
@@ -22,11 +23,14 @@ const LikedPost = () => {
       return;
     }
 
-    fetch(base_url + `/user/liked-posts?page=${currentPage}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    fetch(
+      base_url + `/user/${paramsUserName}/liked-posts?page=${currentPage}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
       .then((response) => {
         if (!response.ok) {
           if (response.status === 401) {

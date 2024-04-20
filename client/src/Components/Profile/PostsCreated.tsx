@@ -6,18 +6,20 @@ import BounceLoader from 'react-spinners/BounceLoader';
 import Post from '@/Components/Home/Post';
 import { toast } from 'react-hot-toast';
 import { FetchStates, useFetch } from '@/hooks/useFetch';
+import { useParams } from 'react-router-dom';
 
 const PostsCreated: React.FC = () => {
   const [posts, setPosts] = useState<IFeedPost[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
+  const { username: paramsUserName } = useParams();
 
   const { fetchState, doFetch } = useFetch<{
     posts: IFeedPost[];
     hasMore: boolean;
     nextPage: number;
   }>({
-    url: `${base_url}/user/posts?page=${currentPage}`,
+    url: `${base_url}/user/${paramsUserName}/posts?page=${currentPage}`,
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {

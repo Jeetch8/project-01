@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IoLocationOutline } from 'react-icons/io5';
 import { SlCalender } from 'react-icons/sl';
 import EditProfileModal from '../Components/Modals/EditProfileModal';
@@ -7,14 +7,36 @@ import Dayjs from 'dayjs';
 import LikedPost from '@/Components/Profile/LikedPost';
 import PostsCreated from '@/Components/Profile/PostsCreated';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
-import { useGlobalContext } from '@/context/GlobalContext';
+import { IGlobalContextUser, useGlobalContext } from '@/context/GlobalContext';
 import AvatarTemplate from '@/assets/AvatarTemplate.png';
 import BlackScreen from '@/assets/black-screen_39.png';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useFetch } from '@/hooks/useFetch';
+import { base_url } from '@/utils/base_url';
+import { IUser } from '@/utils/interfaces';
 
 const Profile = () => {
   const [tweetsToShow, setTweetToShow] = useState('allUserTweets');
   const [modalIsOpen, setIsOpen] = React.useState(false);
-  const { user } = useGlobalContext();
+  const { user: globalUser } = useGlobalContext();
+  const { username: paramsUserName } = useParams();
+  const navigate = useNavigate();
+  let user: Omit<IUser, 'password' | 'auth_provider'> | undefined = globalUser;
+
+  const { fetchState, doFetch } = useFetch<{ user: IGlobalContextUser }>({
+    url: `${base_url}/user/${paramsUserName}`,
+    method: 'GET',
+    authorized: true,
+    onSuccess: (data) => {
+      user = data.user;
+    },
+  });
+
+  useEffect(() => {
+    if (paramsUserName !== user?.username) {
+      doFetch();
+    }
+  }, []);
 
   return (
     <>
