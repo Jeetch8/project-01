@@ -13,6 +13,7 @@ import { SocketModule } from './socket/socket.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RedisModule } from '@nestjs-modules/ioredis';
+import { CloudinaryModule } from './lib/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
       },
     }),
     MongooseModule.forRoot('mongodb://localhost:27017/social_media'),
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

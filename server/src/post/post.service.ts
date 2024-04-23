@@ -13,8 +13,7 @@ import { User } from '@/user/user.entity';
 import { createId } from '@paralleldrive/cuid2';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Redis } from 'ioredis';
-import VoyageAI, { VoyageAIClient } from 'voyageai';
-import { EmbedResponseDataItem } from 'voyageai/api';
+import { GoogleAIService } from '@/lib/googleAI/googleAI.service';
 
 @Injectable()
 export class PostService {
@@ -22,22 +21,8 @@ export class PostService {
     private cloudinaryService: CloudinaryService,
     private neo4jService: Neo4jService,
     @InjectRedis() private readonly redis: Redis,
-    private voyageAIClient: VoyageAIClient
-  ) {
-    this.voyageAIClient = new VoyageAIClient({
-      apiKey: process.env.VOYAGE_API_KEY,
-    });
-  }
-
-  async getEmbedding(
-    text: string[]
-  ): Promise<EmbedResponseDataItem[] | undefined> {
-    const embedding = await this.voyageAIClient.embed({
-      input: text,
-      model: 'voyage-3-lite',
-    });
-    return embedding.data;
-  }
+    private googleAIService: GoogleAIService
+  ) {}
 
   async createPost({
     caption,
@@ -48,10 +33,11 @@ export class PostService {
     media: (Express.Multer.File | string)[];
     requestUser: jwtAuthTokenPayload;
   }): Promise<Post> {
+    const embedding = await this.googleAIService.getEmbedding(caption);
     const newPost = await this.neo4jService
       .write(
         `MATCH (user:USER {id:$creatorid})
-      CREATE (post:POST {caption:$caption}) -[:CREATED_BY]-> (user)
+      CREATE (post:POST {caption:$caption, embedding:$embedding}) -[:CREATED_BY]-> (user)
       RETURN post
       `,
         {
@@ -170,10 +156,10 @@ export class PostService {
        OPTIONAL MATCH (comment)<-[:POSTED]-(user:USER)
        WITH comment, collect(media) as comment_media, user
        ORDER BY comment.created_on DESC
-       SKIP $skip
-       LIMIT $limit
+       SKIP toInteger(${skip})
+       LIMIT toInteger(${limit + 1})
        RETURN comment, comment_media, user`,
-      { postId, skip, limit: limit + 1 }
+      { postId, skip }
     );
 
     const comments = result.records.slice(0, limit).map((record) => {
@@ -292,10 +278,11 @@ export class PostService {
     comment: string;
     media: Express.Multer.File[];
   }): Promise<Post> {
+    const embedding = await this.googleAIService.getEmbedding(comment);
     const newComment = await this.neo4jService
       .write(
         `MATCH (user:USER {id: $userId}), (post:POST {id: $postId})
-       CREATE (comment:POST {id: $commentId, caption: $comment, created_on: datetime(), updated_on: datetime(), likes_count: 0})
+       CREATE (comment:POST {id: $commentId, caption: $comment, created_on: datetime(), updated_on: datetime(), likes_count: 0, embedding: $embedding})
        CREATE (user)-[:POSTED]->(comment)-[:REPLY_TO]->(post)
        RETURN comment`,
         {
@@ -303,6 +290,7 @@ export class PostService {
           postId,
           commentId: createId(),
           comment,
+          embedding,
         }
       )
       .then((res) => new PostCon(res.records[0].get('comment')).getObject());
@@ -326,7 +314,7 @@ export class PostService {
   async getFeedPosts(
     userId: string,
     page: number = 0,
-    limit: number = 10
+    limit: number = 25
   ): Promise<{ posts: Post[]; hasMore: boolean; nextPage: number }> {
     const skip = page * limit;
     const result = await this.neo4jService.write(
@@ -335,15 +323,15 @@ export class PostService {
        WHERE NOT (user)-[:SEEN {seen_at: $seen_at}]->(post)
        WITH post, user
        ORDER BY post.likes_count DESC, post.created_on DESC
-       WITH post, user, collect(post)[toInteger($skip)..toInteger($skip + $limit)] AS paginatedPosts
+       WITH post, user, collect(post)[toInteger(${skip})..toInteger(toInteger(${skip}) + toInteger(${limit}))] AS paginatedPosts
        UNWIND paginatedPosts AS paginatedPost
        OPTIONAL MATCH (paginatedPost)-[:HAS_MEDIA]->(media:POST_MEDIA)
        OPTIONAL MATCH (paginatedPost)<-[:POSTED]-(creator:USER)
        WITH paginatedPost, collect(DISTINCT media) as post_media, creator, user
        CREATE (user)-[:SEEN]->(paginatedPost)
        RETURN paginatedPost, post_media, creator
-       LIMIT $limit`,
-      { userId, skip, limit: limit + 1, seen_at: new Date().toISOString() }
+       LIMIT toInteger(${limit})`,
+      { userId, skip, seen_at: new Date().toISOString() }
     );
 
     const posts = result.records.slice(0, limit).map((record) => {
@@ -352,12 +340,32 @@ export class PostService {
         .get('post_media')
         .map((m) => new PostMediaCon(m).getObject());
       const creator = record.get('creator').properties;
-      return { ...post, post_media: media, creator };
+      return { ...post, media, creator };
     });
 
     const hasMore = result.records.length > limit;
     const nextPage = hasMore ? page + 1 : null;
 
     return { posts, hasMore, nextPage };
+  }
+
+  async searchPosts(query: string, page: number = 0, limit: number = 20) {
+    const skip = page * limit;
+    const embedding = await this.googleAIService.getEmbedding(query);
+    const result = await this.neo4jService.read(
+      `MATCH (post:POST)
+      WHERE post.embedding IS NOT NULL
+      WITH post, vector.cosineSimilarity(post.embedding, $embedding) as similarity
+      WHERE similarity > 0.7
+      SKIP toInteger(${skip})
+      LIMIT toInteger(${limit})
+      RETURN post
+      `,
+      { query, skip, embedding, limit }
+    );
+    const posts = result.records.map((record) => {
+      return new PostCon(record.get('post')).getObject();
+    });
+    return posts;
   }
 }

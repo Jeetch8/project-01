@@ -14,35 +14,40 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import { IUser } from '@/utils/interfaces';
+import RingLoader from 'react-spinners/RingLoader';
 
 const Profile = () => {
   const [tweetsToShow, setTweetToShow] = useState('allUserTweets');
   const [modalIsOpen, setIsOpen] = React.useState(false);
   const { user: globalUser } = useGlobalContext();
   const { username: paramsUserName } = useParams();
-  const navigate = useNavigate();
-  let user: Omit<IUser, 'password' | 'auth_provider'> | undefined = globalUser;
+  const [user, setUser] = useState<IGlobalContextUser | null>(null);
 
   const { fetchState, doFetch } = useFetch<{ user: IGlobalContextUser }>({
     url: `${base_url}/user/${paramsUserName}`,
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {
-      user = data.user;
+      setUser(data.user);
     },
   });
 
   useEffect(() => {
-    if (paramsUserName !== user?.username) {
-      doFetch();
-    }
-  }, []);
+    if (paramsUserName === 'me' && globalUser) {
+      setUser(globalUser);
+    } else doFetch();
+  }, [paramsUserName]);
 
   return (
     <>
       <div className="w-[620px] border-x-[1px] border-gray-700 text-white sticky top-0">
-        <div className="flex flex-col py-[1vh] px-[1vw] bg-black backdrop-blur-xl sticky top-0 z-50">
+        <div className="flex justify-between py-[1vh] px-[1vw] bg-black backdrop-blur-xl sticky top-0 z-50">
           <h2 className="font-bold text-[20px]">{user?.full_name}</h2>
+          <div className="mr-2">
+            {fetchState == 'loading' && (
+              <RingLoader color="#1d9bf0" size={20} />
+            )}
+          </div>
         </div>
         <div>
           <div className="relative">
@@ -119,7 +124,8 @@ const Profile = () => {
                   <p
                     className={twMerge(
                       'border-b-[3px] rounded-sm pb-[2vh] border-transparent w-fit mx-auto duration-200',
-                      tweetsToShow === 'allUserTweets' && 'border-blue-400'
+                      tweetsToShow === 'allUserTweets' &&
+                        'border-blue-400 text-white'
                     )}
                   >
                     Posts
@@ -134,7 +140,8 @@ const Profile = () => {
                   <p
                     className={twMerge(
                       'border-b-[3px] rounded-sm pb-[2vh] border-transparent w-fit mx-auto duration-200',
-                      tweetsToShow === 'likedTweets' && 'border-blue-400'
+                      tweetsToShow === 'likedTweets' &&
+                        'border-blue-400 text-white'
                     )}
                   >
                     Likes

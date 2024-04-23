@@ -71,23 +71,23 @@ const router = createBrowserRouter([
         element: <HomeLayout />,
         children: [
           {
-            index: true,
+            path: 'home',
             element: <Home />,
           },
           {
-            path: '/explore',
+            path: 'explore',
             element: <Explore />,
           },
           {
-            path: '/bookmark',
+            path: 'bookmark',
             element: <Bookmark />,
           },
           {
-            path: '/:username',
+            path: 'profile/:username',
             element: <Profile />,
           },
           {
-            path: '/:username/status/:postId',
+            path: ':username/status/:postId',
             element: <UserStatus />,
           },
         ],

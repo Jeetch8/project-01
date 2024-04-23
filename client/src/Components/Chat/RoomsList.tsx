@@ -16,7 +16,7 @@ const RoomsList = () => {
 
   return (
     <div className="w-[400px] border-r-[1px] border-zinc-900 text-white">
-      <div className="flex justify-between py-[1vh] px-[1vw] bg-black backdrop-blur-xl sticky top-0 z-50">
+      <div className="flex justify-between py-[1vh] px-[1vw] bg-[rgba(0,0,0,0.9)] backdrop-blur-xl sticky top-0 z-50">
         <h2 className="font-bold text-[20px]">Messages</h2>
         <button
           className="flex items-center text-white px-4 py-2 rounded-full hover:bg-zinc-800"

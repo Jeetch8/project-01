@@ -12,67 +12,77 @@ import {
 import { TbMailFilled, TbMail } from 'react-icons/tb';
 import { RiFileList2Line, RiFileListFill } from 'react-icons/ri';
 import { PiUsersFill, PiUsers, PiUser, PiUserFill } from 'react-icons/pi';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AvatarImage from '@/Components/Global/AvatarImage';
 import { IoIosMore } from 'react-icons/io';
 import { Button } from '@/Components/Global/Button';
 import { FiFeather } from 'react-icons/fi';
 import { useGlobalContext } from '@/context/GlobalContext';
+import { NavLink } from 'react-router-dom';
 
 const navigationLinks = [
   {
     name: 'Home',
     iconOnStale: GoHome,
     iconOnSelection: GoHomeFill,
-    path: '/',
+    toInclude: 'home',
+    path: '/home',
   },
   {
     name: 'Explore',
     iconOnStale: IoSearchOutline,
     iconOnSelection: IoSearchSharp,
+    toInclude: 'explore',
     path: '/explore',
   },
   {
     name: 'Notifications',
     iconOnStale: IoNotificationsOutline,
     iconOnSelection: IoNotificationsSharp,
+    toInclude: 'notifications',
     path: '/notifications',
   },
   {
     name: 'Messages',
     iconOnStale: TbMail,
     iconOnSelection: TbMailFilled,
+    toInclude: 'messages',
     path: '/messages',
   },
   {
     name: 'Bookmarks',
     iconOnStale: IoBookmarkOutline,
     iconOnSelection: IoBookmark,
+    toInclude: 'bookmarks',
     path: '/bookmark',
   },
   {
     name: 'Lists',
     iconOnStale: RiFileList2Line,
     iconOnSelection: RiFileListFill,
+    toInclude: 'lists',
     path: '/list',
   },
   {
     name: 'Profile',
     iconOnStale: PiUser,
     iconOnSelection: PiUserFill,
-    path: '/profile',
+    path: '/profile/me',
+    toInclude: 'profile',
   },
   {
     name: 'Communities',
     iconOnStale: PiUsers,
     iconOnSelection: PiUsersFill,
     path: '/communities',
+    toInclude: 'communities',
   },
   {
     name: 'Settings',
     iconOnStale: IoSettingsOutline,
     iconOnSelection: IoSettingsSharp,
     path: '/settings',
+    toInclude: 'settings',
   },
 ];
 
@@ -85,20 +95,22 @@ export default function Sidebar() {
     <nav className="border-r-[2px] flex justify-between flex-col h-screen border-zinc-900 bg-black text-white pl-6 max-w-[280px] w-fit sticky top-0">
       <div className="pr-4">
         {navigationLinks.map((link) => (
-          <Link
+          <NavLink
             key={link.name}
             to={link.path}
-            className={`flex items-center rounded-full hover:bg-zinc-800 text-[18px] delay-100 duration-150 w-fit px-3 py-3 my-2 ${
-              pathname.includes(link.path) && 'font-bold'
-            }`}
+            className={({ isActive }) =>
+              `flex items-center rounded-full hover:bg-zinc-800 text-[18px] delay-100 duration-150 w-fit px-3 py-3 my-2 ${
+                isActive ? 'font-bold' : ''
+              }`
+            }
           >
-            {pathname.includes(link.path) ? (
+            {pathname.includes(link.toInclude) ? (
               <link.iconOnSelection className="w-7 h-7" />
             ) : (
               <link.iconOnStale className="w-7 h-7" />
             )}
             <span className="ml-4 hidden xl:inline-block">{link.name}</span>
-          </Link>
+          </NavLink>
         ))}
         <div className="xl:mr-6">
           <Button

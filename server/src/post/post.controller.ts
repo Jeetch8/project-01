@@ -22,11 +22,22 @@ import {
   FilesInterceptor,
 } from '@nestjs/platform-express';
 import { AuthRequest, jwtAuthTokenPayload } from '@/auth/entities/auth.entity';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @UseGuards(JwtAuthGuard)
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
+
+  @Get('search')
+  async searchPosts(
+    @Query('query') query: string,
+    @Query('page') page: number = 0,
+    @Query('limit') limit: number = 20
+  ) {
+    const result = await this.postService.searchPosts(query, page, limit);
+    return result;
+  }
 
   @Post('create')
   @UseInterceptors(FilesInterceptor('postimage', 4))
@@ -70,6 +81,23 @@ export class PostController {
     return { message: 'Post liked' };
   }
 
+  @Get('feed')
+  async getFeedPosts(@Req() req: AuthRequest, @Query('page') page: number = 0) {
+    const requestUser: jwtAuthTokenPayload = req.user;
+    const result = await this.postService.getFeedPosts(
+      requestUser.userId,
+      page
+    );
+    return result;
+  }
+
+  @Get(':postId')
+  async getPost(@Param('postId') postId: string, @Req() req: AuthRequest) {
+    const requestUser: jwtAuthTokenPayload = req.user;
+    const result = await this.postService.getPost(postId, requestUser.userId);
+    return result;
+  }
+
   @Get(':postid/comments')
   async getPostComments(
     @Param('postid') postId: string,
@@ -91,13 +119,6 @@ export class PostController {
       requestUser.userId
     );
     return { message: result };
-  }
-
-  @Get(':postId')
-  async getPost(@Param('postId') postId: string, @Req() req: AuthRequest) {
-    const requestUser: jwtAuthTokenPayload = req.user;
-    const result = await this.postService.getPost(postId, requestUser.userId);
-    return result;
   }
 
   @Put(':postId/comment')
@@ -127,20 +148,5 @@ export class PostController {
       media: commentimage,
     });
     return { message: 'Comment added successfully', post: result };
-  }
-
-  @Get('feed')
-  async getFeedPosts(
-    @Req() req: AuthRequest,
-    @Query('page') page: number = 0,
-    @Query('limit') limit: number = 10
-  ) {
-    const requestUser: jwtAuthTokenPayload = req.user;
-    const result = await this.postService.getFeedPosts(
-      requestUser.userId,
-      page,
-      limit
-    );
-    return result;
   }
 }

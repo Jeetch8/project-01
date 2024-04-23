@@ -1,8 +1,18 @@
 import NavSidebar from '@/Components/Global/NavSidebar';
 import { GlobalContextProvider } from '@/context/GlobalContext';
-import { Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const MainLayout = () => {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (pathname === '/') {
+      navigate('/home');
+    }
+  }, [pathname]);
+
   return (
     <GlobalContextProvider>
       <div className="flex mx-auto w-fit">

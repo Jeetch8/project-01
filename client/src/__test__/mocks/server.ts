@@ -69,20 +69,28 @@ export function makeServer({ environment = 'development' }) {
           typeof request.queryParams.query === 'string'
             ? request.queryParams.query.toLowerCase()
             : '';
-        const users = schema.db.users.filter((user) =>
-          user.full_name.toLowerCase().includes(query)
+        const users = schema.db.users.filter(
+          (user) =>
+            user.full_name.toLowerCase().includes(query) ||
+            user.username.toLowerCase().includes(query)
         );
         return {
           users: users.map((user) => ({
             id: user.id,
+            value: user.id,
+            label: user.full_name,
             username: user.username,
             full_name: user.full_name,
             profile_img: user.profile_img,
+            bio: user.bio,
           })),
+          hasMore: users.length > 10,
+          currentPage: 1,
+          nextPage: 2,
         };
       });
 
-      this.get('/user/feed', (schema, request) => {
+      this.get('/post/feed', (schema, request) => {
         const page = request.queryParams.page;
         const posts: (ISchemaPost & { userId: string })[] = schema.db.posts;
         const arr: IFeedPost[] = [];
@@ -95,15 +103,21 @@ export function makeServer({ environment = 'development' }) {
           arr.push({ ...posts[i], media: postMedia, creator: user });
         }
         return {
-          feed: arr,
+          posts: arr,
           hasMore: true,
           currentPage: page,
           nextPage: page ? Number(page) + 1 : 2,
         };
       });
 
-      this.get('/user/me', async (schema, request) => {
-        return { user: schema.db.users[0] };
+      this.get('/user/:username', async (schema, request) => {
+        if (request.params.username === 'me') {
+          return { user: schema.db.users[0] };
+        }
+        const user = schema.db.users.findBy({
+          username: request.params.username,
+        });
+        return { user };
       });
       this.patch('/post/:id/togglelike', (schema, request) => {
         const post = schema.db.posts.find(request.params.id);
@@ -265,6 +279,24 @@ export function makeServer({ environment = 'development' }) {
         };
       });
 
+      this.get('/post/search', (schema, request) => {
+        const page = request.queryParams.page;
+        const formattedPosts = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+        }));
+
+        return {
+          posts: formattedPosts,
+          hasMore: true,
+          nextPage: Number(page) + 1,
+          currentPage: page,
+        };
+      });
+
       this.get('/post/:id', (schema, request) => {
         const post = schema.db.posts[0];
         const user = schema.db.users[0];
@@ -285,22 +317,6 @@ export function makeServer({ environment = 'development' }) {
         return { post: schema.db.posts[0] };
       });
 
-      // this.get('/posts/comments', (schema, request) => {
-      //   const page = request.queryParams.page;
-      //   const user = schema.db.users[0];
-      //   const formattedPosts = schema.db.posts.map((post) => ({
-      //     ...post,
-      //     comments: [], // Assuming comments are not pre-loaded
-      //     creator: user,
-      //   }));
-
-      //   return {
-      //     posts: formattedPosts,
-      //     hasMore: true,
-      //     nextPage: Number(page) + 1,
-      //     currentPage: page,
-      //   };
-      // });
       this.passthrough('https://tenor.googleapis.com/*');
     },
   });

@@ -120,6 +120,7 @@ const PostExtraAsset: React.FC<PostExtraAssetProps> = ({
           />
           <div ref={emojiPickerRef} style={{ position: 'absolute' }}>
             <EmojiPicker
+              className="z-50"
               aria-label="emoji-picker"
               open={showEmojiPicker}
               onEmojiClick={handleEmojiClick}

@@ -17,8 +17,8 @@ const Feed = ({ items, hasMore, fetchMoreData }: Props) => {
         next={fetchMoreData}
         hasMore={hasMore}
         endMessage={
-          <div className="text-center text-lg text-white mt-5">
-            No posts to show
+          <div className="text-center text-lg text-white mt-5 h-[20vh]">
+            <p>No posts to show</p>
           </div>
         }
         loader={

@@ -89,6 +89,18 @@ class EnvironmentVariables {
 
   @IsString()
   JWT_SSO_VERIFICATION_TOKEN_EXPIRY: string;
+
+  @IsString()
+  CLD_CLOUD_NAME: string;
+
+  @IsString()
+  CLD_API_KEY: string;
+
+  @IsString()
+  CLD_API_SECRET: string;
+
+  @IsString()
+  GOOGLE_GENERATIVE_AI_API_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

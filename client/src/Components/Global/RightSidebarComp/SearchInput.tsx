@@ -1,94 +1,123 @@
-'use client';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import AsyncSelect from 'react-select/async';
+import { base_url } from '@/utils/base_url';
+import { getTokenFromLocalStorage } from '@/utils/localstorage';
+import { ParticipantDocument } from '@server/src/schemas/Participant.schema';
+import AvatarImage from '../AvatarImage';
+import { useNavigate } from 'react-router-dom';
+import { useGlobalContext } from '@/context/GlobalContext';
 
-interface ISearchResults {
+interface UserOption {
   id: string;
-  avatar: string;
-  name: string;
+  value: string;
+  label: string;
   username: string;
+  full_name: string;
+  profile_img: string;
 }
 
-import { useEffect, useRef, useState } from 'react';
-import { RiSearchLine } from 'react-icons/ri';
-import { twMerge } from 'tailwind-merge';
+interface FormData {
+  selectedUser: UserOption | null;
+}
 
 export default function SearchInput() {
-  const [searchInput, setSearchInput] = useState('');
-  const [searchResults, setSearchResults] = useState<ISearchResults[]>([]);
-  const [boxResultsBoxOpen, setResultsBoxOpen] = useState(false);
-  const searchInputRef = useRef<HTMLDivElement>(null);
+  const [menuIsOpen, setMenuIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useGlobalContext();
+  const { control } = useForm<FormData>({
+    defaultValues: {
+      selectedUser: null,
+    },
+  });
 
-  useEffect(() => {
-    function handleClickOutside(event: any) {
-      if (
-        searchInputRef.current &&
-        !searchInputRef.current.contains(event.target)
-      ) {
-        setResultsBoxOpen(false);
-      }
+  const promiseOptions = async (inputValue: string): Promise<UserOption[]> => {
+    if (inputValue.length < 2) {
+      return Promise.resolve([]);
     }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [searchInputRef]);
+    return await fetch(`${base_url}/user?query=${inputValue}`, {
+      headers: {
+        Authorization: `Bearer ${getTokenFromLocalStorage()}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => data.users);
+  };
 
   return (
-    <div className="relative" ref={searchInputRef}>
-      <div
-        className={twMerge(
-          'flex items-center bg-zinc-800 px-5 rounded-full  space-x-4 border-[0.5px] border-zinc-800 z-50',
-          boxResultsBoxOpen && 'border-blue-400'
-        )}
-      >
-        <RiSearchLine
-          className={twMerge(
-            'text-zinc-400',
-            boxResultsBoxOpen && 'text-blue-400'
-          )}
-        />
-        <input
-          onClick={() => setResultsBoxOpen(true)}
-          type="text"
-          placeholder="Search"
-          className="bg-transparent w-full text-white placeholder-zinc-400"
-          style={{
-            fontSize: '1.125rem',
-            outline: 'none',
-            border: 'none',
-            boxShadow: 'none',
-          }}
-        />
-      </div>
-      {boxResultsBoxOpen && (
-        <div className="absolute border-2 border-zinc-800 bg-black w-full min-h-[200px] rounded-xl top-10 z-10">
-          {searchResults.length === 0 ? (
-            searchInput.length > 0 ? (
-              <p className="text-white text-center">No results found</p>
-            ) : (
-              <p className=" text-center mt-4 text-zinc-500">
-                Try saerching for people, list or keywords
-              </p>
-            )
-          ) : (
-            searchResults.map((el) => {
-              return (
-                <div key={el.id} className="flex items-center space-x-4">
-                  <img
-                    src={el.avatar}
-                    alt="avatar"
-                    className="w-12 h-12 rounded-full"
-                  />
+    <div className="relative">
+      <Controller
+        name="selectedUser"
+        control={control}
+        render={({ field }) => (
+          <AsyncSelect
+            {...field}
+            noOptionsMessage={({ inputValue }) =>
+              inputValue.length < 2
+                ? 'Start typing'
+                : 'No users found, try a different search'
+            }
+            onMenuOpen={() => setMenuIsOpen(true)}
+            onMenuClose={() => setMenuIsOpen(false)}
+            menuIsOpen={menuIsOpen}
+            cacheOptions
+            defaultOptions
+            closeMenuOnSelect
+            loadOptions={promiseOptions}
+            placeholder="Search"
+            className="text-black border-[2px] border-zinc-900 rounded-full px-2 focus:border-blue-500 outline-blue-500"
+            components={{
+              DropdownIndicator: () => null,
+              IndicatorSeparator: () => null,
+              Option: ({ data, ...props }) => (
+                <div
+                  onClick={() => {
+                    if (data.id === user?.id) {
+                      navigate('/profile/me');
+                    } else {
+                      navigate(`/profile/${data.username}`);
+                    }
+                    setMenuIsOpen(false);
+                  }}
+                  {...props}
+                  className="flex items-center p-2 cursor-pointer hover:bg-gray-900 gap-x-3"
+                >
+                  <AvatarImage url={data.profile_img} diameter="40px" />
                   <div>
-                    <h1>{el.name}</h1>
-                    <p>{el.username}</p>
+                    <div className="font-semibold text-white">
+                      {data.full_name}
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      @{data.username}
+                    </div>
                   </div>
                 </div>
-              );
-            })
-          )}
-        </div>
-      )}
+              ),
+            }}
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                backgroundColor: 'transparent',
+                border: 'none',
+                boxShadow: 'none',
+                '&:hover': {
+                  border: 'none',
+                },
+              }),
+              input: (provided) => ({
+                ...provided,
+                color: 'white',
+              }),
+              menu: (provided) => ({
+                ...provided,
+                backgroundColor: 'black',
+                color: 'white',
+                border: '2px solid #2F3336',
+              }),
+            }}
+          />
+        )}
+      />
     </div>
   );
 }

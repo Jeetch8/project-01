@@ -21,6 +21,12 @@ import {
 import { createId } from '@paralleldrive/cuid2';
 import { UAParser } from 'ua-parser-js';
 import { hashPassword } from './src/utils/helpers';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createReadStream } from 'fs';
+import os from 'os';
+import * as path from 'path';
+import * as csv from 'csv-parser';
+import * as fs from 'fs';
 
 const driver = Driver.driver(
   'bolt://localhost:7687',
@@ -29,10 +35,16 @@ const driver = Driver.driver(
     process.env.NEO4J_DB_PASSWORD
   )
 );
+const genAIClient = new GoogleGenerativeAI(
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY
+);
+const model = genAIClient.getGenerativeModel({ model: 'text-embedding-004' });
 
 const session = driver.session();
 
-const createUser = async (): Promise<User> => {
+const createUser = async (
+  embedding: number[]
+): Promise<User & { embedding: number[] }> => {
   const firstName = faker.person.firstName();
   const lastName = faker.person.lastName();
 
@@ -55,6 +67,7 @@ const createUser = async (): Promise<User> => {
     location: faker.location.city(),
     followers_count: faker.number.int({ min: 0, max: 1000 }),
     following_count: faker.number.int({ min: 0, max: 1000 }),
+    embedding,
   };
 };
 
@@ -68,13 +81,16 @@ const createUserToken = (): UserToken => {
   };
 };
 
-const createPost = (): Post => {
+const createPost = (index: number): Post & { embedding: number[] } => {
+  const tweet = sampleTweets[index].Text;
+  const embedding = sampleTweetsEmbedding[index];
   return {
     id: createId(),
-    caption: faker.lorem.sentence(),
+    caption: tweet,
     likes_count: faker.number.int({ min: 0, max: 1000 }),
     created_on: faker.date.past(),
     updated_on: faker.date.recent(),
+    embedding,
   };
 };
 
@@ -116,23 +132,50 @@ const createParticipant = (user: User): any => {
   };
 };
 
+let sampleTweets = [];
+let sampleTweetsEmbedding = [];
+let currentTweetIndex = 0;
+let sampleTwitterUsers = [];
+let sampleTwitterUsersEmbedding = [];
+let sampleTwitterUsersEmbeddingIndex = 0;
+
 const seed = async () => {
   // Connect to MongoDB
   await mongoose.connect(process.env.MONGODB_URI);
 
-  // Clear existing participants
   await mongoose.connection.collection('participants').deleteMany({});
   await mongoose.connection.collection('rooms').deleteMany({});
+  await session.run(`MATCH (n) DETACH DELETE n;`);
+  // await session.run(`DROP INDEX postembeddings IF EXISTS;`);
+  // await session.run(`DROP INDEX userembeddings IF EXISTS;`);
 
-  await session.run('MATCH (n) DETACH DELETE n');
+  // await session.run(`
+  //   CREATE VECTOR INDEX postembeddings
+  //   FOR (n:POST) ON (n.embedding)
+  //   OPTIONS {indexConfig: {
+  //     \`vector.dimensions\`: 768,
+  //     \`vector.similarity_function\`: 'cosine'
+  //   }}
+  // `);
+  // await session.run(`
+  //   CREATE VECTOR INDEX userembeddings
+  //   FOR (n:USER) ON (n.embedding)
+  //   OPTIONS {indexConfig: {
+  //     \`vector.dimensions\`: 768,
+  //     \`vector.similarity_function\`: 'cosine'
+  //   }}
+  // `);
+
   const userids = [];
   const followSet = new Set();
   const allPostsIds = [];
-  for (let i = 0; i < 10; i++) {
-    const user = await createUser();
+  for (let i = 0; i < 30; i++) {
+    const user = await createUser(
+      sampleTwitterUsersEmbedding[sampleTwitterUsersEmbeddingIndex]
+    );
     const userToken = createUserToken();
     let authSessionStr = '';
-    for (let j = 0; j < faker.number.int({ min: 1, max: 5 }); j++) {
+    for (let j = 0; j < faker.number.int({ min: 1, max: 3 }); j++) {
       const authSession = createAuthSession();
       authSessionStr += ` CREATE (u) - [z${j}:SESSION]-> (a${j}:AUTH_SESSION {${createAuthSessionPropertiesString(authSession)}}) `;
     }
@@ -165,8 +208,8 @@ const seed = async () => {
 
     // Create posts for each user
     const postIds = [];
-    for (let j = 0; j < faker.number.int({ min: 1, max: 10 }); j++) {
-      const post = createPost();
+    for (let j = 0; j < faker.number.int({ min: 1, max: 20 }); j++) {
+      const post = createPost(currentTweetIndex);
       let postMediaStr = '';
       for (let k = 0; k < faker.number.int({ min: 1, max: 3 }); k++) {
         const postMedia = createPostMedia(post.id, user.id);
@@ -176,12 +219,13 @@ const seed = async () => {
       }
       await session.run(
         `MATCH (u:USER {id: $userId})
-        CREATE (p:POST {${createPostPropertiesString(post)}})
+        CREATE (p:POST {${createPostPropertiesString(post)}, embedding: $embedding})
         CREATE (u)-[:POSTED]->(p)
         ${postMediaStr}
          RETURN p`,
-        { userId: user.id }
+        { userId: user.id, embedding: post.embedding }
       );
+      currentTweetIndex++;
     }
 
     // Create replies for random posts
@@ -191,7 +235,7 @@ const seed = async () => {
       j++
     ) {
       const originalPostId = faker.helpers.arrayElement(allPostsIds);
-      const reply = createPost();
+      const reply = createPost(currentTweetIndex);
       let replyMediaStr = '';
       for (let k = 0; k < faker.number.int({ min: 0, max: 3 }); k++) {
         const replyMedia = createPostMedia(reply.id, user.id);
@@ -200,13 +244,14 @@ const seed = async () => {
       allPostsIds.push(reply.id);
       await session.run(
         `MATCH (u:USER {id: $userId}), (p:POST {id: $originalPostId})
-            CREATE (r:POST {${createPostPropertiesString(reply)}})
+            CREATE (r:POST {${createPostPropertiesString(reply)}, embedding: $embedding})
             CREATE (u)-[:POSTED]->(r)
             CREATE (r)-[:REPLY_TO]->(p)
             ${replyMediaStr}
             RETURN r`,
-        { userId: user.id, originalPostId }
+        { userId: user.id, originalPostId, embedding: reply.embedding }
       );
+      currentTweetIndex++;
     }
 
     const likedSet = new Set();
@@ -236,11 +281,102 @@ const seed = async () => {
         );
       }
     }
+    sampleTwitterUsersEmbeddingIndex++;
   }
 };
 
-seed().then(() => {
-  session.close();
-  driver.close();
-  process.exit(0);
-});
+try {
+  createReadStream(path.join(__dirname, 'sample', 'twitter_dataset.csv'))
+    .pipe(csv())
+    .on('data', (data) => {
+      sampleTweets.push(data);
+    })
+    .on('end', async () => {
+      console.log('csv data pushed');
+      createReadStream(
+        path.join(__dirname, 'sample', 'twitter_user_scraping.csv')
+      )
+        .pipe(csv())
+        .on('data', (data) => {
+          sampleTwitterUsers.push(data);
+        })
+        .on('end', async () => {
+          if (
+            fs.existsSync(
+              path.join(__dirname, 'sample', 'twitter_user_embeddings.json')
+            )
+          ) {
+            sampleTwitterUsersEmbedding = JSON.parse(
+              fs.readFileSync(
+                path.join(__dirname, 'sample', 'twitter_user_embeddings.json'),
+                'utf8'
+              )
+            );
+          } else {
+            const temp2 = [];
+            for (let i = 0; i < 30; i++) {
+              temp2.push({
+                content: {
+                  parts: [{ text: sampleTwitterUsers[i].Description }],
+                  role: 'user',
+                },
+              });
+            }
+            await model
+              .batchEmbedContents({
+                requests: temp2,
+              })
+              .then((res) => {
+                res.embeddings.forEach((embedding, index) => {
+                  sampleTwitterUsersEmbedding.push(embedding.values);
+                });
+              });
+            fs.writeFileSync(
+              path.join(__dirname, 'sample', 'twitter_user_embeddings.json'),
+              JSON.stringify(sampleTwitterUsersEmbedding)
+            );
+          }
+        });
+
+      if (
+        fs.existsSync(path.join(__dirname, 'sample', 'tweet_embeddings.json'))
+      ) {
+        sampleTweetsEmbedding = JSON.parse(
+          fs.readFileSync(
+            path.join(__dirname, 'sample', 'tweet_embeddings.json'),
+            'utf8'
+          )
+        );
+      } else {
+        const temp = [];
+        for (let i = 0; i < 1200; i++) {
+          temp.push({
+            content: { parts: [{ text: sampleTweets[i].Text }], role: 'user' },
+          });
+        }
+        for (let i = 0; i < 12; i++) {
+          await model
+            .batchEmbedContents({
+              requests: temp.slice(i * 100, (i + 1) * 100),
+            })
+            .then((res) => {
+              res.embeddings.forEach((embedding, index) => {
+                sampleTweetsEmbedding.push(embedding.values);
+              });
+            });
+        }
+        fs.writeFileSync(
+          path.join(__dirname, 'sample', 'tweet_embeddings.json'),
+          JSON.stringify(sampleTweetsEmbedding)
+        );
+      }
+      console.log('embedding done');
+      await seed();
+      console.log('seed done');
+      session.close();
+      driver.close();
+      process.exit(0);
+    });
+} catch (error) {
+  console.log(error);
+}

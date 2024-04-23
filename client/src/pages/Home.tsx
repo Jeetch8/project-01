@@ -11,15 +11,16 @@ const Home = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const { fetchState, doFetch } = useFetch<{
-    feed: IFeedPost[];
+    posts: IFeedPost[];
     hasMore: boolean;
     nextPage: number;
   }>({
-    url: `${base_url}/user/feed?page=${currentPage}`,
+    url: `${base_url}/post/feed?page=${currentPage}`,
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {
-      setPosts((prevPosts) => [...prevPosts, ...data.feed]);
+      console.log(data);
+      setPosts((prevPosts) => [...prevPosts, ...data.posts]);
       setHasMore(data.hasMore);
       setCurrentPage(data.nextPage);
     },
