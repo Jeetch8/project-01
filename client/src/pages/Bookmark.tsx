@@ -4,7 +4,7 @@ import { base_url } from '@/utils/base_url';
 import Post from '@/Components/Home/Post';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { IFeedPost } from '@/utils/interfaces';
-import { BounceLoader } from 'react-spinners';
+import { HashLoader } from 'react-spinners';
 import { useGlobalContext } from '@/context/GlobalContext';
 
 const Bookmark = () => {
@@ -44,7 +44,7 @@ const Bookmark = () => {
         hasMore={hasMore}
         loader={
           <div className="flex justify-center items-center p-5">
-            <BounceLoader color="#fff" />
+            <HashLoader color="#fff" />
           </div>
         }
         endMessage={

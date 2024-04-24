@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { base_url } from '@/utils/base_url';
 import { IFeedPost } from '@/utils/interfaces';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import BounceLoader from 'react-spinners/BounceLoader';
 import Post from '@/Components/Home/Post';
 import { toast } from 'react-hot-toast';
-import { FetchStates, useFetch } from '@/hooks/useFetch';
+import { useFetch } from '@/hooks/useFetch';
 import { useParams } from 'react-router-dom';
+import { HashLoader } from 'react-spinners';
 
 const PostsCreated: React.FC = () => {
   const [posts, setPosts] = useState<IFeedPost[]>([]);
@@ -48,7 +48,7 @@ const PostsCreated: React.FC = () => {
         hasMore={hasMore}
         loader={
           <div className="flex justify-center items-center p-5">
-            <BounceLoader color="#fff" />
+            <HashLoader color="#fff" />
           </div>
         }
         endMessage={

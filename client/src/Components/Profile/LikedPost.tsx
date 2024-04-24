@@ -2,67 +2,45 @@ import { useState, useEffect } from 'react';
 import { base_url } from '@/utils/base_url';
 import { IFeedPost } from '@/utils/interfaces';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import BounceLoader from 'react-spinners/BounceLoader';
+import HashLoader from 'react-spinners/HashLoader';
 import Post from '@/Components/Home/Post';
-import { getTokenFromLocalStorage } from '@/utils/localstorage';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import { useParams } from 'react-router-dom';
+import { useFetch } from '@/hooks/useFetch';
 
 const LikedPost = () => {
   const [posts, setPosts] = useState<IFeedPost[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [nextPage, setNextPage] = useState(1);
   const { username: paramsUserName } = useParams();
-  const navigate = useNavigate();
 
-  const fetchMoreData = () => {
-    const token = getTokenFromLocalStorage();
-    if (!token) {
-      toast.error('Please login');
-      navigate('/login');
-      return;
-    }
-
-    fetch(
-      base_url + `/user/${paramsUserName}/liked-posts?page=${currentPage}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
-      .then((response) => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            toast.error('Please login');
-            navigate('/login');
-            throw new Error('Unauthorized');
-          }
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setPosts((prevPosts) => [...prevPosts, ...data.posts]);
-        setHasMore(data.hasMore);
-        setCurrentPage(data.nextPage);
-      })
-      .catch((err) => console.log(err));
-  };
+  const { doFetch } = useFetch<{
+    posts: IFeedPost[];
+    hasMore: boolean;
+    nextPage: number;
+  }>({
+    url: `${base_url}/user/${paramsUserName}/liked-posts?page=${nextPage}`,
+    method: 'GET',
+    authorized: true,
+    onSuccess: (data) => {
+      setNextPage(data.nextPage);
+      setPosts((prevPosts) => [...prevPosts, ...data.posts]);
+      setHasMore(data.hasMore);
+    },
+  });
 
   useEffect(() => {
-    fetchMoreData();
+    doFetch();
   }, []);
 
   return (
     <div className="border-r-[2px] border-zinc-900 bg-black max-w-[600px] inline w-full">
       <InfiniteScroll
         dataLength={posts.length}
-        next={fetchMoreData}
+        next={doFetch}
         hasMore={hasMore}
         loader={
           <div className="flex justify-center items-center p-5">
-            <BounceLoader color="#fff" />
+            <HashLoader color="#fff" />
           </div>
         }
         endMessage={

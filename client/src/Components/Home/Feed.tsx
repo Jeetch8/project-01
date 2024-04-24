@@ -6,13 +6,13 @@ interface Props {
 
 import Post from './Post';
 import { IFeedPost } from '@/utils/interfaces';
-import InfinteScroll from 'react-infinite-scroll-component';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import HashLoader from 'react-spinners/HashLoader';
 
 const Feed = ({ items, hasMore, fetchMoreData }: Props) => {
   return (
     <div>
-      <InfinteScroll
+      <InfiniteScroll
         dataLength={items.length}
         next={fetchMoreData}
         hasMore={hasMore}
@@ -30,7 +30,7 @@ const Feed = ({ items, hasMore, fetchMoreData }: Props) => {
         {items?.map((post, ind) => {
           return <Post key={ind} post={post} />;
         })}
-      </InfinteScroll>
+      </InfiniteScroll>
     </div>
   );
 };

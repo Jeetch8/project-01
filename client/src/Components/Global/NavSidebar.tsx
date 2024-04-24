@@ -10,7 +10,6 @@ import {
   IoSettingsSharp,
 } from 'react-icons/io5';
 import { TbMailFilled, TbMail } from 'react-icons/tb';
-import { RiFileList2Line, RiFileListFill } from 'react-icons/ri';
 import { PiUsersFill, PiUsers, PiUser, PiUserFill } from 'react-icons/pi';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AvatarImage from '@/Components/Global/AvatarImage';
@@ -19,6 +18,7 @@ import { Button } from '@/Components/Global/Button';
 import { FiFeather } from 'react-icons/fi';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { NavLink } from 'react-router-dom';
+import { Tooltip } from 'react-tooltip';
 
 const navigationLinks = [
   {
@@ -57,13 +57,6 @@ const navigationLinks = [
     path: '/bookmark',
   },
   {
-    name: 'Lists',
-    iconOnStale: RiFileList2Line,
-    iconOnSelection: RiFileListFill,
-    toInclude: 'lists',
-    path: '/list',
-  },
-  {
     name: 'Profile',
     iconOnStale: PiUser,
     iconOnSelection: PiUserFill,
@@ -95,22 +88,27 @@ export default function Sidebar() {
     <nav className="border-r-[2px] flex justify-between flex-col h-screen border-zinc-900 bg-black text-white pl-6 max-w-[280px] w-fit sticky top-0">
       <div className="pr-4">
         {navigationLinks.map((link) => (
-          <NavLink
-            key={link.name}
-            to={link.path}
-            className={({ isActive }) =>
-              `flex items-center rounded-full hover:bg-zinc-800 text-[18px] delay-100 duration-150 w-fit px-3 py-3 my-2 ${
-                isActive ? 'font-bold' : ''
-              }`
-            }
-          >
-            {pathname.includes(link.toInclude) ? (
-              <link.iconOnSelection className="w-7 h-7" />
-            ) : (
-              <link.iconOnStale className="w-7 h-7" />
-            )}
-            <span className="ml-4 hidden xl:inline-block">{link.name}</span>
-          </NavLink>
+          <>
+            <NavLink
+              key={link.name}
+              to={link.path}
+              data-tooltip-id={`navlink-${link.name}`}
+              data-tooltip-content={link.name}
+              className={({ isActive }) =>
+                `flex items-center rounded-full hover:bg-zinc-800 text-[18px] delay-100 duration-150 w-fit px-3 py-3 my-2 ${
+                  isActive ? 'font-bold' : ''
+                }`
+              }
+            >
+              {pathname.includes(link.toInclude) ? (
+                <link.iconOnSelection className="w-7 h-7" />
+              ) : (
+                <link.iconOnStale className="w-7 h-7" />
+              )}
+              <span className="ml-4 hidden xl:inline-block">{link.name}</span>
+            </NavLink>
+            <Tooltip id={`navlink-${link.name}`} />
+          </>
         ))}
         <div className="xl:mr-6">
           <Button

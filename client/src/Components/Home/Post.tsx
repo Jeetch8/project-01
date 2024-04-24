@@ -12,6 +12,7 @@ import { base_url } from '@/utils/base_url';
 import { IFeedPost } from '@/utils/interfaces';
 import CommentPostModal from '@/Components/Modals/CommentPostModal';
 import { twMerge } from 'tailwind-merge';
+import { PiUsersFill } from 'react-icons/pi';
 
 interface Props {
   post: IFeedPost;
@@ -49,6 +50,11 @@ const Post = ({ post, outerClassName }: Props) => {
         outerClassName
       )}
     >
+      {post.isCommunityPost && (
+        <div className="flex items-center gap-x-2 text-sm ml-12 font-semibold text-gray-500">
+          <PiUsersFill color="gray" size={20} /> {post.communityName}
+        </div>
+      )}
       <div className="flex gap-x-2 items-start w-full">
         <div>
           <AvatarImage url={post?.creator?.profile_img} diameter={'42px'} />
@@ -56,10 +62,26 @@ const Post = ({ post, outerClassName }: Props) => {
         <div className="w-full pr-2">
           <div className="flex justify-between">
             <div>
-              <span className="font-bold mr-1">{post?.creator?.full_name}</span>
-              <span className="font-light text-gray-500 ml-1">
+              <span
+                className="font-bold mr-1 hover:underline cursor-pointer"
+                onClick={() => navigate(`/profile/${post.creator.username}`)}
+              >
+                {post?.creator?.full_name}
+              </span>
+              <span
+                className="font-light text-gray-400 ml-1"
+                onClick={() => navigate(`/profile/${post.creator.username}`)}
+              >
                 @{post?.creator?.username}
               </span>
+              {post.isCommunityPost && post.roleInCommunity && (
+                <>
+                  <span> · </span>
+                  <span className="text-sm ml-1 bg-[#199BF0] text-white px-2 rounded-[10%]">
+                    {post.roleInCommunity}
+                  </span>
+                </>
+              )}
               <span> · </span>
               <span className="text-sm text-gray-500 ml-1">
                 {post?.timeAgo}

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { IFeedPost } from '@/utils/interfaces';
 import { base_url } from '@/utils/base_url';
 import { useFetch } from '@/hooks/useFetch';
 import PostsTab from '@/Components/Explore/PostsTab';
 import UsersTab from '@/Components/Explore/UsersTab';
+import { IoSearch } from 'react-icons/io5';
+import { twMerge } from 'tailwind-merge';
 
 const Explore: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'posts' | 'users'>('posts');
@@ -114,32 +116,54 @@ const Explore: React.FC = () => {
     <div className="w-[620px] text-white border-r-[1px] border-neutral-800">
       <div className="bg-[rgba(0,0,0,0.9)] backdrop-blur-xl sticky top-0 z-50">
         <div className="border-b border-neutral-800 p-4">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearch}
-            placeholder="Search"
-            className="w-full bg-transparent text-white border-[2px] border-zinc-900 rounded-full px-4 py-2 focus:border-blue-500 outline-none"
-          />
+          <div className="flex items-center gap-2 w-full bg-transparent text-white border-[2px] border-zinc-900 rounded-full focus:border-blue-500 outline-none overflow-hidden px-4">
+            <IoSearch className="w-5 h-5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
+              placeholder="Search"
+              style={{
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+              }}
+              className="bg-transparent w-full outline-none focus:outline-none"
+            />
+          </div>
         </div>
         <div className="flex border-b border-neutral-800">
-          <button
-            className={`flex-1 py-2 text-center border-b-2 border-black transition-all duration-300 hover:bg-neutral-900 ${
-              activeTab === 'posts' ? 'border-blue-500' : ''
-            }`}
+          <div
+            className={
+              'pt-[15px] cursor-pointer text-gray-500 hover:bg-neutral-900 group duration-300 w-full transition-all'
+            }
             onClick={() => handleTabChange('posts')}
           >
-            Posts
-          </button>
-          <button
-            className={`flex-1 py-2 text-center border-b-2 border-black transition-all duration-300 hover:bg-neutral-900 ${
-              activeTab === 'users' ? 'border-blue-500' : ''
-            }`}
+            <p
+              className={twMerge(
+                'border-b-[3px] rounded-sm pb-[2vh] border-transparent w-fit mx-auto duration-300 transition-all',
+                activeTab === 'posts' && 'border-blue-500 text-white'
+              )}
+            >
+              Posts
+            </p>
+          </div>
+          <div
+            className={
+              'pt-[15px] cursor-pointer text-gray-500 hover:bg-neutral-900 transition-all group duration-300 w-full'
+            }
             onClick={() => handleTabChange('users')}
           >
-            People
-          </button>
+            <p
+              className={twMerge(
+                'border-b-[3px] rounded-sm pb-[2vh] border-transparent w-fit mx-auto duration-300 transition-all',
+                activeTab === 'users' && 'border-blue-500 text-white'
+              )}
+            >
+              Likes
+            </p>
+          </div>
         </div>
       </div>
       {renderTabContent()}

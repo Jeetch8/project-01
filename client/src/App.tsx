@@ -18,6 +18,8 @@ import GithubLogin from './pages/GithubLoginCallback';
 import EmptyChatDisplay from './Components/Chat/EmptyChatDisplay';
 import GroupChatDisplay from './Components/Chat/GroupChat';
 import PrivateChatDisplay from './Components/Chat/PrivateChat';
+import Communities from './pages/Communities';
+import SingleCommunity from './pages/SingleCommunity';
 
 const router = createBrowserRouter([
   {
@@ -81,6 +83,14 @@ const router = createBrowserRouter([
           {
             path: 'bookmark',
             element: <Bookmark />,
+          },
+          {
+            path: 'communities',
+            element: <Communities />,
+          },
+          {
+            path: 'communities/:id',
+            element: <SingleCommunity />,
           },
           {
             path: 'profile/:username',

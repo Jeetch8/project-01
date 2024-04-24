@@ -11,7 +11,7 @@ export default function PostImages({ media }: Props) {
   if (media.length === 0) return null;
 
   return (
-    <PhotoProvider className="">
+    <PhotoProvider>
       <div
         className={twMerge(
           'grid grid-cols-2 grid-rows-1 gap-3 w-full h-[320px] mb-6',

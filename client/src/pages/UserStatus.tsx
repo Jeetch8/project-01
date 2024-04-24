@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Post from '@/Components/Home/Post';
 import AvatarImage from '@/Components/Global/AvatarImage';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { useFetch, FetchStates } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { BounceLoader, RingLoader } from 'react-spinners';
+import { HashLoader } from 'react-spinners';
 import { IPostPage, IFeedPost } from '@/utils/interfaces';
 import { IoArrowBack } from 'react-icons/io5';
 import TextareaAutoSize from 'react-textarea-autosize';
@@ -36,9 +36,6 @@ const UserStatus: React.FC = () => {
     url: base_url + `/post/${postId}`,
     authorized: true,
     method: 'GET',
-    onSuccess: (res) => {
-      console.log(res, 'userstatus');
-    },
   });
 
   const { doFetch: replyToPost } = useFetch({
@@ -59,6 +56,7 @@ const UserStatus: React.FC = () => {
     fetch(base_url + `/post/${postId}/comments?page=${currentPage}`)
       .then((response) => response.json())
       .then((data) => {
+        console.log(data);
         setComments((prevComments) => [...prevComments, ...data.posts]);
         setHasMore(data.hasMore);
         setCurrentPage(data.nextPage);
@@ -113,7 +111,7 @@ const UserStatus: React.FC = () => {
   if (fetchState === FetchStates.LOADING) {
     return (
       <div className="flex justify-center items-center h-screen text-white max-w-[600px] w-[600px]">
-        <RingLoader color="#1DA1F2" size={50} />
+        <HashLoader color="#1DA1F2" size={50} />
       </div>
     );
   }
@@ -205,7 +203,7 @@ const UserStatus: React.FC = () => {
         hasMore={hasMore}
         loader={
           <div className="flex justify-center items-center p-5">
-            <BounceLoader color="#fff" />
+            <HashLoader color="#fff" />
           </div>
         }
         endMessage={

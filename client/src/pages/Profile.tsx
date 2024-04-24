@@ -7,13 +7,14 @@ import Dayjs from 'dayjs';
 import LikedPost from '@/Components/Profile/LikedPost';
 import PostsCreated from '@/Components/Profile/PostsCreated';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
+import 'react-photo-view/dist/react-photo-view.css';
+import PostMedia from '@/Components/Profile/CreatedPostsMedia';
 import { IGlobalContextUser, useGlobalContext } from '@/context/GlobalContext';
 import AvatarTemplate from '@/assets/AvatarTemplate.png';
 import BlackScreen from '@/assets/black-screen_39.png';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { IUser } from '@/utils/interfaces';
 import RingLoader from 'react-spinners/RingLoader';
 
 const Profile = () => {
@@ -147,11 +148,29 @@ const Profile = () => {
                     Likes
                   </p>
                 </div>
+                <div
+                  className={
+                    'pt-[15px] cursor-pointer text-gray-500 hover:bg-zinc-800 group duration-200 w-full'
+                  }
+                  onClick={() => setTweetToShow('media')}
+                >
+                  <p
+                    className={twMerge(
+                      'border-b-[3px] rounded-sm pb-[2vh] border-transparent w-fit mx-auto duration-200',
+                      tweetsToShow === 'media' && 'border-blue-400 text-white'
+                    )}
+                  >
+                    Media
+                  </p>
+                </div>
               </div>
             </div>
             <div className="text-white">
               {tweetsToShow === 'allUserTweets' && <PostsCreated />}
               {tweetsToShow === 'likedTweets' && <LikedPost />}
+              {tweetsToShow === 'media' && (
+                <PostMedia url={`${base_url}/user/${paramsUserName}/media`} />
+              )}
             </div>
           </div>
         </div>

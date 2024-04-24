@@ -8,9 +8,8 @@ import {
 import {
   IFeedPost,
   IMediaType,
-  IPost,
   ISchemaPost,
-  IUser,
+  ICommunity,
 } from '@/utils/interfaces';
 import { faker } from '@faker-js/faker';
 
@@ -243,7 +242,7 @@ export function makeServer({ environment = 'development' }) {
         };
       });
 
-      this.get('/user/liked-posts', (schema, request) => {
+      this.get('/user/:username/liked-posts', (schema, request) => {
         const page = request.queryParams.page;
         const formattedPosts = schema.db.posts.map((post) => ({
           ...post,
@@ -318,6 +317,221 @@ export function makeServer({ environment = 'development' }) {
       });
 
       this.passthrough('https://tenor.googleapis.com/*');
+
+      this.get('/user/communities', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+        const communities: ICommunity[] = Array(20)
+          .fill(null)
+          .map(() => ({
+            id: faker.string.uuid(),
+            name: faker.word.words(2),
+            banner_img: faker.image.url(),
+            members_count: faker.number.int({ min: 100, max: 10000 }),
+            description: faker.word.words(),
+            members: Array(10)
+              .fill(null)
+              .map(() => faker.string.uuid()),
+          }));
+        const posts: IFeedPost[] = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+          isCommunityPost: true,
+          communityName: faker.helpers.arrayElement(communities).name,
+          roleInCommunity: faker.helpers.maybe(
+            () => faker.helpers.arrayElement(['Admin', 'Mod'] as const),
+            { probability: 0.3 }
+          ),
+        }));
+
+        return {
+          communities,
+          posts: {
+            posts,
+            hasMore: true,
+            nextPage: page + 1,
+            currentPage: page,
+          },
+        };
+      });
+
+      this.get('/community/:communityId', (schema, request) => {
+        const communityId = request.params.communityId;
+        const page = parseInt(request.queryParams.page as string) || 1;
+
+        const community: ICommunity = {
+          id: communityId,
+          name: faker.word.words(2),
+          banner_img: faker.image.url(),
+          members_count: faker.number.int({ min: 100, max: 10000 }),
+          description: faker.lorem.paragraph(),
+          members: schema.db.users,
+        };
+
+        const posts: IFeedPost[] = Array(10)
+          .fill(null)
+          .map(() => ({
+            ...schema.db.posts[0],
+            id: faker.string.uuid(),
+            creator: schema.db.users[0],
+            media: Array(faker.number.int({ min: 0, max: 4 }))
+              .fill(null)
+              .map(() => createPostMedia()),
+            isCommunityPost: true,
+            communityName: community.name,
+            roleInCommunity: faker.helpers.maybe(
+              () => faker.helpers.arrayElement(['Admin', 'Mod'] as const),
+              { probability: 0.3 }
+            ),
+          }));
+
+        return {
+          community,
+          posts: {
+            posts,
+            hasMore: page < 5, // Simulate 5 pages of content
+            nextPage: page + 1,
+            currentPage: page,
+          },
+        };
+      });
+
+      // New endpoint for fetching comments
+      this.get('/post/:postId/comments', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+
+        const comments = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+        }));
+
+        return {
+          posts: comments,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
+
+      // New endpoint for fetching user's posts with media
+      this.get('/user/:username/posts', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+        const posts: IFeedPost[] = Array(10)
+          .fill(null)
+          .map(() => ({
+            ...schema.db.posts[0],
+            id: faker.string.uuid(),
+            creator: schema.db.users[0],
+            media: Array(faker.number.int({ min: 0, max: 4 }))
+              .fill(null)
+              .map(() => createPostMedia()),
+            isCommunityPost: false,
+            communityName: undefined,
+            roleInCommunity: undefined,
+          }));
+
+        return {
+          posts: posts,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/user/:username/media', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+
+        const media = Array(20)
+          .fill(null)
+          .map(() => ({
+            ...createPostMedia(),
+            post: faker.helpers.arrayElements(schema.db.users),
+          }));
+
+        return {
+          media: media,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/community/:communityId/post/media', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+
+        const media = Array(20)
+          .fill(null)
+          .map(() => ({
+            ...createPostMedia(),
+            post: faker.helpers.arrayElements(schema.db.users),
+          }));
+
+        return {
+          media: media,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/community/:communityId/post/top', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+        const posts: IFeedPost[] = Array(10)
+          .fill(null)
+          .map(() => ({
+            ...schema.db.posts[0],
+            id: faker.string.uuid(),
+            creator: schema.db.users[0],
+            media: Array(faker.number.int({ min: 0, max: 4 }))
+              .fill(null)
+              .map(() => createPostMedia()),
+            isCommunityPost: true,
+            communityName: faker.word.words(2),
+            roleInCommunity: faker.helpers.maybe(
+              () => faker.helpers.arrayElement(['Admin', 'Mod'] as const),
+              { probability: 0.3 }
+            ),
+          }));
+
+        return {
+          posts: posts,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/community/:communityId/post/latest', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+        const posts: IFeedPost[] = Array(10)
+          .fill(null)
+          .map(() => ({
+            ...schema.db.posts[0],
+            id: faker.string.uuid(),
+            creator: schema.db.users[0],
+            media: Array(faker.number.int({ min: 0, max: 4 }))
+              .fill(null)
+              .map(() => createPostMedia()),
+            isCommunityPost: true,
+            communityName: faker.word.words(2),
+            roleInCommunity: faker.helpers.maybe(
+              () => faker.helpers.arrayElement(['Admin', 'Mod'] as const),
+              { probability: 0.3 }
+            ),
+          }));
+
+        return {
+          posts: posts,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
     },
   });
   return server;

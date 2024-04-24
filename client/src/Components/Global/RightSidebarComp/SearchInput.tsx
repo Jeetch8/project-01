@@ -3,7 +3,6 @@ import { Controller, useForm } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
 import { base_url } from '@/utils/base_url';
 import { getTokenFromLocalStorage } from '@/utils/localstorage';
-import { ParticipantDocument } from '@server/src/schemas/Participant.schema';
 import AvatarImage from '../AvatarImage';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '@/context/GlobalContext';

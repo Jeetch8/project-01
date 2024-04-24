@@ -86,6 +86,9 @@ export interface IFeedPost {
   caption: string;
   liked: boolean;
   bookmarked: boolean;
+  isCommunityPost?: boolean;
+  roleInCommunity?: string;
+  communityName?: string;
   comments_count: number;
   likes_count: number;
   created_on: string;
@@ -98,3 +101,12 @@ export interface IPostPage extends IFeedPost {
 }
 
 export type ISchemaPost = Omit<IFeedPost, 'creator' | 'comments' | 'media'>;
+
+export interface ICommunity {
+  id: string;
+  name: string;
+  banner_img: string;
+  members_count: number;
+  description: string;
+  members: IParticipant[] | string[];
+}
