@@ -35,7 +35,6 @@ const mockUser: IUser = {
 };
 
 const mockSetIsOpen = vi.fn();
-const mockFetchMyProfile = vi.fn();
 
 beforeAll(() => {
   global.URL.createObjectURL = vi.fn(() => 'mocked-url');
@@ -50,12 +49,7 @@ const renderEditProfileModal = () => {
   return {
     user,
     ...render(
-      <EditProfileModal
-        setIsOpen={mockSetIsOpen}
-        modalIsOpen={true}
-        user={mockUser}
-        fetchMyProfile={mockFetchMyProfile}
-      />,
+      <EditProfileModal setIsOpen={mockSetIsOpen} modalIsOpen={true} />,
       { wrapper }
     ),
   };

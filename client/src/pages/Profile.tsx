@@ -41,8 +41,8 @@ const Profile = () => {
 
   return (
     <>
-      <div className="w-[620px] border-x-[1px] border-gray-700 text-white sticky top-0">
-        <div className="flex justify-between py-[1vh] px-[1vw] bg-black backdrop-blur-xl sticky top-0 z-50">
+      <div className="w-[620px] border-x-[1px] border-gray-700 text-white">
+        <div className="flex justify-between py-3 px-5 sticky top-0 z-50 bg-[rgba(0,0,0,0.8)] backdrop-blur-md">
           <h2 className="font-bold text-[20px]">{user?.full_name}</h2>
           <div className="mr-2">
             {fetchState == 'loading' && (

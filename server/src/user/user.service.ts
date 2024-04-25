@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Neo4jService } from 'nest-neo4j/dist';
-import { UserAuthDto, UserDto } from './user.dto';
+import {
+  ChangePasswordDto,
+  UpdateAccountInfoDto,
+  UserAuthDto,
+  UserDto,
+} from './user.dto';
 import { createId } from '@paralleldrive/cuid2';
 import {
   UserCon,
@@ -9,11 +14,14 @@ import {
   UserTokenCon,
   createUserPropertiesString,
   createUserTokenPropertiesString,
+  AuthSession,
+  AuthSessionCon,
 } from './user.entity';
 import { Post, PostCon, PostMediaCon } from '@/post/entities/post.entity';
 import { InjectModel, Schema } from '@nestjs/mongoose';
 import mongoose, { Model, Types } from 'mongoose';
 import { Participant, ParticipantDocument } from '@/schemas/Participant.schema';
+import { hashPassword } from '@/utils/helpers';
 
 @Injectable()
 export class UserService {
@@ -215,6 +223,27 @@ export class UserService {
     );
   }
 
+  async updateAccountInfo(userId: string, user: UpdateAccountInfoDto) {
+    const result = await this.neo4jService.write(
+      `MATCH (user:USER {id: $userId})
+      SET user.username = $username, user.email = $email, user.gender = $gender, user.date_of_birth = $date_of_birth, user.location = $location
+      RETURN user`,
+      { userId, ...user }
+    );
+    return new UserCon(result.records[0].get('user')).getObject();
+  }
+
+  async changePassword(userId: string, password: ChangePasswordDto) {
+    const hashedPass = await hashPassword(password.new_password);
+    const result = await this.neo4jService.write(
+      `MATCH (user:USER {id: $userId})
+      SET user.password = $password
+      RETURN user`,
+      { userId, password: hashedPass }
+    );
+    return new UserCon(result.records[0].get('user')).getObject();
+  }
+
   async getUserPosts(
     userId: string,
     page: number = 0,
@@ -280,6 +309,17 @@ export class UserService {
     const nextPage = hasMore ? page + 1 : null;
 
     return { posts, hasMore, nextPage };
+  }
+
+  async deactivateAccount(userId: string) {
+    const result = await this.neo4jService.write(
+      `MATCH (user:USER {id: $userId})
+      SET user.is_active = false
+      RETURN user`,
+      { userId }
+    );
+    await this.participantModel.deleteOne({ userid: userId });
+    return result.records.length > 0;
   }
 
   async getBookmarkedPosts(
@@ -376,5 +416,19 @@ export class UserService {
     );
 
     return result.records.length > 0;
+  }
+
+  // Add this method to the UserService class
+  async getUserSessions(userId: string): Promise<AuthSession[]> {
+    const result = await this.neo4jService.read(
+      `MATCH (user:USER {id: $userId})-[:HAS_SESSION]->(session:SESSION)
+       RETURN session
+       ORDER BY session.last_seen_on DESC`,
+      { userId }
+    );
+
+    return result.records.map((record) =>
+      new AuthSessionCon(record.get('session')).getObject()
+    );
   }
 }

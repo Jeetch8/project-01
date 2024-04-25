@@ -20,6 +20,12 @@ import GroupChatDisplay from './Components/Chat/GroupChat';
 import PrivateChatDisplay from './Components/Chat/PrivateChat';
 import Communities from './pages/Communities';
 import SingleCommunity from './pages/SingleCommunity';
+import Settings from './pages/Settings';
+import AccountInfo from './Components/Settings/Account/AccountInfo';
+import ChangePassword from './Components/Settings/Account/ChangePassword';
+import DeactivateAccount from './Components/Settings/Account/DeactivateAccount';
+import Index from './Components/Settings/Account/Index';
+import Sessions from './Components/Settings/Sessions';
 
 const router = createBrowserRouter([
   {
@@ -51,7 +57,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       {
-        path: '/messages',
+        path: 'messages',
         element: <Messages />,
         children: [
           {
@@ -65,6 +71,32 @@ const router = createBrowserRouter([
           {
             path: 'private/:id',
             element: <PrivateChatDisplay />,
+          },
+        ],
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
+        children: [
+          {
+            path: 'account',
+            element: <Index />,
+          },
+          {
+            path: 'account/account_info',
+            element: <AccountInfo />,
+          },
+          {
+            path: 'account/change_password',
+            element: <ChangePassword />,
+          },
+          {
+            path: 'account/deactivate_account',
+            element: <DeactivateAccount />,
+          },
+          {
+            path: 'sessions',
+            element: <Sessions />,
           },
         ],
       },

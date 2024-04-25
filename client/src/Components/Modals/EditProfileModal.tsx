@@ -1,7 +1,6 @@
 import { useForm, FormProvider } from 'react-hook-form';
 import Modal from './Modal';
 import { useFetch } from '@/hooks/useFetch';
-import { IUser } from '@/utils/interfaces';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 import { TbCameraPlus } from 'react-icons/tb';
 import { Button } from '../Global/Button';

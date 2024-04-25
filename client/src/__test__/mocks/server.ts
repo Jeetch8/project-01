@@ -10,6 +10,7 @@ import {
   IMediaType,
   ISchemaPost,
   ICommunity,
+  IUserSession,
 } from '@/utils/interfaces';
 import { faker } from '@faker-js/faker';
 
@@ -503,6 +504,26 @@ export function makeServer({ environment = 'development' }) {
           hasMore: true,
           nextPage: page + 1,
           currentPage: page,
+        };
+      });
+
+      this.get('/user/sessions', (schema, request) => {
+        const sessions: IUserSession[] = Array(10)
+          .fill(null)
+          .map(() => ({
+            id: faker.string.uuid(),
+            device: faker.helpers.arrayElement(['Desktop', 'Mobile', 'Tablet']),
+            browser: faker.word.words(2),
+            os: faker.word.words(2),
+            ip_address: faker.internet.ip(),
+            location: faker.location.city(),
+            operating_system: faker.word.words(2),
+            last_seen_on: faker.date.recent().toISOString(),
+            signed_in_on: faker.date.recent().toISOString(),
+          }));
+        return {
+          sessions,
+          user_ip: faker.internet.ip(),
         };
       });
 

@@ -74,7 +74,7 @@ const navigationLinks = [
     name: 'Settings',
     iconOnStale: IoSettingsOutline,
     iconOnSelection: IoSettingsSharp,
-    path: '/settings',
+    path: '/settings/account',
     toInclude: 'settings',
   },
 ];
@@ -124,7 +124,7 @@ export default function Sidebar() {
         </div>
       </div>
       <div className="flex justify-between items-center mx-2 mb-2 py-2  px-2 hover:bg-zinc-900 rounded-full cursor-pointer">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-start space-x-2">
           <AvatarImage url={user?.profile_img} diameter="40px" />
           <div className="hidden xl:inline-block">
             <p className="font-bold">{user?.full_name}</p>

@@ -8,6 +8,7 @@ import {
   Matches,
 } from 'class-validator';
 import { AuthProvider, Gender } from './user.entity';
+import { PickType } from '@nestjs/mapped-types';
 
 export class UserAuthDto {
   @IsString({ message: 'password is required' })
@@ -56,58 +57,51 @@ export class UserDto {
 
   @IsEmail({}, { message: 'email is required' })
   email: string;
+
+  @IsString()
+  bio?: string;
+
+  @IsUrl()
+  banner_img?: string;
+
+  @IsString()
+  location?: string;
 }
 
-// export class CreateUserDto {
-//   @IsString({ message: 'first_name is required' })
-//   first_name: string;
+export class UpdateProfileDto extends PickType(UserDto, [
+  'first_name',
+  'last_name',
+  'date_of_birth',
+  'gender',
+  'profile_img',
+  'bio',
+  'banner_img',
+]) {}
 
-//   @IsString({ message: 'last_name is required' })
-//   last_name: string;
+export class UpdateAccountInfoDto extends PickType(UserDto, [
+  'username',
+  'email',
+  'gender',
+  'date_of_birth',
+  'location',
+]) {}
 
-//   @IsString({ message: 'username is required' })
-//   username: string;
+export class ChangePasswordDto {
+  @IsString({ message: 'old password is required' })
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/,
+    {
+      message: 'Password is too weak',
+    }
+  )
+  password: string;
 
-//   @IsDateString({}, { message: 'date_of_birth is required' })
-//   date_of_birth: string;
-
-//   @IsString()
-//   @IsOptional()
-//   profile_img?: string;
-
-//   @IsString()
-//   @IsOptional()
-//   banner_img?: string;
-
-//   @IsEmail({}, { message: 'email is required' })
-//   email: string;
-
-//   @IsString({ message: 'password is required' })
-//   @Matches(
-//     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/,
-//     {
-//       message: 'Password is too weak',
-//     }
-//   )
-//   password: string;
-
-//   @IsString()
-//   provider: string;
-// }
-
-// export class CreateTempUserDto {
-//   @IsString({ message: 'first_name is required' })
-//   first_name: string;
-
-//   @IsString({ message: 'last_name is required' })
-//   last_name: string;
-
-//   @IsDateString({}, { message: 'date_of_birth is required' })
-//   date_of_birth: string;
-
-//   @IsEmail()
-//   email: string;
-
-//   @IsJWT()
-//   email_verification_token: string;
-// }
+  @IsString({ message: 'new_password is required' })
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/,
+    {
+      message: 'Password is too weak',
+    }
+  )
+  new_password: string;
+}

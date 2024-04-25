@@ -21,3 +21,7 @@
 .no-scroll-container::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
 }
+
+body {
+  overflow-y: scroll;
+}

@@ -11,12 +11,19 @@ import {
   BadRequestException,
   Param,
   NotFoundException,
+  Delete,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request } from 'express';
 import { jwtAuthTokenPayload } from '@/auth/entities/auth.entity';
 import { JwtAuthGuard } from '@/auth/guards/jwt.guard';
-import { User } from './user.entity';
+import { AuthSession, User } from './user.entity';
+import {
+  ChangePasswordDto,
+  UpdateAccountInfoDto,
+  UpdateProfileDto,
+} from './user.dto';
+import UAParser from 'ua-parser-js';
 
 @UseGuards(JwtAuthGuard)
 @Controller('user')
@@ -24,13 +31,34 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Put('profile')
-  async updateUser(@Req() req: Request, @Body() body: Partial<User>) {
+  async updateUser(@Req() req: Request, @Body() body: UpdateProfileDto) {
     const user = req.user as jwtAuthTokenPayload;
     const result = await this.userService.updateUser(user.userId, body);
     return {
       user: {
         ...result,
       },
+    };
+  }
+
+  @Patch('account-info')
+  async updateAccountInfo(
+    @Req() req: Request,
+    @Body() body: UpdateAccountInfoDto
+  ) {
+    const user = req.user as jwtAuthTokenPayload;
+    const result = await this.userService.updateAccountInfo(user.userId, body);
+    return {
+      user: { ...result },
+    };
+  }
+
+  @Patch('change-password')
+  async changePassword(@Req() req: Request, @Body() body: ChangePasswordDto) {
+    const user = req.user as jwtAuthTokenPayload;
+    const result = await this.userService.changePassword(user.userId, body);
+    return {
+      user: { ...result },
     };
   }
 
@@ -87,6 +115,13 @@ export class UserController {
     }
   }
 
+  @Delete('deactivate')
+  async deactivateAccount(@Req() req: Request) {
+    const user = req.user as jwtAuthTokenPayload;
+    const result = await this.userService.deactivateAccount(user.userId);
+    return { message: 'User deactivated successfully' };
+  }
+
   @Get(':username')
   async getUser(@Req() req: Request, @Param('username') username: string) {
     let result;
@@ -139,5 +174,13 @@ export class UserController {
       Number(page)
     );
     return result;
+  }
+
+  @Get('sessions')
+  async getUserSessions(@Req() req: Request) {
+    const user_ip = req.ip;
+    const user = req.user as jwtAuthTokenPayload;
+    const sessions = await this.userService.getUserSessions(user.userId);
+    return { sessions, user_ip };
   }
 }

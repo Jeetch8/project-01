@@ -10,6 +10,7 @@ interface Props {
   fieldRules?: RegisterOptions;
   register: any;
   placeholder?: string;
+  iconColor?: string;
 }
 
 import { useEffect, useState } from 'react';
@@ -26,6 +27,7 @@ function PasswordInput({
   errors,
   fieldRules,
   fieldName,
+  iconColor = 'black',
 }: Props) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -41,7 +43,7 @@ function PasswordInput({
     <>
       <div
         className={twMerge(
-          'bg-white flex items-center h-fit w-full rounded-md border-[1px] border-black',
+          'bg-white flex items-center h-fit w-full rounded-md border-[1px] border-black group',
           outerClassName
         )}
       >
@@ -51,6 +53,11 @@ function PasswordInput({
             'rounded-md outline-none text-black px-2 py-1 border-none w-full',
             inputClassName
           )}
+          style={{
+            outline: 'none',
+            border: 'none',
+            boxShadow: 'none',
+          }}
           type={showPassword ? 'text' : 'password'}
           name={fieldName}
           placeholder={placeholder}
@@ -62,7 +69,11 @@ function PasswordInput({
           className="mx-3 h-fit"
           onClick={() => setShowPassword(!showPassword)}
         >
-          {showPassword ? <FiEyeOff color="black" /> : <FiEye color="black" />}
+          {showPassword ? (
+            <FiEyeOff color={iconColor} />
+          ) : (
+            <FiEye color={iconColor} />
+          )}
         </button>
       </div>
       <ErrorDisplayComp error={errors} />
