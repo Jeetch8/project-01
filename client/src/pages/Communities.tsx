@@ -29,7 +29,7 @@ const Communities = () => {
     [WheelGesturesPlugin()]
   );
 
-  const { doFetch } = useFetch<{
+  const { doFetch, fetchState } = useFetch<{
     communities: ICommunity[];
     posts: { posts: IFeedPost[]; hasMore: boolean; nextPage: number };
   }>({
@@ -112,6 +112,11 @@ const Communities = () => {
           >
             <FaChevronRight />
           </button>
+        )}
+        {fetchState === 'loading' && (
+          <div className="h-[100px] w-full flex justify-center items-center">
+            <HashLoader color="#fff" />
+          </div>
         )}
       </div>
 

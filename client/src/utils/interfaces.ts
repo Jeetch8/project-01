@@ -21,13 +21,14 @@ export enum IGender {
 
 export interface IUserSession {
   id: string;
-  device: string;
+  device_name: string;
   browser: string;
-  location: string;
+  os: string;
   ip_address: string;
-  operating_system: string;
-  last_seen_on: string;
-  signed_in_on: string;
+  location: string;
+  logged_in: boolean;
+  logged_in_date: string;
+  last_logged_in_date: string;
 }
 
 export interface IUser {

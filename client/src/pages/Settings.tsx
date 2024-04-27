@@ -1,3 +1,4 @@
+import { HiChevronRight } from 'react-icons/hi';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const settingsOptions = [
@@ -21,7 +22,12 @@ const Settings = () => {
                 `px-4 py-3 cursor-pointer block w-full hover:bg-zinc-800 transition-colors duration-200 border-r-2 ${isActive ? 'bg-zinc-800 border-blue-500' : 'border-transparent'}`
               }
             >
-              <span>{option.label}</span>
+              <span className="flex items-center justify-between w-full">
+                {option.label}
+                <span className="text-gray-400">
+                  <HiChevronRight size={20} />
+                </span>
+              </span>
             </NavLink>
           ))}
         </div>

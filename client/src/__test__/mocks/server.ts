@@ -512,7 +512,11 @@ export function makeServer({ environment = 'development' }) {
           .fill(null)
           .map(() => ({
             id: faker.string.uuid(),
-            device: faker.helpers.arrayElement(['Desktop', 'Mobile', 'Tablet']),
+            device_name: faker.helpers.arrayElement([
+              'Desktop',
+              'Mobile',
+              'Tablet',
+            ]),
             browser: faker.word.words(2),
             os: faker.word.words(2),
             ip_address: faker.internet.ip(),
@@ -520,6 +524,9 @@ export function makeServer({ environment = 'development' }) {
             operating_system: faker.word.words(2),
             last_seen_on: faker.date.recent().toISOString(),
             signed_in_on: faker.date.recent().toISOString(),
+            logged_in: faker.datatype.boolean(),
+            logged_in_date: faker.date.recent().toISOString(),
+            last_logged_in_date: faker.date.recent().toISOString(),
           }));
         return {
           sessions,

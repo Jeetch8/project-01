@@ -14,6 +14,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { CloudinaryModule } from './lib/cloudinary/cloudinary.module';
+import { CommunityModule } from './community/community.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { CloudinaryModule } from './lib/cloudinary/cloudinary.module';
     }),
     MongooseModule.forRoot('mongodb://localhost:27017/social_media'),
     CloudinaryModule,
+    CommunityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

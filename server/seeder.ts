@@ -27,6 +27,10 @@ import os from 'os';
 import * as path from 'path';
 import * as csv from 'csv-parser';
 import * as fs from 'fs';
+import {
+  Community,
+  createCommunityPropertiesString,
+} from '@/community/entities/community.entity';
 
 const driver = Driver.driver(
   'bolt://localhost:7687',
@@ -68,6 +72,18 @@ const createUser = async (
     followers_count: faker.number.int({ min: 0, max: 1000 }),
     following_count: faker.number.int({ min: 0, max: 1000 }),
     embedding,
+  };
+};
+
+const createCommunity = (): Community => {
+  return {
+    id: createId(),
+    title: faker.lorem.sentence(),
+    description: faker.lorem.paragraph(),
+    image: faker.image.url(),
+    createdAt: faker.date.past(),
+    updatedAt: faker.date.recent(),
+    rules: faker.lorem.paragraph(),
   };
 };
 
@@ -169,6 +185,7 @@ const seed = async () => {
   const userids = [];
   const followSet = new Set();
   const allPostsIds = [];
+
   for (let i = 0; i < 30; i++) {
     const user = await createUser(
       sampleTwitterUsersEmbedding[sampleTwitterUsersEmbeddingIndex]
@@ -282,6 +299,40 @@ const seed = async () => {
       }
     }
     sampleTwitterUsersEmbeddingIndex++;
+  }
+
+  for (let i = 0; i < 10; i++) {
+    const community = createCommunity();
+    const members = faker.helpers.arrayElements(userids);
+    const admins = faker.helpers.arrayElement(userids);
+    const moderators = faker.helpers.arrayElements(userids, { min: 2, max: 5 });
+    const pinnedPost = faker.helpers.arrayElement(allPostsIds);
+    const posts = faker.helpers.arrayElements(allPostsIds, { min: 1, max: 15 });
+
+    const membersStr = members
+      .map(
+        (member, ind) =>
+          `CREATE (c) -[ab${ind}:MEMBER {role: 'MEMBER', joined_at: '${faker.date.past().toISOString()}'}]-> (:USER {id: '${member}'})`
+      )
+      .join('\n');
+    const postsStr = posts
+      .map((post) => `CREATE (c) -[:COMMUNITY_POST]-> (:POST {id: '${post}'})`)
+      .join('\n');
+    const moderatorsStr = moderators
+      .map(
+        (moderator, ind) =>
+          `CREATE  (c) -[gd${ind}:MEMBER {role: 'MODERATOR', joined_at: '${faker.date.past().toISOString()}'}]-> (:USER {id: '${moderator}'})`
+      )
+      .join('\n');
+    await session.run(
+      `CREATE (c:COMMUNITY {${createCommunityPropertiesString(community)}})        
+      ${membersStr}
+      ${postsStr}
+      CREATE (c) -[:ADMIN]-> (a:USER {id: '${admins}'})
+      ${moderatorsStr}
+      CREATE (c) -[:PINNED_POST]-> (p:POST {id: '${pinnedPost}'})
+      RETURN c`
+    );
   }
 };
 

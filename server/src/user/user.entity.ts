@@ -5,11 +5,11 @@ export class UserCon {
   constructor(private readonly node: Node) {}
 
   get id() {
-    return (<Record<string, any>>this.node.properties).id;
+    return (<Record<string, any>>this.node?.properties)?.id;
   }
 
   getObject(): User {
-    return createUserObj({ ...this.node.properties });
+    return createUserObj({ ...this.node?.properties });
   }
 }
 

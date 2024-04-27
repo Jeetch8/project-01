@@ -9,6 +9,7 @@ import { HashLoader } from 'react-spinners';
 import { CiLaptop } from 'react-icons/ci';
 import { RxMobile } from 'react-icons/rx';
 import { IoTabletPortraitOutline } from 'react-icons/io5';
+import dayjs from 'dayjs';
 
 const Sessions: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const Sessions: React.FC = () => {
 
   return (
     <div className="text-white">
-      <div className="px-4 py-4 mb-3 flex items-center">
+      <div className="px-4 py-4 flex items-center">
         <button
           onClick={() => navigate(-1)}
           className="mr-4 p-2 rounded-full transition-colors duration-200 hover:bg-gray-900"
@@ -54,14 +55,14 @@ const Sessions: React.FC = () => {
         {dataRef.current?.sessions?.map((session) => (
           <div
             key={session.id}
-            className="flex items-center justify-between py-4 border-b border-gray-700 hover:bg-neutral-900 px-3 cursor-pointer rounded-md"
+            className="flex items-center justify-between py-4 hover:bg-neutral-900 px-3 cursor-pointer rounded-md"
           >
             <div className="flex items-center">
               <div className="mr-4 text-2xl border border-gray-700 rounded-full p-2">
-                {getDeviceIcon(session.device)}
+                {getDeviceIcon(session.device_name)}
               </div>
               <div>
-                <div className="font-semibold">{session.operating_system}</div>
+                <div className="font-semibold">{session.os}</div>
                 <div className="text-sm text-gray-400">{session.location}</div>
               </div>
               {session.ip_address === dataRef.current?.user_ip && (
@@ -69,6 +70,9 @@ const Sessions: React.FC = () => {
                   Active now
                 </span>
               )}
+            </div>
+            <div className="text-sm text-gray-400">
+              {dayjs(session.last_logged_in_date).format('MMM D, YYYY h:mm A')}
             </div>
           </div>
         ))}

@@ -9,7 +9,7 @@ import {
   PostMediaCon,
   Post,
 } from './entities/post.entity';
-import { User } from '@/user/user.entity';
+import { User, UserCon } from '@/user/user.entity';
 import { createId } from '@paralleldrive/cuid2';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Redis } from 'ioredis';
@@ -322,24 +322,26 @@ export class PostService {
        MATCH (post:POST)
        WHERE NOT (user)-[:SEEN {seen_at: $seen_at}]->(post)
        WITH post, user
-       ORDER BY post.likes_count DESC, post.created_on DESC
-       WITH post, user, collect(post)[toInteger(${skip})..toInteger(toInteger(${skip}) + toInteger(${limit}))] AS paginatedPosts
+       WITH post, user, collect(post)[toInteger($skip)..toInteger(toInteger($skip) + toInteger($limit))] AS paginatedPosts
        UNWIND paginatedPosts AS paginatedPost
        OPTIONAL MATCH (paginatedPost)-[:HAS_MEDIA]->(media:POST_MEDIA)
        OPTIONAL MATCH (paginatedPost)<-[:POSTED]-(creator:USER)
        WITH paginatedPost, collect(DISTINCT media) as post_media, creator, user
-       CREATE (user)-[:SEEN]->(paginatedPost)
+       WITH paginatedPost, post_media, creator, user,
+            CASE WHEN NOT (user)-[:SEEN]->(paginatedPost) THEN true ELSE false END AS shouldCreateSeen
+       FOREACH (_ IN CASE WHEN shouldCreateSeen THEN [1] ELSE [] END |
+           CREATE (user)-[:SEEN {seen_at: $seen_at}]->(paginatedPost)
+       )
        RETURN paginatedPost, post_media, creator
-       LIMIT toInteger(${limit})`,
-      { userId, skip, seen_at: new Date().toISOString() }
+       LIMIT toInteger($limit)`,
+      { userId, skip, seen_at: new Date().toISOString(), limit }
     );
-
     const posts = result.records.slice(0, limit).map((record) => {
       const post = new PostCon(record.get('paginatedPost')).getObject();
       const media = record
         .get('post_media')
         .map((m) => new PostMediaCon(m).getObject());
-      const creator = record.get('creator').properties;
+      const creator = new UserCon(record.get('creator')).getObject();
       return { ...post, media, creator };
     });
 
@@ -369,3 +371,15 @@ export class PostService {
     return posts;
   }
 }
+// `MATCH (user:USER {id: $userId})
+// MATCH (post:POST)
+// WHERE NOT (user)-[:SEEN {seen_at: $seen_at}]->(post)
+// WITH post, user
+// WITH post, user, collect(post)[toInteger($skip)..toInteger(toInteger($skip) + toInteger($limit))] AS paginatedPosts
+// UNWIND paginatedPosts AS paginatedPost
+// OPTIONAL MATCH (paginatedPost)-[:HAS_MEDIA]->(media:POST_MEDIA)
+// OPTIONAL MATCH (paginatedPost)<-[:POSTED]-(creator:USER)
+// WITH paginatedPost, collect(DISTINCT media) as post_media, creator, user
+// CREATE (user)-[:SEEN]->(paginatedPost)
+// RETURN paginatedPost, post_media, creator
+// LIMIT toInteger($limit)`,
