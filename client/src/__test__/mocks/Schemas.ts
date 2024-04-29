@@ -143,7 +143,7 @@ export const UserSessionSchema = Factory.extend<IUserSession>({
   id() {
     return faker.string.alphanumeric(20);
   },
-  device() {
+  device_name() {
     return faker.helpers.arrayElement([
       'mobile',
       'tablet',
@@ -170,7 +170,7 @@ export const UserSessionSchema = Factory.extend<IUserSession>({
   ip_address() {
     return faker.internet.ip();
   },
-  operating_system() {
+  os() {
     return faker.helpers.arrayElement([
       'windows',
       'linux',
@@ -179,10 +179,13 @@ export const UserSessionSchema = Factory.extend<IUserSession>({
       'ios',
     ]);
   },
-  last_seen_on() {
+  last_logged_in_date() {
     return faker.date.past().toDateString();
   },
-  signed_in_on() {
-    return faker.date.past().toISOString();
+  logged_in() {
+    return faker.datatype.boolean();
+  },
+  logged_in_date() {
+    return faker.date.past().toDateString();
   },
 });

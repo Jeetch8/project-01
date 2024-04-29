@@ -26,7 +26,7 @@ export class CommunityRolesGuard implements CanActivate {
 
     const result = await this.neo4jService.read(
       `
-      MATCH (u:USER {id: $userId})-[r:ADMIN|MODERATOR|MEMBER]->(c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId}) <-[r:ADMIN|MODERATOR|MEMBER]- (c:Community {id: $communityId})
       RETURN type(r) as role
       `,
       { userId: user.userId, communityId }

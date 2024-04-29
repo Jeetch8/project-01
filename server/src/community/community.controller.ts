@@ -46,9 +46,13 @@ export class CommunityController {
   }
 
   @Get(':id')
-  async getCommunity(@Param('id') id: string) {
-    const community = await this.communityService.getCommunity(id);
-    return { community };
+  async getCommunity(@Param('id') id: string, @Req() req: AuthRequest) {
+    const { community, userRoleInCommunity } =
+      await this.communityService.getCommunity(id, req.user.userId);
+    return {
+      community,
+      userRoleInCommunity,
+    };
   }
 
   @Post(':id/post')

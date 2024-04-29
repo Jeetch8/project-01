@@ -11,6 +11,7 @@ import {
   ISchemaPost,
   ICommunity,
   IUserSession,
+  IUser,
 } from '@/utils/interfaces';
 import { faker } from '@faker-js/faker';
 
@@ -24,6 +25,36 @@ const createPostMedia = () => {
     modified_media_url: faker.image.urlPicsumPhotos(),
   };
 };
+
+const createCommunity = (): ICommunity => ({
+  id: faker.string.uuid(),
+  title: faker.word.words(2),
+  banner_img: faker.image.urlPicsumPhotos(),
+  members_count: faker.number.int({ min: 0, max: 1000 }),
+  rules: faker.lorem.sentence(),
+  description: faker.lorem.sentence(),
+  membership_type: faker.helpers.arrayElement(['public', 'private']),
+  members: [],
+});
+
+const createFeedPost = (creator: IUser): IFeedPost => ({
+  id: faker.string.uuid(),
+  caption: faker.lorem.sentence(),
+  likes_count: faker.number.int({ min: 0, max: 1000 }),
+  created_on: faker.date.recent().toISOString(),
+  updated_on: faker.date.recent().toISOString(),
+  creator,
+  liked: faker.datatype.boolean(),
+  bookmarked: faker.datatype.boolean(),
+  comments_count: faker.number.int({ min: 0, max: 1000 }),
+  timeAgo: faker.date.recent().toISOString(),
+  media: Array(faker.number.int({ min: 0, max: 4 }))
+    .fill(null)
+    .map(() => createPostMedia()),
+  isCommunityPost: true,
+  communityName: faker.word.words(2),
+  roleInCommunity: faker.helpers.arrayElement(['ADMIN', 'MODERATOR', 'MEMBER']),
+});
 
 export function makeServer({ environment = 'development' }) {
   const server = createServer({
@@ -323,16 +354,7 @@ export function makeServer({ environment = 'development' }) {
         const page = parseInt(request.queryParams.page as string) || 1;
         const communities: ICommunity[] = Array(20)
           .fill(null)
-          .map(() => ({
-            id: faker.string.uuid(),
-            name: faker.word.words(2),
-            banner_img: faker.image.url(),
-            members_count: faker.number.int({ min: 100, max: 10000 }),
-            description: faker.word.words(),
-            members: Array(10)
-              .fill(null)
-              .map(() => faker.string.uuid()),
-          }));
+          .map(() => createCommunity());
         const posts: IFeedPost[] = schema.db.posts.map((post) => ({
           ...post,
           creator: schema.db.users.find(post.userId),
@@ -340,7 +362,7 @@ export function makeServer({ environment = 'development' }) {
             .fill(null)
             .map(() => createPostMedia()),
           isCommunityPost: true,
-          communityName: faker.helpers.arrayElement(communities).name,
+          communityName: faker.helpers.arrayElement(communities).title,
           roleInCommunity: faker.helpers.maybe(
             () => faker.helpers.arrayElement(['Admin', 'Mod'] as const),
             { probability: 0.3 }
@@ -362,14 +384,7 @@ export function makeServer({ environment = 'development' }) {
         const communityId = request.params.communityId;
         const page = parseInt(request.queryParams.page as string) || 1;
 
-        const community: ICommunity = {
-          id: communityId,
-          name: faker.word.words(2),
-          banner_img: faker.image.url(),
-          members_count: faker.number.int({ min: 100, max: 10000 }),
-          description: faker.lorem.paragraph(),
-          members: schema.db.users,
-        };
+        const community: ICommunity = createCommunity();
 
         const posts: IFeedPost[] = Array(10)
           .fill(null)
@@ -381,7 +396,7 @@ export function makeServer({ environment = 'development' }) {
               .fill(null)
               .map(() => createPostMedia()),
             isCommunityPost: true,
-            communityName: community.name,
+            communityName: community.title,
             roleInCommunity: faker.helpers.maybe(
               () => faker.helpers.arrayElement(['Admin', 'Mod'] as const),
               { probability: 0.3 }
@@ -559,6 +574,93 @@ export function makeServer({ environment = 'development' }) {
           nextPage: page + 1,
           currentPage: page,
         };
+      });
+
+      this.post('/community', (schema, request) => {
+        const newCommunity: ICommunity = createCommunity();
+        return { message: 'Community created', community: newCommunity };
+      });
+
+      this.get('/community/:id', (schema, request) => {
+        const community: ICommunity = createCommunity();
+        const userRoleInCommunity = 'ADMIN';
+        return { community, userRoleInCommunity };
+      });
+
+      this.post('/community/:id/post', (schema, request) => {
+        const newPost: IFeedPost = createFeedPost(
+          faker.helpers.arrayElement(schema.db.users)
+        );
+        return { message: 'Post created in community', post: newPost };
+      });
+
+      this.put('/community/:id/member/:userId', (schema, request) => {
+        return { message: 'Member added to community' };
+      });
+
+      this.delete('/community/:id/member/:userId', (schema, request) => {
+        return { message: 'Member removed from community' };
+      });
+
+      this.put('/community/:id/moderator/:userId', (schema, request) => {
+        return { message: 'Moderator added to community' };
+      });
+
+      this.delete('/community/:id/moderator/:userId', (schema, request) => {
+        return { message: 'Moderator removed from community' };
+      });
+
+      this.patch('/community/:id', (schema, request) => {
+        const updatedCommunity: ICommunity = createCommunity();
+        return { message: 'Community updated', community: updatedCommunity };
+      });
+
+      this.get('/community/:id/members', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+        const members = Array(10)
+          .fill(null)
+          .map(() => ({
+            id: faker.string.uuid(),
+            username: faker.internet.userName(),
+            full_name: faker.person.fullName(),
+            profile_img: faker.image.avatar(),
+            role: faker.helpers.arrayElement(['ADMIN', 'MODERATOR', 'MEMBER']),
+          }));
+        return {
+          members,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
+
+      this.get('/community/:id/posts', (schema, request) => {
+        const posts: IFeedPost[] = Array(10)
+          .fill(null)
+          .map(() =>
+            createFeedPost(faker.helpers.arrayElement(schema.db.users))
+          );
+        return { posts };
+      });
+
+      this.post('/community/:id/pin/:postId', (schema, request) => {
+        return { message: 'Post pinned successfully' };
+      });
+
+      this.post('/community/:id/join', (schema, request) => {
+        return { message: 'Joined community successfully' };
+      });
+
+      this.post('/community/:id/leave', (schema, request) => {
+        return { message: 'Left community successfully' };
+      });
+
+      this.delete('/community/:id', (schema, request) => {
+        return { message: 'Community deleted successfully' };
+      });
+
+      this.delete('/community/:id/post/:postId', (schema, request) => {
+        return { message: 'Post deleted from community successfully' };
       });
     },
   });

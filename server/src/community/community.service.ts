@@ -19,15 +19,20 @@ export class CommunityService {
     private postService: PostService
   ) {}
 
-  async getCommunity(id: string): Promise<Community> {
+  async getCommunity(communityid: string, userid: string) {
     const result = await this.neo4jService.read(
-      'MATCH (c:Community) WHERE c.id = $id RETURN c',
-      { id }
+      `MATCH (c:COMMUNITY {id: $communityid}), (u:USER {id: $userid})
+      (c) -[r:ADMIN|MODERATOR|MEMBER]-> (u)
+      RETURN c, type(r) AS role`,
+      { communityid, userid }
     );
     if (result.records.length === 0) {
       throw new NotFoundException('Community not found');
     }
-    return new CommunityCon(result.records[0].get('c')).getObject();
+    return {
+      community: new CommunityCon(result.records[0].get('c')).getObject(),
+      userRoleInCommunity: result.records[0].get('role'),
+    };
   }
 
   async createCommunity(communityData: {
@@ -66,7 +71,7 @@ export class CommunityService {
       .write(
         `
         MATCH (creator:USER {id: $creatorId})
-        CREATE (c:Community {
+        CREATE (c:COMMUNITY {
           id: $id,
           title: $title,
           description: $description,
@@ -114,7 +119,7 @@ export class CommunityService {
 
     await this.neo4jService.write(
       `
-      MATCH (c:Community {id: $communityId}), (p:POST {id: $postId})
+      MATCH (c:COMMUNITY {id: $communityId}), (p:POST {id: $postId})
       CREATE (c)-[:COMMUNITY_POST]->(p)
       `,
       { communityId, postId: newPost.id }
@@ -127,7 +132,7 @@ export class CommunityService {
     return await this.neo4jService
       .write(
         `
-      MATCH (u:USER {id: $userId}), (c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId}), (c:COMMUNITY {id: $communityId})
       WHERE NOT (u)-[:MEMBER|:MODERATOR|:ADMIN]->(c)
       CREATE (u)-[:MEMBER {joined_at: datetime()}]->(c)
       RETURN c
@@ -144,7 +149,7 @@ export class CommunityService {
     return await this.neo4jService
       .write(
         `
-      MATCH (u:USER {id: $userId})-[r:MEMBER|:MODERATOR]->(c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId})-[r:MEMBER|:MODERATOR]->(c:COMMUNITY {id: $communityId})
       DELETE r
       `,
         { userId, communityId }
@@ -159,7 +164,7 @@ export class CommunityService {
     return await this.neo4jService
       .write(
         `
-      MATCH (u:USER {id: $userId})-[r:MEMBER]->(c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId})-[r:MEMBER]->(c:COMMUNITY {id: $communityId})
       DELETE r
       CREATE (u)-[:MODERATOR {joined_at: datetime()}]->(c)
       RETURN c
@@ -179,7 +184,7 @@ export class CommunityService {
     return await this.neo4jService
       .write(
         `
-      MATCH (u:USER {id: $userId})-[r:MODERATOR]->(c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId})-[r:MODERATOR]->(c:COMMUNITY {id: $communityId})
       DELETE r
       CREATE (u)-[:MEMBER {joined_at: datetime()}]->(c)
       `,
@@ -198,7 +203,7 @@ export class CommunityService {
     const { title, description, image, rules } = updateData;
     const result = await this.neo4jService.write(
       `
-      MATCH (c:Community {id: $communityId})
+      MATCH (c:COMMUNITY {id: $communityId})
       SET c += {
         title: $title,
         description: $description,
@@ -216,7 +221,7 @@ export class CommunityService {
   async deleteCommunity(communityId: string): Promise<void> {
     await this.neo4jService.write(
       `
-      MATCH (c:Community {id: $communityId})
+      MATCH (c:COMMUNITY {id: $communityId})
       DETACH DELETE c
       `,
       { communityId }
@@ -226,7 +231,7 @@ export class CommunityService {
   async getCommunityMembers(communityId: string): Promise<User[]> {
     const result = await this.neo4jService.read(
       `
-      MATCH (u:USER)-[:MEMBER|:MODERATOR|:ADMIN]->(c:Community {id: $communityId})
+      MATCH (u:USER)-[:MEMBER|:MODERATOR|:ADMIN]->(c:COMMUNITY {id: $communityId})
       RETURN u
       `,
       { communityId }
@@ -244,7 +249,7 @@ export class CommunityService {
     const skip = page * limit;
     const result = await this.neo4jService.read(
       `
-      MATCH (c:Community {id: $communityId})-[:COMMUNITY_POST]->(p:POST)
+      MATCH (c:COMMUNITY {id: $communityId})-[:COMMUNITY_POST]->(p:POST)
       RETURN p
       ORDER BY p.created_on DESC
       SKIP $skip
@@ -276,7 +281,7 @@ export class CommunityService {
     const skip = page * limit;
     const result = await this.neo4jService.read(
       `
-      MATCH (c:Community {id: $communityId})-[:COMMUNITY_POST]->(p:POST)
+      MATCH (c:COMMUNITY {id: $communityId})-[:COMMUNITY_POST]->(p:POST)
       RETURN p
       ORDER BY p.likes_count DESC, p.created_on DESC
       SKIP $skip
@@ -300,7 +305,7 @@ export class CommunityService {
     const skip = page * limit;
     const result = await this.neo4jService.read(
       `
-      MATCH (c:Community {id: $communityId})-[:COMMUNITY_POST]->(p:POST)-[:HAS_MEDIA]->(m:POST_MEDIA)
+      MATCH (c:COMMUNITY {id: $communityId})-[:COMMUNITY_POST]->(p:POST)-[:HAS_MEDIA]->(m:POST_MEDIA)
       RETURN m
       ORDER BY p.created_on DESC
       SKIP $skip
@@ -319,7 +324,7 @@ export class CommunityService {
   async pinPost(communityId: string, postId: string): Promise<void> {
     await this.neo4jService.write(
       `
-      MATCH (c:Community {id: $communityId}), (p:POST {id: $postId})
+      MATCH (c:COMMUNITY {id: $communityId}), (p:POST {id: $postId})
       MERGE (c)-[:PINNED_POST]->(p)
       `,
       { communityId, postId }
@@ -329,7 +334,7 @@ export class CommunityService {
   async joinCommunity(communityId: string, userId: string): Promise<void> {
     await this.neo4jService.write(
       `
-      MATCH (u:USER {id: $userId}), (c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId}), (c:COMMUNITY {id: $communityId})
       WHERE NOT (u)-[:ADMIN|MODERATOR|MEMBER]->(c)
       CREATE (u)-[:MEMBER {joined_at: datetime()}]->(c)
       `,
@@ -340,7 +345,7 @@ export class CommunityService {
   async leaveCommunity(communityId: string, userId: string): Promise<void> {
     await this.neo4jService.write(
       `
-      MATCH (u:USER {id: $userId})-[r:MEMBER]->(c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId})-[r:MEMBER]->(c:COMMUNITY {id: $communityId})
       DELETE r
       `,
       { userId, communityId }
@@ -354,7 +359,7 @@ export class CommunityService {
   async getUserRole(communityId: string, userId: string): Promise<string> {
     const result = await this.neo4jService.read(
       `
-      MATCH (u:USER {id: $userId})-[r:ADMIN|MODERATOR|MEMBER]->(c:Community {id: $communityId})
+      MATCH (u:USER {id: $userId})-[r:ADMIN|MODERATOR|MEMBER]->(c:COMMUNITY {id: $communityId})
       RETURN type(r) as role
       `,
       { userId, communityId }

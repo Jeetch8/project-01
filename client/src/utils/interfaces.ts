@@ -105,9 +105,17 @@ export type ISchemaPost = Omit<IFeedPost, 'creator' | 'comments' | 'media'>;
 
 export interface ICommunity {
   id: string;
-  name: string;
+  title: string;
   banner_img: string;
   members_count: number;
+  rules: string;
   description: string;
+  membership_type: string;
   members: IParticipant[] | string[];
+}
+
+export enum RolesInCommunity {
+  ADMIN = 'ADMIN',
+  MODERATOR = 'MODERATOR',
+  MEMBER = 'MEMBER',
 }

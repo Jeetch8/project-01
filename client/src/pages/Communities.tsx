@@ -12,6 +12,8 @@ import HashLoader from 'react-spinners/HashLoader';
 import { GoArrowLeft } from 'react-icons/go';
 import { Tooltip } from 'react-tooltip';
 import { useNavigate } from 'react-router-dom';
+import { TbUsersPlus } from 'react-icons/tb';
+import CreateCommunityModal from '@/Components/Modals/CreateCommunityModal';
 
 const Communities = () => {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ const Communities = () => {
   const [posts, setPosts] = useState<IFeedPost[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
@@ -72,19 +75,30 @@ const Communities = () => {
 
   return (
     <div className="border-r-[2px] border-zinc-900 bg-black w-[620px] text-white">
-      <div className=" flex items-center gap-x-2 ml-2 backdrop-blur-md">
+      <div className=" flex items-center gap-x-2 ml-2 backdrop-blur-md justify-between sticky top-0">
+        <div className="flex items-center gap-x-2">
+          <a
+            onClick={() => navigate(-1)}
+            data-tooltip-id={`community-back`}
+            data-tooltip-content={'back'}
+          >
+            <GoArrowLeft
+              size={38}
+              className="px-2 py-2 hover:bg-[rgba(108,122,137,0.4)] transition-all  rounded-full cursor-pointer duration-300"
+            />
+          </a>
+          <Tooltip id={`community-back`} />
+          <h1 className="text-2xl font-bold p-4">Communities</h1>
+        </div>
         <a
-          onClick={() => navigate(-1)}
-          data-tooltip-id={`community-back`}
-          data-tooltip-content={'back'}
+          onClick={() => setIsModalOpen(true)}
+          className="px-2 py-2 hover:bg-[rgba(108,122,137,0.4)] transition-all  rounded-full cursor-pointer duration-300 mr-4"
+          data-tooltip-id={`community-create`}
+          data-tooltip-content={'Create Community'}
         >
-          <GoArrowLeft
-            size={38}
-            className="px-2 py-2 hover:bg-[rgba(108,122,137,0.4)] transition-all  rounded-full cursor-pointer duration-300"
-          />
+          <TbUsersPlus size={20} />
         </a>
-        <Tooltip id={`community-back`} />
-        <h1 className="text-2xl font-bold p-4">Communities</h1>
+        <Tooltip id={`community-create`} />
       </div>
 
       <div className="relative group border-y-[2px] border-zinc-900 mt-8">
@@ -141,6 +155,10 @@ const Communities = () => {
           ))}
         </InfiniteScroll>
       </div>
+      <CreateCommunityModal
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+      />
     </div>
   );
 };

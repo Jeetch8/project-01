@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { GoArrowLeft } from 'react-icons/go';
+import { IoSettingsOutline } from 'react-icons/io5';
 import { Tooltip } from 'react-tooltip';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { ICommunity } from '@/utils/interfaces';
+import { ICommunity, RolesInCommunity } from '@/utils/interfaces';
 import SidedProfileImgs from '@/Components/Chat/SidedProfileImgs';
 import { IParticipant } from '@server/src/socket/socket.types';
 import { Button } from '@/Components/Global/Button';
@@ -21,7 +22,10 @@ const SingleCommunity = () => {
     'latest'
   );
 
-  const { doFetch } = useFetch<{ community: ICommunity }>({
+  const { doFetch, dataRef } = useFetch<{
+    community: ICommunity;
+    userRoleInCommunity: RolesInCommunity;
+  }>({
     url: `${base_url}/community/${communityId}`,
     method: 'GET',
     authorized: true,
@@ -34,9 +38,11 @@ const SingleCommunity = () => {
     doFetch();
   }, []);
 
+  console.log(community);
+
   return (
     <div className="border-r-[2px] border-zinc-900 bg-black w-[620px] text-white">
-      <div className="sticky top-0 z-10 bg-black bg-opacity-80 backdrop-blur-md">
+      <div className="sticky top-0 z-10 bg-black bg-opacity-80 backdrop-blur-md flex justify-between items-center">
         <div className="flex items-center gap-x-2 ml-2 p-2">
           <a
             onClick={() => navigate(-1)}
@@ -50,6 +56,21 @@ const SingleCommunity = () => {
           </a>
           <Tooltip id="community-back" />
           <h1 className="text-2xl font-bold">{community?.name}</h1>
+        </div>
+        <div className="mr-2">
+          {dataRef.current?.userRoleInCommunity === RolesInCommunity.ADMIN && (
+            <a
+              onClick={() =>
+                navigate(`/communities/${community?.id}/admin/settings`)
+              }
+              className="px-2 py-2 block hover:bg-[rgba(108,122,137,0.4)] transition-all rounded-full cursor-pointer duration-300"
+              data-tooltip-id="community-settings"
+              data-tooltip-content="Settings"
+            >
+              <IoSettingsOutline size={20} />
+            </a>
+          )}
+          <Tooltip id="community-settings" />
         </div>
       </div>
 

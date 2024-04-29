@@ -9,6 +9,7 @@ export interface Community {
   description: string;
   image: string;
   rules: string;
+  membership_type: string;
   //   members: User | string[];
   //   posts: Post | string[];
   //   admins: User | string[];
@@ -37,6 +38,7 @@ const createCommunityObj = (communityData: Partial<Community>): Community => {
     description: communityData.description,
     image: communityData.image,
     rules: communityData.rules,
+    membership_type: communityData.membership_type,
     // members: communityData.members,
     // posts: communityData.posts,
     // admins: communityData.admins,

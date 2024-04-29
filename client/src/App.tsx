@@ -26,6 +26,9 @@ import ChangePassword from './Components/Settings/Account/ChangePassword';
 import DeactivateAccount from './Components/Settings/Account/DeactivateAccount';
 import Index from './Components/Settings/Account/Index';
 import Sessions from './Components/Settings/Sessions';
+import CommunityAdminSettings from './pages/CommunityAdminSettings';
+import CommunityMembers from './Components/Community/CommunityMembers';
+import EditCommunityInfo from './Components/Community/EditCommunityInfo';
 
 const router = createBrowserRouter([
   {
@@ -56,6 +59,20 @@ const router = createBrowserRouter([
     path: '/',
     element: <MainLayout />,
     children: [
+      {
+        path: 'communities/:id/admin/settings',
+        element: <CommunityAdminSettings />,
+        children: [
+          {
+            path: 'members',
+            element: <CommunityMembers />,
+          },
+          {
+            path: 'edit_community_info',
+            element: <EditCommunityInfo />,
+          },
+        ],
+      },
       {
         path: 'messages',
         element: <Messages />,
@@ -124,6 +141,7 @@ const router = createBrowserRouter([
             path: 'communities/:id',
             element: <SingleCommunity />,
           },
+
           {
             path: 'profile/:username',
             element: <Profile />,
