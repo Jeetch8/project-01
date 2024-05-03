@@ -8,6 +8,8 @@ import {
   PostMedia,
   PostMediaCon,
   Post,
+  createPostPropertiesString,
+  createPostObj,
 } from './entities/post.entity';
 import { User, UserCon } from '@/user/user.entity';
 import { createId } from '@paralleldrive/cuid2';
@@ -28,27 +30,44 @@ export class PostService {
     caption,
     media,
     requestUser,
+    audience,
   }: {
     caption: string;
     media: (Express.Multer.File | string)[];
     requestUser: jwtAuthTokenPayload;
+    audience: string;
   }): Promise<Post> {
     const embedding = await this.googleAIService.getEmbedding(caption);
-    const newPost = await this.neo4jService
-      .write(
-        `MATCH (user:USER {id:$creatorid})
-      CREATE (post:POST {caption:$caption, embedding:$embedding}) -[:CREATED_BY]-> (user)
+    let query = `
+      MATCH (user:USER {id:$creatorid})
+      CREATE (post:POST {${createPostPropertiesString(createPostObj({ caption, embedding }))}}) -[:CREATED_BY]-> (user)
+    `;
+
+    if (audience !== 'Everyone') {
+      query += `
+        WITH post
+        MATCH (community:COMMUNITY {id: $audience})
+        CREATE (community)-[:COMMUNITY_POST]->(post)
+      `;
+    }
+
+    query += `
       RETURN post
-      `,
-        {
-          caption,
-          creatorid: requestUser.userId,
-        }
-      )
+    `;
+
+    const newPost = await this.neo4jService
+      .write(query, {
+        postId: createId(),
+        caption,
+        creatorid: requestUser.userId,
+        embedding,
+        audience,
+      })
       .then((res) => {
         const record = res.records[0];
         return new PostCon(record.get('post')).getObject();
       });
+
     for (let i = 0; i < media.length; i++) {
       const item = media[i];
       if (typeof item !== 'string') {
@@ -78,7 +97,7 @@ export class PostService {
   async deletePost(postid: string) {
     const res = await this.neo4jService.write(
       `MATCH (post:POST {id:$postid})
-      MATCH (post_media:POST_MEDIA) -[:MEDIA_OF]-> (post)
+      MATCH (post_media:POST_MEDIA) -[:HAS_MEDIA]-> (post)
       DETACH DELETE post
       `,
       {
@@ -123,7 +142,7 @@ export class PostService {
     return this.neo4jService
       .write(
         `MATCH (post:POST {id:$post_id})
-      CREATE (post_media:POST_MEDIA {media_type:$media_type,creator_id:$creator_id,modified_media_url:$modified_media_url,original_media_url:$original_media_url}) -[:MEDIA_OF]-> (post)
+      CREATE (post_media:POST_MEDIA {media_type:$media_type,creator_id:$creator_id,modified_media_url:$modified_media_url,original_media_url:$original_media_url}) -[:HAS_MEDIA]-> (post)
       RETURN post_media, post
       `,
         {
@@ -371,15 +390,3 @@ export class PostService {
     return posts;
   }
 }
-// `MATCH (user:USER {id: $userId})
-// MATCH (post:POST)
-// WHERE NOT (user)-[:SEEN {seen_at: $seen_at}]->(post)
-// WITH post, user
-// WITH post, user, collect(post)[toInteger($skip)..toInteger(toInteger($skip) + toInteger($limit))] AS paginatedPosts
-// UNWIND paginatedPosts AS paginatedPost
-// OPTIONAL MATCH (paginatedPost)-[:HAS_MEDIA]->(media:POST_MEDIA)
-// OPTIONAL MATCH (paginatedPost)<-[:POSTED]-(creator:USER)
-// WITH paginatedPost, collect(DISTINCT media) as post_media, creator, user
-// CREATE (user)-[:SEEN]->(paginatedPost)
-// RETURN paginatedPost, post_media, creator
-// LIMIT toInteger($limit)`,

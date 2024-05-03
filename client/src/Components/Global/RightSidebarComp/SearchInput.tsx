@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
 import { base_url } from '@/utils/base_url';
@@ -6,6 +6,7 @@ import { getTokenFromLocalStorage } from '@/utils/localstorage';
 import AvatarImage from '../AvatarImage';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '@/context/GlobalContext';
+import useDebounce from '@/hooks/useDebounce';
 
 interface UserOption {
   id: string;
@@ -22,6 +23,7 @@ interface FormData {
 
 export default function SearchInput() {
   const [menuIsOpen, setMenuIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
   const navigate = useNavigate();
   const { user } = useGlobalContext();
   const { control } = useForm<FormData>({
@@ -30,18 +32,31 @@ export default function SearchInput() {
     },
   });
 
-  const promiseOptions = async (inputValue: string): Promise<UserOption[]> => {
-    if (inputValue.length < 2) {
-      return Promise.resolve([]);
-    }
-    return await fetch(`${base_url}/user?query=${inputValue}`, {
-      headers: {
-        Authorization: `Bearer ${getTokenFromLocalStorage()}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => data.users);
-  };
+  const debouncedInputValue = useDebounce(inputValue, 300);
+
+  const loadOptions = useCallback(
+    (inputValue: string, callback: (options: UserOption[]) => void) => {
+      if (inputValue.length < 2) {
+        callback([]);
+        return;
+      }
+      fetch(`${base_url}/user?query=${inputValue}`, {
+        headers: {
+          Authorization: `Bearer ${getTokenFromLocalStorage()}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => callback(data.users));
+    },
+    []
+  );
+
+  const debouncedLoadOptions = useMemo(
+    () => (inputValue: string, callback: (options: UserOption[]) => void) => {
+      loadOptions(debouncedInputValue, callback);
+    },
+    [loadOptions, debouncedInputValue]
+  );
 
   return (
     <div className="relative">
@@ -51,6 +66,8 @@ export default function SearchInput() {
         render={({ field }) => (
           <AsyncSelect
             {...field}
+            loadOptions={debouncedLoadOptions}
+            onInputChange={(newValue) => setInputValue(newValue)}
             noOptionsMessage={({ inputValue }) =>
               inputValue.length < 2
                 ? 'Start typing'
@@ -62,7 +79,6 @@ export default function SearchInput() {
             cacheOptions
             defaultOptions
             closeMenuOnSelect
-            loadOptions={promiseOptions}
             placeholder="Search"
             className="text-black border-[2px] border-zinc-900 rounded-full px-2 focus:border-blue-500 outline-blue-500"
             components={{

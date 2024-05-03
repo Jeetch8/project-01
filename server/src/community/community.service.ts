@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Neo4jService } from 'nest-neo4j/dist';
 import { Community, CommunityCon } from './entities/community.entity';
@@ -11,12 +12,14 @@ import { User, UserCon } from '@/user/user.entity';
 import { PostService } from '@/post/post.service';
 import { PostMedia, PostMediaCon } from '@/post/entities/post.entity';
 import { jwtAuthTokenPayload } from '@/auth/entities/auth.entity';
+import { GoogleAIService } from '@/lib/googleAI/googleAI.service';
 
 @Injectable()
 export class CommunityService {
   constructor(
     private neo4jService: Neo4jService,
-    private postService: PostService
+    private postService: PostService,
+    private googleAIService: GoogleAIService
   ) {}
 
   async getCommunity(communityid: string, userid: string) {
@@ -31,7 +34,7 @@ export class CommunityService {
     }
     return {
       community: new CommunityCon(result.records[0].get('c')).getObject(),
-      userRoleInCommunity: result.records[0].get('role'),
+      userRoleInCommunity: result.records[0]?.get('role'),
     };
   }
 
@@ -44,9 +47,12 @@ export class CommunityService {
     moderators?: string[];
     members?: string[];
   }): Promise<Community> {
+    const { title, description } = communityData;
+    const embedding = await this.googleAIService.getEmbedding(
+      `${title} ${description}`
+    );
+
     const {
-      title,
-      description,
       image,
       rules,
       creatorId,
@@ -78,7 +84,8 @@ export class CommunityService {
           image: $image,
           rules: $rules,
           createdAt: datetime(),
-          updatedAt: datetime()
+          updatedAt: datetime(),
+          embedding: $embedding
         })
         CREATE (c)-[:ADMIN {joined_at: datetime()}]->(creator)
         ${membersStr}
@@ -94,6 +101,7 @@ export class CommunityService {
           creatorId,
           moderators,
           members,
+          embedding,
         }
       )
       .then((res) => {
@@ -102,30 +110,6 @@ export class CommunityService {
       });
 
     return newCommunity;
-  }
-
-  async createPostInCommunity(postData: {
-    communityId: string;
-    requestUser: jwtAuthTokenPayload;
-    caption: string;
-    media: Express.Multer.File[];
-  }): Promise<Post> {
-    const { communityId, requestUser, caption, media } = postData;
-    const newPost = await this.postService.createPost({
-      caption,
-      media,
-      requestUser,
-    });
-
-    await this.neo4jService.write(
-      `
-      MATCH (c:COMMUNITY {id: $communityId}), (p:POST {id: $postId})
-      CREATE (c)-[:COMMUNITY_POST]->(p)
-      `,
-      { communityId, postId: newPost.id }
-    );
-
-    return newPost;
   }
 
   async addMember(communityId: string, userId: string): Promise<Community> {
@@ -228,13 +212,23 @@ export class CommunityService {
     );
   }
 
-  async getCommunityMembers(communityId: string): Promise<User[]> {
+  async getCommunityMembers(
+    communityId: string,
+    query: string,
+    page: number = 0,
+    role: string,
+    limit: number = 25
+  ): Promise<User[]> {
     const result = await this.neo4jService.read(
       `
-      MATCH (u:USER)-[:MEMBER|:MODERATOR|:ADMIN]->(c:COMMUNITY {id: $communityId})
+      MATCH (u:USER)-[${role === 'All' ? ':MEMBER|:MODERATOR|:ADMIN' : `:${role}`}]->(c:COMMUNITY {id: $communityId})
+      WHERE toLower(u.full_name) CONTAINS toLower($query)
       RETURN u
+      ORDER BY u.username ASC
+      SKIP toInteger($page * $limit)
+      LIMIT toInteger($limit)
       `,
-      { communityId }
+      { communityId, query, page, limit }
     );
     return result.records.map((record) =>
       new UserCon(record.get('u')).getObject()
@@ -370,5 +364,54 @@ export class CommunityService {
     }
 
     return result.records[0].get('role');
+  }
+
+  async editMemberRole(
+    communityId: string,
+    userId: string,
+    newRole: 'MODERATOR' | 'MEMBER'
+  ): Promise<void> {
+    const result = await this.neo4jService.write(
+      `
+      MATCH (u:USER {id: $userId})-[r:MEMBER|MODERATOR]->(c:COMMUNITY {id: $communityId})
+      WHERE NOT (u)-[:ADMIN]->(c)
+      WITH u, c, r, type(r) AS oldRole
+      DELETE r
+      CREATE (u)-[:${newRole} {joined_at: r.joined_at}]->(c)
+      RETURN oldRole, $newRole AS newRole
+      `,
+      { communityId, userId, newRole }
+    );
+
+    if (result.records.length === 0) {
+      throw new NotFoundException('User or community not found');
+    }
+
+    const oldRole = result.records[0].get('oldRole');
+    const updatedRole = result.records[0].get('newRole');
+
+    if (oldRole === updatedRole) {
+      throw new BadRequestException('User already has this role');
+    }
+  }
+
+  async searchCommunities(
+    query: string,
+    limit: number = 25
+  ): Promise<Community[]> {
+    const embedding = await this.googleAIService.getEmbedding(query);
+    const result = await this.neo4jService.read(
+      `MATCH (community:COMMUNITY)
+      WHERE community.embedding IS NOT NULL
+      WITH community, vector.cosineSimilarity(community.embedding, $embedding) as similarity
+      WHERE similarity > 0.7
+      RETURN community
+      ORDER BY similarity DESC
+      LIMIT $limit`,
+      { embedding, limit }
+    );
+    return result.records.map((record) =>
+      new CommunityCon(record.get('community')).getObject()
+    );
   }
 }

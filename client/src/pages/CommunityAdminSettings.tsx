@@ -10,14 +10,12 @@ const CommunityAdminSettings = () => {
   useEffect(() => {
     if (pathname.endsWith('settings/')) {
       navigate('edit_community_info');
-    } else if (pathname.endsWith('settings')) {
-      navigate('/edit_community_info');
     }
   }, []);
 
   return (
-    <div className="flex text-white">
-      <div className="w-[400px] border-r border-zinc-800">
+    <div className="flex text-white items-start">
+      <div className="w-[400px] border-r border-zinc-800 sticky top-0 min-h-screen">
         <div className="px-4 py-4 flex items-center">
           <button
             onClick={() => navigate(-1)}
@@ -29,7 +27,7 @@ const CommunityAdminSettings = () => {
         </div>
         <AdminNavigation />
       </div>
-      <div className="w-[620px] p-4">
+      <div className="w-[620px] no-scroll-container p-4 border-r-[2px] border-zinc-800 min-h-screen">
         <Outlet />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function useDetectOutsideClick(fn: Function) {
   const elementRef = useRef<HTMLDivElement>(null);

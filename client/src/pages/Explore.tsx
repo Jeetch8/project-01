@@ -4,10 +4,14 @@ import { base_url } from '@/utils/base_url';
 import { useFetch } from '@/hooks/useFetch';
 import PostsTab from '@/Components/Explore/PostsTab';
 import UsersTab from '@/Components/Explore/UsersTab';
-import { IoSearch } from 'react-icons/io5';
+import { IoArrowBack, IoSearch } from 'react-icons/io5';
 import { twMerge } from 'tailwind-merge';
+import { FaSearch } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import useDebounce from '@/hooks/useDebounce';
 
 const Explore: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'posts' | 'users'>('posts');
   const [posts, setPosts] = useState<IFeedPost[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -61,17 +65,20 @@ const Explore: React.FC = () => {
     setCurrentUserPage(1);
   };
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchQuery.trim() !== '') {
-      clearSearchStates();
-      setHasSearched(true);
-      if (activeTab === 'posts') {
-        fetchPosts();
-      } else {
-        fetchUsers();
+  const debouncedSearch = useDebounce(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && searchQuery.trim() !== '') {
+        clearSearchStates();
+        setHasSearched(true);
+        if (activeTab === 'posts') {
+          fetchPosts();
+        } else {
+          fetchUsers();
+        }
       }
-    }
-  };
+    },
+    300
+  );
 
   const handleTabChange = (tab: 'posts' | 'users') => {
     setActiveTab(tab);
@@ -115,19 +122,28 @@ const Explore: React.FC = () => {
   return (
     <div className="w-[620px] text-white border-r-[1px] border-neutral-800">
       <div className="bg-[rgba(0,0,0,0.9)] backdrop-blur-xl sticky top-0 z-50">
-        <div className="border-b border-neutral-800 p-4">
-          <div className="flex items-center gap-2 w-full bg-transparent text-white border-[2px] border-zinc-900 rounded-full focus:border-blue-500 outline-none overflow-hidden px-4">
-            <IoSearch className="w-5 h-5" />
+        <div className="flex items-center w-full border-b border-neutral-800 p-4">
+          <div>
+            <button
+              onClick={() => navigate(-1)}
+              className="mr-4 p-2 rounded-full transition-colors duration-200 hover:bg-gray-900"
+            >
+              <IoArrowBack size={18} />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 w-full bg-transparent text-white border-[2px] border-zinc-900 rounded-full outline-none overflow-hidden px-4 group focus-within:border-blue-500">
+            <FaSearch className="text-gray-400 group-focus-within:text-blue-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearch}
+              onKeyDown={debouncedSearch}
               placeholder="Search"
               style={{
                 border: 'none',
                 outline: 'none',
                 background: 'transparent',
+                boxShadow: 'none',
               }}
               className="bg-transparent w-full outline-none focus:outline-none"
             />

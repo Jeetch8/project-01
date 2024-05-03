@@ -5,6 +5,8 @@ export interface Post {
   id: string;
   caption: string;
   likes_count: number;
+  comments_count: number;
+  embedding: number[];
   created_on: Date;
   updated_on: Date;
 }
@@ -79,7 +81,9 @@ export const createPostObj = (post: Partial<Post>): Post => {
   return {
     id: post?.id,
     caption: post?.caption,
-    likes_count: post?.likes_count,
+    likes_count: post?.likes_count || 0,
+    comments_count: post?.comments_count || 0,
+    embedding: post?.embedding || [],
     created_on: post?.created_on,
     updated_on: post?.updated_on,
   };
@@ -108,14 +112,22 @@ export class PostCon {
   }
 
   getObject(): Post {
-    const { id, caption, likes_count, creator_id, created_on, updated_on } = <
-      Record<string, any>
-    >this.node.properties;
+    const {
+      id,
+      caption,
+      likes_count,
+      comments_count,
+      created_on,
+      updated_on,
+      embedding,
+    } = <Record<string, any>>this.node.properties;
     return {
       id,
       caption,
       likes_count,
+      comments_count,
       created_on,
+      embedding,
       updated_on,
     };
   }

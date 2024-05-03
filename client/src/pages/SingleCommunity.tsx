@@ -13,24 +13,53 @@ import { twMerge } from 'tailwind-merge';
 import PostMedia from '@/Components/Profile/CreatedPostsMedia';
 import CommunityLatestPosts from '@/Components/Community/CommunityLatestPosts';
 import CommunityTopPosts from '@/Components/Community/CommunityTopPosts';
+import SingleCommunityAboutTab from '@/Components/Community/SingleCommunityAboutTab';
+import toast from 'react-hot-toast';
+import numeral from 'numeral';
 
 const SingleCommunity = () => {
   const navigate = useNavigate();
   const { communityId } = useParams();
   const [community, setCommunity] = useState<ICommunity | null>(null);
-  const [activeTab, setActiveTab] = useState<'latest' | 'top' | 'media'>(
-    'latest'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'latest' | 'top' | 'media' | 'about'
+  >('latest');
 
   const { doFetch, dataRef } = useFetch<{
     community: ICommunity;
-    userRoleInCommunity: RolesInCommunity;
+    userRoleInCommunity: RolesInCommunity | undefined;
   }>({
     url: `${base_url}/community/${communityId}`,
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {
       setCommunity(data.community);
+    },
+  });
+
+  const { doFetch: joinCommunity } = useFetch({
+    url: `${base_url}/community/${communityId}/join`,
+    method: 'POST',
+    authorized: true,
+    onSuccess: () => {
+      toast.success('Joined community successfully');
+      doFetch(); // Refetch community data
+    },
+    onError: () => {
+      toast.error('Failed to join community');
+    },
+  });
+
+  const { doFetch: leaveCommunity } = useFetch({
+    url: `${base_url}/community/${communityId}/leave`,
+    method: 'POST',
+    authorized: true,
+    onSuccess: () => {
+      toast.success('Left community successfully');
+      doFetch(); // Refetch community data
+    },
+    onError: () => {
+      toast.error('Failed to leave community');
     },
   });
 
@@ -55,13 +84,13 @@ const SingleCommunity = () => {
             />
           </a>
           <Tooltip id="community-back" />
-          <h1 className="text-2xl font-bold">{community?.name}</h1>
+          <h1 className="text-2xl font-bold">{community?.title}</h1>
         </div>
         <div className="mr-2">
           {dataRef.current?.userRoleInCommunity === RolesInCommunity.ADMIN && (
             <a
               onClick={() =>
-                navigate(`/communities/${community?.id}/admin/settings`)
+                navigate(`/communities/${community?.id}/admin/settings/`)
               }
               className="px-2 py-2 block hover:bg-[rgba(108,122,137,0.4)] transition-all rounded-full cursor-pointer duration-300"
               data-tooltip-id="community-settings"
@@ -79,12 +108,12 @@ const SingleCommunity = () => {
           <div className="h-[250px] overflow-hidden">
             <img
               src={community.banner_img}
-              alt={`${community.name} banner`}
+              alt={`${community.title} banner`}
               className="w-full object-cover"
             />
           </div>
           <div className="p-4 bg-[rgba(55,63,71,0.4)]">
-            <h2 className="text-3xl font-bold mb-2">{community.name}</h2>
+            <h2 className="text-3xl font-bold mb-2">{community.title}</h2>
             <p className="mb-4">{community.description}</p>
             <div className="flex justify-between">
               <button className="flex px-2 py-2 gap-x-3 rounded-md hover:bg-[rgba(108,122,137,0.4)]">
@@ -94,14 +123,22 @@ const SingleCommunity = () => {
                   />
                 )}
                 <span className="text-gray-400">
-                  <span className="text-white font-semibold">
-                    {community.members_count}
+                  <span className="font-semibold text-white">
+                    {numeral(community.members_count).format('0.[00]a')}
                   </span>{' '}
                   Members
                 </span>
               </button>
-              <Button variant="outline" className="rounded-full px-5">
-                Join
+              <Button
+                variant="outline"
+                className="rounded-full px-5"
+                onClick={() =>
+                  dataRef.current?.userRoleInCommunity
+                    ? leaveCommunity()
+                    : joinCommunity()
+                }
+              >
+                {dataRef.current?.userRoleInCommunity ? 'Leave' : 'Join'}
               </Button>
             </div>
           </div>
@@ -138,6 +175,9 @@ const SingleCommunity = () => {
         )}
         {activeTab === 'media' && (
           <PostMedia url={`${base_url}/community/${communityId}/post/media`} />
+        )}
+        {activeTab === 'about' && community && (
+          <SingleCommunityAboutTab community={community} />
         )}
       </div>
     </div>

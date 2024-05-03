@@ -87,6 +87,7 @@ export interface IFeedPost {
   caption: string;
   liked: boolean;
   bookmarked: boolean;
+  communityId?: string;
   isCommunityPost?: boolean;
   roleInCommunity?: string;
   communityName?: string;
@@ -112,6 +113,8 @@ export interface ICommunity {
   description: string;
   membership_type: string;
   members: IParticipant[] | string[];
+  created_on: string;
+  updated_on: string;
 }
 
 export enum RolesInCommunity {

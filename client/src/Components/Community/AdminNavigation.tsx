@@ -1,4 +1,4 @@
-import { FaUsers, FaInfoCircle, FaGavel } from 'react-icons/fa';
+import { FaUsers, FaInfoCircle, FaGavel, FaTrash } from 'react-icons/fa';
 import { Link, NavLink, useParams } from 'react-router-dom';
 
 const AdminNavigation = () => {
@@ -21,6 +21,12 @@ const AdminNavigation = () => {
       icon: FaGavel,
       path: 'rules',
       description: 'Set and manage community rules',
+    },
+    {
+      name: 'Delete Community',
+      icon: FaTrash,
+      path: 'delete',
+      description: 'Permanently delete this community',
     },
   ];
 

@@ -4,9 +4,10 @@ import { Tooltip } from 'react-tooltip';
 
 interface Props {
   participants: IParticipant[];
+  size?: string;
 }
 
-const SidedProfileImgs = ({ participants }: Props) => {
+const SidedProfileImgs = ({ participants, size = '32px' }: Props) => {
   const firstFourParticipants = participants?.slice(
     0,
     participants.length > 4 ? 4 : participants.length
@@ -25,7 +26,7 @@ const SidedProfileImgs = ({ participants }: Props) => {
             <AvatarImage
               key={index}
               url={participant?.profile_img}
-              diameter="32px"
+              diameter={size}
             />
           </a>
           <Tooltip id={`profile-img-${participant.id}`} />

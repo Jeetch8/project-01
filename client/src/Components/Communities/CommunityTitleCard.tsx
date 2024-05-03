@@ -17,13 +17,13 @@ const CommunityTitleCard: React.FC<Props> = ({ community }) => {
       <div className="h-3/4 w-full">
         <img
           src={community.banner_img}
-          alt={community.name}
+          alt={community.title}
           className="w-full h-full object-cover"
         />
       </div>
       <div className="h-1/4 w-full bg-zinc-900 flex items-center justify-center">
         <p className="text-white text-sm font-semibold truncate px-2">
-          {community.name}
+          {community.title}
         </p>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import TextareaAutoSize from 'react-textarea-autosize';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import { CiCirclePlus } from 'react-icons/ci';
-import AudienceSelection from './AudienceSelection';
+import AudienceSelectionDropDown from '@/Components/DropDowns/AudienceSelectionDropDown';
 import MediaAssetsPreview from './ExtraAssets/MediaAssetsPreview';
 import { MoonLoader } from 'react-spinners';
 import AvatarImage from '@/Components/Global/AvatarImage';
@@ -21,6 +21,10 @@ export default function CreateNewPostBox({
   const { user } = useGlobalContext();
   const [inputText, setInputText] = useState('');
   const [extraAssetsState, setExtraAssetsState] = useState<string[]>([]);
+  const [selectedAudience, setSelectedAudience] = useState({
+    id: 'Everyone',
+    name: 'Everyone',
+  });
   const { doFetch, fetchState } = useFetch({
     url: base_url + '/post',
     method: 'POST',
@@ -52,6 +56,7 @@ export default function CreateNewPostBox({
       formData.append('postimage', extraAssetsState[i]);
     }
     formData.append('caption', inputText);
+    formData.append('audience', selectedAudience.id);
     doFetch(formData);
   };
 
@@ -61,7 +66,7 @@ export default function CreateNewPostBox({
         <AvatarImage diameter="50px" url={user?.profile_img} />
       </div>
       <div className="w-full">
-        <AudienceSelection />
+        <AudienceSelectionDropDown onAudienceSelect={setSelectedAudience} />
         <TextareaAutoSize
           placeholder={`What's happening?`}
           minRows={2}

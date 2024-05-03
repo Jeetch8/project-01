@@ -30,11 +30,16 @@ const createCommunity = (): ICommunity => ({
   id: faker.string.uuid(),
   title: faker.word.words(2),
   banner_img: faker.image.urlPicsumPhotos(),
-  members_count: faker.number.int({ min: 0, max: 1000 }),
-  rules: faker.lorem.sentence(),
+  members_count: faker.number.int({ min: 1000, max: 1000000 }),
+  rules: new Array(faker.number.int({ min: 3, max: 6 }))
+    .fill(null)
+    .map(() => `===${faker.lorem.sentence()}`)
+    .join(','),
   description: faker.lorem.sentence(),
   membership_type: faker.helpers.arrayElement(['public', 'private']),
   members: [],
+  created_on: faker.date.past().toISOString(),
+  updated_on: faker.date.past().toString(),
 });
 
 const createFeedPost = (creator: IUser): IFeedPost => ({
@@ -44,6 +49,7 @@ const createFeedPost = (creator: IUser): IFeedPost => ({
   created_on: faker.date.recent().toISOString(),
   updated_on: faker.date.recent().toISOString(),
   creator,
+  communityId: faker.string.uuid(),
   liked: faker.datatype.boolean(),
   bookmarked: faker.datatype.boolean(),
   comments_count: faker.number.int({ min: 0, max: 1000 }),
@@ -661,6 +667,28 @@ export function makeServer({ environment = 'development' }) {
 
       this.delete('/community/:id/post/:postId', (schema, request) => {
         return { message: 'Post deleted from community successfully' };
+      });
+
+      this.patch('/community/:id/member/:userId/role', (schema, request) => {
+        return { message: 'Member role updated successfully' };
+      });
+
+      this.get('/community/search', (schema, request) => {
+        const query = request.queryParams.query;
+        const page = parseInt(request.queryParams.page as string) || 1;
+        const communities: ICommunity[] = Array(25)
+          .fill(null)
+          .map(() => ({
+            ...createCommunity(),
+            members: schema.db.users.slice(0, 10),
+          }));
+
+        return {
+          communities,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
       });
     },
   });

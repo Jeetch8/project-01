@@ -5,7 +5,7 @@ import { base_url } from '@/utils/base_url';
 import { Button } from '../Global/Button';
 import { TbCameraPlus } from 'react-icons/tb';
 import toast from 'react-hot-toast';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ICommunity } from '@/utils/interfaces';
 
 interface FormData {
@@ -18,6 +18,7 @@ interface FormData {
 const EditCommunityInfo = () => {
   const [community, setCommunity] = useState<ICommunity | null>(null);
   const { communityId } = useParams();
+  const navigate = useNavigate();
 
   const { doFetch: fetchCommunity } = useFetch<{
     community: ICommunity;
@@ -27,6 +28,10 @@ const EditCommunityInfo = () => {
     authorized: true,
     onSuccess: (data) => {
       setCommunity(data.community);
+    },
+    onUnAuthorisedAccessError: () => {
+      toast.error('You are not authorized to access this page');
+      navigate(-1);
     },
   });
 
@@ -39,6 +44,10 @@ const EditCommunityInfo = () => {
     },
     onError: () => {
       toast.error('Failed to update community');
+    },
+    onUnAuthorisedAccessError: () => {
+      toast.error('You are not authorized to access this page');
+      navigate(-1);
     },
   });
 

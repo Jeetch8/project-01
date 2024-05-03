@@ -209,13 +209,20 @@ export class UserService {
     return new UserCon(result.records[0].get('user')).getObject();
   }
 
-  async searchUsersByFullName(query: string): Promise<User[]> {
+  async searchUsersByFullName(
+    query: string,
+    page: number = 0,
+    limit: number = 25
+  ): Promise<User[]> {
+    const skip = page * limit;
     const result = await this.neo4jService.read(
       `MATCH (user:USER)
       WHERE toLower(user.full_name) CONTAINS toLower($query)
       RETURN user
-      LIMIT 10`,
-      { query }
+      ORDER BY user.username ASC
+      SKIP toInteger($skip)
+      LIMIT toInteger($limit)`,
+      { query, skip, limit }
     );
 
     return result.records.map((record) =>

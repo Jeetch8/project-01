@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarImage from '@/Components/Global/AvatarImage';
-import { SlOptions } from 'react-icons/sl';
 import { TbHeartFilled, TbMessage } from 'react-icons/tb';
 import { CiHeart } from 'react-icons/ci';
 import { CiBookmark } from 'react-icons/ci';
@@ -13,6 +12,7 @@ import { IFeedPost } from '@/utils/interfaces';
 import CommentPostModal from '@/Components/Modals/CommentPostModal';
 import { twMerge } from 'tailwind-merge';
 import { PiUsersFill } from 'react-icons/pi';
+import PostDropdown from '@/Components/DropDowns/PostDropdown';
 
 interface Props {
   post: IFeedPost;
@@ -87,7 +87,10 @@ const Post = ({ post, outerClassName }: Props) => {
                 {post?.timeAgo}
               </span>
             </div>
-            <SlOptions color="rgb(113 113 112)" />
+            <PostDropdown
+              post={post}
+              isAdmin={post.roleInCommunity === 'ADMIN'}
+            />
           </div>
           <p
             className="cursor-pointer"

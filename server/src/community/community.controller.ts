@@ -27,11 +27,15 @@ import {
   CommunityRole,
 } from './decorators/community-roles.decorator';
 import { CommunityRolesGuard } from './guards/community-roles.guard';
+import { GoogleAIService } from '@/lib/googleAI/googleAI.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('community')
 export class CommunityController {
-  constructor(private readonly communityService: CommunityService) {}
+  constructor(
+    private readonly communityService: CommunityService,
+    private readonly googleAIService: GoogleAIService
+  ) {}
 
   @Post()
   async createCommunity(
@@ -53,23 +57,6 @@ export class CommunityController {
       community,
       userRoleInCommunity,
     };
-  }
-
-  @Post(':id/post')
-  @UseInterceptors(FilesInterceptor('media', 4))
-  async createPostInCommunity(
-    @Param('id') communityId: string,
-    @Body() createPostDto: CreatePostInCommunityDto,
-    @Req() req: AuthRequest,
-    @UploadedFiles() media: Express.Multer.File[]
-  ) {
-    const newPost = await this.communityService.createPostInCommunity({
-      communityId,
-      requestUser: req.user,
-      caption: createPostDto.caption,
-      media,
-    });
-    return { message: 'Post created in community', post: newPost };
   }
 
   @Put(':id/member/:userId')
@@ -121,8 +108,20 @@ export class CommunityController {
   }
 
   @Get(':id/members')
-  async getCommunityMembers(@Param('id') id: string) {
-    const members = await this.communityService.getCommunityMembers(id);
+  async getCommunityMembers(
+    @Param('id') id: string,
+    @Query('query') query: string,
+    @Query('page') page: number = 0,
+    @Query('role') role: string = 'All',
+    @Query('limit') limit: number = 25
+  ) {
+    const members = await this.communityService.getCommunityMembers(
+      id,
+      query,
+      page,
+      role,
+      limit
+    );
     return { members };
   }
 
@@ -177,5 +176,23 @@ export class CommunityController {
   async deletePostFromCommunity(@Param('postId') postId: string) {
     await this.communityService.deletePostFromCommunity(postId);
     return { message: 'Post deleted from community successfully' };
+  }
+
+  @Patch(':id/member/:userId/role')
+  @UseGuards(CommunityRolesGuard)
+  @CommunityRoles(CommunityRole.ADMIN)
+  async editMemberRole(
+    @Param('id') communityId: string,
+    @Param('userId') userId: string,
+    @Body('role') newRole: 'MODERATOR' | 'MEMBER'
+  ) {
+    await this.communityService.editMemberRole(communityId, userId, newRole);
+    return { message: `Member role updated to ${newRole}` };
+  }
+
+  @Get('search')
+  async searchCommunities(@Query('query') query: string) {
+    const communities = await this.communityService.searchCommunities(query);
+    return { communities };
   }
 }

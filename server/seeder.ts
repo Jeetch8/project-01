@@ -84,6 +84,11 @@ const createCommunity = (): Community => {
     createdAt: faker.date.past(),
     updatedAt: faker.date.recent(),
     rules: faker.lorem.paragraph(),
+    membership_type: faker.helpers.arrayElement([
+      'ADMIN',
+      'MODERATOR',
+      'MEMBER',
+    ]),
   };
 };
 
@@ -104,6 +109,7 @@ const createPost = (index: number): Post & { embedding: number[] } => {
     id: createId(),
     caption: tweet,
     likes_count: faker.number.int({ min: 0, max: 1000 }),
+    comments_count: faker.number.int({ min: 0, max: 1000 }),
     created_on: faker.date.past(),
     updated_on: faker.date.recent(),
     embedding,
@@ -164,7 +170,16 @@ const seed = async () => {
   await session.run(`MATCH (n) DETACH DELETE n;`);
   // await session.run(`DROP INDEX postembeddings IF EXISTS;`);
   // await session.run(`DROP INDEX userembeddings IF EXISTS;`);
+  // await session.run(`DROP INDEX communityembeddings IF EXISTS`);
 
+  // await session.run(`
+  //   CREATE VECTOR INDEX communityembeddings
+  //   FOR (n:POST) ON (n.embedding)
+  //   OPTIONS {indexConfig: {
+  //     \`vector.dimensions\`: 768,
+  //     \`vector.similarity_function\`: 'cosine'
+  //   }}
+  // `);
   // await session.run(`
   //   CREATE VECTOR INDEX postembeddings
   //   FOR (n:POST) ON (n.embedding)

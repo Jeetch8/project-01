@@ -14,6 +14,7 @@ import { Tooltip } from 'react-tooltip';
 import { useNavigate } from 'react-router-dom';
 import { TbUsersPlus } from 'react-icons/tb';
 import CreateCommunityModal from '@/Components/Modals/CreateCommunityModal';
+import { FaSearch } from 'react-icons/fa';
 
 const Communities = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ const Communities = () => {
 
   return (
     <div className="border-r-[2px] border-zinc-900 bg-black w-[620px] text-white">
-      <div className=" flex items-center gap-x-2 ml-2 backdrop-blur-md justify-between sticky top-0">
+      <div className="flex items-center gap-x-2 ml-2 backdrop-blur-md justify-between sticky top-0">
         <div className="flex items-center gap-x-2">
           <a
             onClick={() => navigate(-1)}
@@ -90,15 +91,26 @@ const Communities = () => {
           <Tooltip id={`community-back`} />
           <h1 className="text-2xl font-bold p-4">Communities</h1>
         </div>
-        <a
-          onClick={() => setIsModalOpen(true)}
-          className="px-2 py-2 hover:bg-[rgba(108,122,137,0.4)] transition-all  rounded-full cursor-pointer duration-300 mr-4"
-          data-tooltip-id={`community-create`}
-          data-tooltip-content={'Create Community'}
-        >
-          <TbUsersPlus size={20} />
-        </a>
-        <Tooltip id={`community-create`} />
+        <div className="flex items-center">
+          <a
+            onClick={() => navigate('/communities/search')}
+            className="px-2 py-2 hover:bg-[rgba(108,122,137,0.4)] transition-all rounded-full cursor-pointer duration-300 mr-4"
+            data-tooltip-id="community-search"
+            data-tooltip-content="Search Communities"
+          >
+            <FaSearch size={20} />
+          </a>
+          <Tooltip id="community-search" />
+          <a
+            onClick={() => setIsModalOpen(true)}
+            className="px-2 py-2 hover:bg-[rgba(108,122,137,0.4)] transition-all  rounded-full cursor-pointer duration-300 mr-4"
+            data-tooltip-id={`community-create`}
+            data-tooltip-content={'Create Community'}
+          >
+            <TbUsersPlus size={20} />
+          </a>
+          <Tooltip id={`community-create`} />
+        </div>
       </div>
 
       <div className="relative group border-y-[2px] border-zinc-900 mt-8">

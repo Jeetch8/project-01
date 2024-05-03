@@ -37,6 +37,7 @@ interface UseFetchProps<TData, TError> {
   authTokenVariable?: string;
   onSuccess?: (data: TData) => void;
   onError?: (error: TError) => void;
+  onUnAuthorisedAccessError?: () => void;
 }
 
 // interface ApiResponse<TData> {
@@ -58,6 +59,7 @@ export const useFetch = <TData = unknown, TError = ApiError>({
   authTokenVariable,
   onSuccess,
   onError,
+  onUnAuthorisedAccessError,
 }: UseFetchProps<TData, TError>) => {
   const navigate = useNavigate();
   const dataRef = useRef<TData | null>(null);
@@ -66,13 +68,20 @@ export const useFetch = <TData = unknown, TError = ApiError>({
 
   const handleUnAuthorisedAccessError = useCallback(() => {
     setFetchState(FetchStates.ERROR);
+    if (onUnAuthorisedAccessError) {
+      onUnAuthorisedAccessError();
+      return;
+    }
     toast.error('Please login');
     navigate('/login');
     localStorage.clear();
-  }, []);
+  }, [onUnAuthorisedAccessError]);
 
   const doFetch = useCallback(
-    async (dataToSend?: Record<string, unknown> | FormData) => {
+    async (
+      dataToSend?: Record<string, unknown> | FormData,
+      modifiedUrl?: string
+    ) => {
       setFetchState(FetchStates.LOADING);
       try {
         const fetchHeaders: HeadersInit = new Headers(headers);
@@ -104,6 +113,9 @@ export const useFetch = <TData = unknown, TError = ApiError>({
               ? dataToSend
               : JSON.stringify(dataToSend),
         };
+        if (modifiedUrl) {
+          url = modifiedUrl;
+        }
         const req = await fetch(url, fetchOptions);
         if (!req.ok) {
           if (req.status === 401) {

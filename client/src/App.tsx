@@ -29,6 +29,8 @@ import Sessions from './Components/Settings/Sessions';
 import CommunityAdminSettings from './pages/CommunityAdminSettings';
 import CommunityMembers from './Components/Community/CommunityMembers';
 import EditCommunityInfo from './Components/Community/EditCommunityInfo';
+import CommunityRules from './Components/Community/CommunityRules';
+import CommunitiesSearch from './pages/CommunitiesSearch';
 
 const router = createBrowserRouter([
   {
@@ -70,6 +72,10 @@ const router = createBrowserRouter([
           {
             path: 'edit_community_info',
             element: <EditCommunityInfo />,
+          },
+          {
+            path: 'rules',
+            element: <CommunityRules />,
           },
         ],
       },
@@ -136,6 +142,10 @@ const router = createBrowserRouter([
           {
             path: 'communities',
             element: <Communities />,
+          },
+          {
+            path: 'communities/search',
+            element: <CommunitiesSearch />,
           },
           {
             path: 'communities/:id',
