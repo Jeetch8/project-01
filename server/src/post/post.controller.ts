@@ -62,6 +62,7 @@ export class PostController {
       requestUser,
       media: postimage,
       caption: body.caption,
+      audience: body.audience,
     });
     return { message: 'Post created', post: newPost };
   }
