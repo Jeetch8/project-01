@@ -67,7 +67,8 @@ const Explore: React.FC = () => {
 
   const debouncedSearch = useDebounce(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && searchQuery.trim() !== '') {
+      console.log(e?.key);
+      if (e?.key === 'Enter' && searchQuery.trim() !== '') {
         clearSearchStates();
         setHasSearched(true);
         if (activeTab === 'posts') {

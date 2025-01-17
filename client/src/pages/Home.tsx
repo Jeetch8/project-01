@@ -19,7 +19,6 @@ const Home = () => {
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {
-      console.log(data);
       setPosts((prevPosts) => [...prevPosts, ...data.posts]);
       setHasMore(data.hasMore);
       setCurrentPage(data.nextPage);

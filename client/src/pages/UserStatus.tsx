@@ -56,12 +56,11 @@ const UserStatus: React.FC = () => {
     fetch(base_url + `/post/${postId}/comments?page=${currentPage}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
         setComments((prevComments) => [...prevComments, ...data.posts]);
         setHasMore(data.hasMore);
         setCurrentPage(data.nextPage);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   };
 
   React.useEffect(() => {

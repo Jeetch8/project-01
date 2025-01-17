@@ -20,7 +20,6 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     profile: any,
     done: VerifyCallback
   ) {
-    console.log(profile, _accessToken, _refreshToken);
     const { name, email, avatar_url, gender } = profile._json;
     const nameArr = name.trim().split(' ');
     const user = {

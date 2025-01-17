@@ -36,7 +36,6 @@ const Login = () => {
       }, 2000);
     },
     onError: (err) => {
-      console.log(err);
       if (typeof err.error === 'string') {
         toast.error(err.error);
       }
@@ -50,7 +49,6 @@ const Login = () => {
         <div className="border-2 px-10 w-fit py-10 rounded-md">
           <form
             onSubmit={handleSubmit(async (data) => {
-              console.log(data);
               await doFetch(data);
             })}
           >

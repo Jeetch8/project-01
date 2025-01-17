@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -6,13 +6,20 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY prisma ./prisma
-
-RUN npx prisma generate
-
 COPY . .
 
-EXPOSE 3000
-# CMD ["npx prisma migrate dev --name init"]
+RUN npm run build
 
-CMD ["npm", "run", "start:dev"]
+FROM node:22-alpine AS production
+
+WORKDIR /app
+
+RUN npm install -g npm@latest && \
+    npm install -g pm2
+
+COPY --from=builder /app/dist/ ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+
+CMD ["pm2-runtime", "index.js"]
