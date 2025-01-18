@@ -25,7 +25,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Redis } from 'ioredis';
 import { createId } from '@paralleldrive/cuid2';
 
-@WebSocketGateway({ cors: { origin: ['http://localhost:5173'] } })
+@WebSocketGateway({ cors: { origin: [process.env.FRONTEND_URL] } })
 export class SocketGateway
   implements
     OnModuleDestroy,

@@ -46,7 +46,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentRoom, setCurrentRoom] = useState<IOnlineRoom | null>(null);
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:5000', {
+    const socketInstance = io(import.meta.env.VITE_API_BASE_URL as string, {
       auth: { token: getTokenFromLocalStorage() },
       reconnection: true,
       reconnectionAttempts: 5,

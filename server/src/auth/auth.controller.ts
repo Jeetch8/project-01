@@ -107,7 +107,9 @@ export class AuthController {
       req.ip
     );
     const url = new URLSearchParams({ access_token: await access_token });
-    return res.redirect('http://localhost:5173/google/login?' + url.toString());
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/google/login?` + url.toString()
+    );
   }
 
   @Get('login/github')
@@ -128,7 +130,9 @@ export class AuthController {
       req.ip
     );
     const url = new URLSearchParams({ access_token: await access_token });
-    return res.redirect('http://localhost:5173/github/login?' + url.toString());
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/github/login?` + url.toString()
+    );
   }
 
   async attachAccessToken(res: Response, refreshToken: string) {

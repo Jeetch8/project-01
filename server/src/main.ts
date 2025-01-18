@@ -9,7 +9,7 @@ async function bootstrap() {
     rawBody: true,
   });
   app.enableCors({
-    origin: ['http://localhost:5173', 'https://accounts.google.com'],
+    origin: ['https://accounts.google.com', process.env.FRONTEND_URL],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

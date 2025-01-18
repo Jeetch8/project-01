@@ -83,6 +83,9 @@ class EnvironmentVariables {
 
   @IsString()
   GOOGLE_GENERATIVE_AI_API_KEY: string;
+
+  @IsString()
+  FRONTEND_URL: string;
 }
 
 export function validate(config: Record<string, unknown>) {
