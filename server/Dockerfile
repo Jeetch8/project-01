@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --force
 
 COPY . .
 
@@ -22,4 +22,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 
 
-CMD ["pm2-runtime", "index.js"]
+CMD ["pm2-runtime", "src/main.js"]

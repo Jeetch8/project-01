@@ -32,8 +32,8 @@ export class Logging {
           error: {},
         };
 
-        if (err) {
-          json.error = err.stack || err;
+        if (err && err instanceof Error) {
+          json.error = err?.stack || err;
         }
 
         msg = JSON.stringify(json);

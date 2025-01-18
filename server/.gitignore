@@ -2,6 +2,7 @@
 /dist
 /node_modules
 /build
+/neo4j_data
 
 # Logs
 logs

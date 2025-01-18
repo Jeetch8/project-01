@@ -4,3 +4,4 @@ node_modules
 .prettierrc
 Dockerfile
 README.md
+.env*
