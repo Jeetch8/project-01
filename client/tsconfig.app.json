@@ -32,9 +32,6 @@
       "@test/*": [
         "src/__test__/*"
       ],
-      "@server/*": [
-        "../server/*"
-      ]
     },
   },
   "include": [

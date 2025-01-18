@@ -27,32 +27,14 @@ class EnvironmentVariables {
   @IsString()
   NEO4J_DB_SCHEME: string;
 
-  // @IsString()
-  // PSQL_DB_USERNAME: string;
-
-  // @IsString()
-  // PSQL_DB_PASSWORD: string;
-
-  // @IsNumber()
-  // PSQL_DB_PORT: number;
-
-  // @IsString()
-  // PSQL_DB_HOST: string;
-
-  // @IsString()
-  // PSQL_DB_SCHEME: string;
+  @IsString()
+  MONGO_DB_URL: string;
 
   @IsString()
-  PSQL_DB_URL: string;
+  REDIS_URL: string;
 
   @IsString()
   JWT_ACCESS_TOKEN_SECRET: string;
-
-  // @IsString()
-  // JWT_REFRESH_TOKEN_SECRET: string;
-
-  // @IsString()
-  // JWT_REFRESH_TOKEN_EXPIRY: string;
 
   @IsString()
   JWT_ACCESS_TOKEN_EXPIRY: string;

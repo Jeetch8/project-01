@@ -163,7 +163,7 @@ let sampleTwitterUsersEmbeddingIndex = 0;
 
 const seed = async () => {
   // Connect to MongoDB
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(process.env.MONGO_DB_URI);
 
   await mongoose.connection.collection('participants').deleteMany({});
   await mongoose.connection.collection('rooms').deleteMany({});

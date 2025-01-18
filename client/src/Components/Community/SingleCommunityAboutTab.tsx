@@ -1,6 +1,6 @@
 import { FaInfoCircle, FaUsers, FaCalendarAlt, FaGavel } from 'react-icons/fa';
 import { MdPublic, MdLock } from 'react-icons/md';
-import { format } from 'date-fns';
+import dayjs from 'dayjs';
 import { ICommunity } from '@/utils/interfaces';
 
 const CommunityAboutTab = ({ community }: { community: ICommunity }) => {
@@ -31,7 +31,7 @@ const CommunityAboutTab = ({ community }: { community: ICommunity }) => {
             <FaCalendarAlt className="mr-1" />
             <span>
               Created on{' '}
-              {format(new Date(community.created_on), 'MMMM d, yyyy')}
+              {dayjs(new Date(community.created_on)).format('MMMM D, YYYY')}
             </span>
           </div>
         </div>

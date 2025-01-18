@@ -1,4 +1,3 @@
-import { SocketEvents } from '@social_media/server/src/socket/socket.constants';
 import { getTokenFromLocalStorage } from '@/utils/localstorage';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
@@ -7,8 +6,9 @@ import {
   IMessageWithSender,
   IOnlineRoom,
   IParticipant,
-} from '@server/src/socket/socket.types';
+} from '@/types/socket';
 import { toast } from 'react-hot-toast'; // Import toast
+import { SocketEvents } from '@/types/socket';
 
 export interface IContext {
   socket: Socket | null;

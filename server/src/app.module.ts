@@ -20,7 +20,8 @@ import { CommunityModule } from './community/community.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+      envFilePath: '.env',
+      // envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
       validate,
     }),
     Neo4jModule.forRootAsync({
@@ -54,7 +55,13 @@ import { CommunityModule } from './community/community.module';
         ttl: 1000 * 60 * 60 * 24 * 7,
       },
     }),
-    MongooseModule.forRoot('mongodb://localhost:27017/social_media'),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get('MONGO_DB_URL'),
+      }),
+    }),
     CloudinaryModule,
     CommunityModule,
   ],

@@ -1,8 +1,8 @@
 import { VscSend } from 'react-icons/vsc';
 
 import React, { useState } from 'react';
-import { IParticipant, ISenderMessage } from '@server/src/socket/socket.types';
-import { SocketEvents } from '@server/src/socket/socket.constants';
+import { IParticipant, ISenderMessage } from '@/types/socket';
+import { SocketEvents } from '@/types/socket';
 import { useSocketContext } from '@/context/SocketContext';
 
 const MessageInputBox = () => {
