@@ -1,7 +1,7 @@
 import React from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import HashLoader from 'react-spinners/HashLoader';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 import Post from '../Home/Post';
 
 interface PostsTabProps {

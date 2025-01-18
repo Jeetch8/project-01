@@ -5,7 +5,7 @@ import { base_url } from '@/utils/base_url';
 import { Button } from '../Global/Button';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ICommunity } from '@/utils/interfaces';
+import { ICommunity } from '@/types/interfaces';
 
 interface FormData {
   rules: { value: string }[];

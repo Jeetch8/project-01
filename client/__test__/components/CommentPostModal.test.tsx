@@ -1,10 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import CommentPostModal from '@/Components/Modals/CommentPostModal';
+import CommentPostModal from '../../src/Components/Modals/CommentPostModal';
 import { Server } from 'miragejs';
 import { makeServer } from '../mocks/server';
-import { IFeedPost } from '@/utils/interfaces';
+// import { IFeedPo@/types/interfaces/interfaces';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { PropsWithChildren } from 'react';
@@ -30,9 +30,9 @@ describe('CommentPostModal', () => {
 
   beforeEach(() => {
     server = makeServer({ environment: 'test' });
-    server.create('post', {
-      creator: server.create('user').attrs,
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = { creator: server.create('user').attrs } as any;
+    server.create('post', data);
   });
 
   afterEach(() => {

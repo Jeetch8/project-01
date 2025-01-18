@@ -4,7 +4,7 @@ import { IoIosArrowDown } from 'react-icons/io';
 import { useDetectOutsideClick } from '@/hooks/useDetectOutsideClick';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { ICommunity } from '@/utils/interfaces';
+import { ICommunity } from '@/types/interfaces';
 import { HashLoader } from 'react-spinners';
 
 interface AudienceSelectionDropDownProps {

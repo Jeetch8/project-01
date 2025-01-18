@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 import { base_url } from '@/utils/base_url';
 import { useFetch } from '@/hooks/useFetch';
 import PostsTab from '@/Components/Explore/PostsTab';
 import UsersTab from '@/Components/Explore/UsersTab';
-import { IoArrowBack, IoSearch } from 'react-icons/io5';
+import { IoArrowBack } from 'react-icons/io5';
 import { twMerge } from 'tailwind-merge';
 import { FaSearch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

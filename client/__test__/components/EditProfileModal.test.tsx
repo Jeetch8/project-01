@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 import EditProfileModal from '@/Components/Modals/EditProfileModal';
 import { Server } from 'miragejs';
 import { makeServer } from '../mocks/server';
-import { IAuthProvider, IUser } from '@/utils/interfaces';
+import { IAuthProvider, IUser } from '@/types/interfaces';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { PropsWithChildren } from 'react';

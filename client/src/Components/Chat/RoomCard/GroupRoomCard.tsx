@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { twMerge } from 'tailwind-merge';
-import { IParticipant } from '@server/src/socket/socket.types';
+import { IParticipant } from '@/types/socket';
 import ProfileImgsInSquare from '../ProfileImgsInSquare';
 import AvatarImage from '@/Components/Global/AvatarImage';
 

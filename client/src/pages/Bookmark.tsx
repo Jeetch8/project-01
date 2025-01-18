@@ -3,7 +3,7 @@ import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import Post from '@/Components/Home/Post';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 import { HashLoader } from 'react-spinners';
 import { useGlobalContext } from '@/context/GlobalContext';
 

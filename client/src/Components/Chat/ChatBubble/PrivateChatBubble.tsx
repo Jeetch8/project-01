@@ -1,5 +1,5 @@
 import React from 'react';
-import { IMessageWithSender } from '@server/src/socket/socket.types';
+import { IMessageWithSender } from '@/types/socket';
 import { useSocketContext } from '@/context/SocketContext';
 import { twMerge } from 'tailwind-merge';
 import AvatarImage from '@/Components/Global/AvatarImage';

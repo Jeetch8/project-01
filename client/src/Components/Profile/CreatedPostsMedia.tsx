@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import { useFetch } from '@/hooks/useFetch';
-import { IPost, IPostMedia } from '@/utils/interfaces';
+import { IPost, IPostMedia } from '@/types/interfaces';
 import HashLoader from 'react-spinners/HashLoader';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { LuZoomIn, LuZoomOut } from 'react-icons/lu';

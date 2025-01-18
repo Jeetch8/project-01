@@ -1,12 +1,11 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { describe, it, beforeEach, afterEach } from 'vitest';
 import Home from '@/pages/Home';
-import CreateNewPost from '@/Components/Home/CreateNewPost/CreateNewPost';
 import { GlobalContextProvider } from '@/context/GlobalContext';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { Server } from 'miragejs';
-import { makeServer } from '@/__test__/mocks/server';
+import { makeServer } from '../mocks/server';
 import { PropsWithChildren } from 'react';
 
 const wrapper = ({ children }: PropsWithChildren) => {

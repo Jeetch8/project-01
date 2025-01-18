@@ -1,4 +1,4 @@
-import { IParticipant } from '@server/src/socket/socket.types';
+import { IParticipant } from '@/types/socket';
 import AvatarImage from '../Global/AvatarImage';
 import { Tooltip } from 'react-tooltip';
 

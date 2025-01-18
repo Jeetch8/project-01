@@ -7,7 +7,7 @@ export enum SocketEvents {
   INITIAL_DATA = 'initial-data',
   LEAVE_ROOM = 'leave-room',
   GET_ROOM_MESSAGES = 'get-room-messages',
-  ERROR = 'error', // Add this line
+  ERROR = 'error',
 }
 
 export enum IRole {
@@ -81,7 +81,6 @@ export interface IOnlineRoom {
   createdAt: string;
 }
 
-// type for the obj will be sent from the sender
 export interface ISenderMessage {
   content: string;
   contentType: string;

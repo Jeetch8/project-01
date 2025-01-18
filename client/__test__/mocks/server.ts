@@ -12,7 +12,7 @@ import {
   ICommunity,
   IUserSession,
   IUser,
-} from '@/utils/interfaces';
+} from '@/types/interfaces';
 import { faker } from '@faker-js/faker';
 
 const createPostMedia = () => {

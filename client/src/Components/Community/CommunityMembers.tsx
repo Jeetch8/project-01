@@ -5,7 +5,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { HashLoader } from 'react-spinners';
 import AvatarImage from '../Global/AvatarImage';
 import { useNavigate, useParams } from 'react-router-dom';
-import { IUser } from '@/utils/interfaces';
+import { IUser } from '@/types/interfaces';
 import { FaSearch } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useDebounce from '@/hooks/useDebounce';

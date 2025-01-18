@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import path from 'path';
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -15,6 +16,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@test': path.resolve(__dirname, './src/__test__'),
       punycode: 'punycode/',
     },
   },

@@ -11,7 +11,7 @@ type IGlobalContext = {
 import React, { createContext, useContext, useEffect } from 'react';
 import { FetchStates, useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { IUser } from '@/utils/interfaces';
+import { IUser } from '@/types/interfaces';
 
 const defaultValues: IGlobalContext = {
   user: undefined,

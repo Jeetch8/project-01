@@ -1,5 +1,5 @@
 import React from 'react';
-import { ICommunity } from '@/utils/interfaces';
+import { ICommunity } from '@/types/interfaces';
 import { useNavigate } from 'react-router-dom';
 
 interface Props {

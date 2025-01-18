@@ -1,7 +1,7 @@
 import Feed from '@/Components/Home/Feed';
 import { base_url } from '@/utils/base_url';
 import CreateNewPostBox from '@/Components/Home/CreateNewPost/CreateNewPost';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { FetchStates, useFetch } from '@/hooks/useFetch';

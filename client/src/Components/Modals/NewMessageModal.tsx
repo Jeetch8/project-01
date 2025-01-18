@@ -6,10 +6,11 @@ import AsyncSelect from 'react-select/async';
 import { Button } from '../Global/Button';
 import { useSocketContext } from '@/context/SocketContext';
 import { getTokenFromLocalStorage } from '@/utils/localstorage';
-import { ParticipantDocument } from '@server/src/schemas/Participant.schema';
-import { IParticipant } from '@server/src/socket/socket.types';
+import { IParticipant as IParticipantDocument } from '@/types/models';
+import { IParticipant } from '@/types/socket';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { TbCameraPlus } from 'react-icons/tb';
+import { IUser } from '@/types/interfaces';
 
 interface Props {
   isModalOpen: boolean;
@@ -59,9 +60,9 @@ const NewMessageModal = ({ isModalOpen, setIsModalOpen }: Props) => {
     })
       .then((res) => res.json())
       .then((data) => data.users)
-      .then((users: Omit<ParticipantDocument, 'participatedRooms' | 'id'>[]) =>
+      .then((users: Omit<IParticipantDocument, 'participatedRooms' | 'id'>[]) =>
         users.map((user) => {
-          const id = user._id.toString();
+          const id = user.userid;
           return {
             value: id,
             label: user.name,

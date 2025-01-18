@@ -5,7 +5,7 @@ interface Props {
 import 'react-photo-view/dist/react-photo-view.css';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
 import { twMerge } from 'tailwind-merge';
-import { IPostMedia } from '@/utils/interfaces';
+import { IPostMedia } from '@/types/interfaces';
 
 export default function PostImages({ media }: Props) {
   if (media.length === 0) return null;

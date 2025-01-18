@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base_url } from '@/utils/base_url';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import HashLoader from 'react-spinners/HashLoader';
 import Post from '@/Components/Home/Post';

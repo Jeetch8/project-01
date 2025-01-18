@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 
-const useThrottle = <T, _>(value: T, interval: number = 500): T | undefined => {
+export const useThrottle = <T, _>(
+  value: T,
+  interval: number = 500
+): T | undefined => {
   const [state, setState] = useState<T>();
   const lastupdate = useRef<number | null>(null);
 

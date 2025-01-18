@@ -3,7 +3,7 @@ import { FaEllipsisV, FaThumbtack } from 'react-icons/fa';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import toast from 'react-hot-toast';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 
 interface PostDropdownProps {
   post: IFeedPost;

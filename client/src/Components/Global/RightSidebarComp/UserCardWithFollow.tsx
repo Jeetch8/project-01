@@ -1,5 +1,5 @@
 import AvatarImage from '../AvatarImage';
-import { IUser } from '@/utils/interfaces';
+import { IUser } from '@/types/interfaces';
 
 export default function UserCardWithFollow({ user }: { user: IUser }) {
   return (

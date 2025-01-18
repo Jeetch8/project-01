@@ -1,4 +1,4 @@
-import { IUser } from '@/utils/interfaces';
+import { IUser } from '@/types/interfaces';
 import AvatarImage from '../Global/AvatarImage';
 import { useNavigate } from 'react-router-dom';
 

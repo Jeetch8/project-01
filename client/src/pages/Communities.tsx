@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { ICommunity, IFeedPost } from '@/utils/interfaces';
+import { ICommunity, IFeedPost } from '@/types/interfaces';
 import CommunityTitleCard from '@/Components/Communities/CommunityTitleCard';
 import useEmblaCarousel from 'embla-carousel-react';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';

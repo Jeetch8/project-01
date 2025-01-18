@@ -1,13 +1,13 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import Post from '@/Components/Home/Post';
 import { GlobalContextProvider } from '@/context/GlobalContext';
 import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { Server } from 'miragejs';
-import { makeServer } from '@/__test__/mocks/server';
+import { makeServer } from '../mocks/server';
 import { PropsWithChildren } from 'react';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 
 // Mock react-router-dom's useNavigate
 const mockNavigate = vi.fn();
@@ -40,9 +40,9 @@ describe('Post Component', () => {
   beforeEach(() => {
     server = makeServer({ environment: 'test' });
     const user = server.create('user');
-    const post = server.create('post', {
-      creator: user.attrs,
-    });
+    // const post = server.create('post', {
+    //   creator: user.attrs,
+    // });
   });
 
   afterEach(() => {

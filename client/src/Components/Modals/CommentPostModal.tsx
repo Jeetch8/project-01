@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import AvatarImage from '@/Components/Global/AvatarImage';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';

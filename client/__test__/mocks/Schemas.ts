@@ -8,7 +8,7 @@ import {
   IAuthProvider,
   IUserSession,
   ISchemaPost,
-} from '@/utils/interfaces';
+} from '@/types/interfaces';
 
 export const UserSchema = Factory.extend<IUser>({
   id() {

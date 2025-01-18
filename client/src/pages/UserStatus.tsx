@@ -6,7 +6,7 @@ import { useGlobalContext } from '@/context/GlobalContext';
 import { useFetch, FetchStates } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import { HashLoader } from 'react-spinners';
-import { IPostPage, IFeedPost } from '@/utils/interfaces';
+import { IPostPage, IFeedPost } from '@/types/interfaces';
 import { IoArrowBack } from 'react-icons/io5';
 import TextareaAutoSize from 'react-textarea-autosize';
 import PostExtraAsset from '@/Components/Home/CreateNewPost/PostExtraAsset';

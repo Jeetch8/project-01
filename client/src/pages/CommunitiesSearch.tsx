@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { ICommunity } from '@/utils/interfaces';
+import { ICommunity } from '@/types/interfaces';
 import { GoArrowLeft } from 'react-icons/go';
 import { FaSearch } from 'react-icons/fa';
 import SidedProfileImgs from '@/Components/Chat/SidedProfileImgs';
 import useDebounce from '@/hooks/useDebounce';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import HashLoader from 'react-spinners/HashLoader';
-import { IParticipant } from '@server/src/socket/socket.types';
+import { IParticipant } from '@/types/socket';
 import numeral from 'numeral';
 
 const CommunitiesSearch = () => {
@@ -21,7 +21,7 @@ const CommunitiesSearch = () => {
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  const { doFetch, fetchState } = useFetch<{
+  const { doFetch } = useFetch<{
     communities: ICommunity[];
     hasMore: boolean;
     nextPage: number;
@@ -45,13 +45,13 @@ const CommunitiesSearch = () => {
       undefined,
       `${base_url}/community/search?query=${debouncedSearchQuery}&page=${page}`
     );
-  }, [debouncedSearchQuery, page]);
+  }, [debouncedSearchQuery, page, doFetch]);
 
   useEffect(() => {
     setPage(1);
     setCommunities([]);
     fetchCommunities();
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, fetchCommunities]);
 
   const loadMore = () => {
     if (hasMore) {

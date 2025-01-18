@@ -1,7 +1,7 @@
 import { FaInfoCircle, FaUsers, FaCalendarAlt, FaGavel } from 'react-icons/fa';
 import { MdPublic, MdLock } from 'react-icons/md';
 import dayjs from 'dayjs';
-import { ICommunity } from '@/utils/interfaces';
+import { ICommunity } from '@/types/interfaces';
 
 const CommunityAboutTab = ({ community }: { community: ICommunity }) => {
   return (

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import { MdArrowForwardIos } from 'react-icons/md';
-import { IUserSession } from '@/utils/interfaces';
+import { IUserSession } from '@/types/interfaces';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import { HashLoader } from 'react-spinners';

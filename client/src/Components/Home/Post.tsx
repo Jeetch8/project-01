@@ -8,7 +8,7 @@ import PostImages from './PostImages';
 import { FaBookmark } from 'react-icons/fa';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
-import { IFeedPost } from '@/utils/interfaces';
+import { IFeedPost } from '@/types/interfaces';
 import CommentPostModal from '@/Components/Modals/CommentPostModal';
 import { twMerge } from 'tailwind-merge';
 import { PiUsersFill } from 'react-icons/pi';

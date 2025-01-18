@@ -1,6 +1,6 @@
 import React from 'react';
 import UserCardWithFollow from './UserCardWithFollow';
-import { IAuthProvider, IUser } from '@/utils/interfaces';
+import { IAuthProvider, IUser } from '@/types/interfaces';
 
 const user: IUser = {
   id: '1',
