@@ -11,6 +11,7 @@ import PasswordInput from '@/Components/Form/PasswordInput';
 import { FaGoogle } from 'react-icons/fa';
 import { FaGithub } from 'react-icons/fa';
 import RequestPasswordResetModal from '@/Components/Modals/RequestPasswordResetModal';
+import { useState } from 'react';
 
 const Login = () => {
   const {
@@ -23,6 +24,7 @@ const Login = () => {
       password: '',
     },
   });
+  const [isGuestLogin, setIsGuestLogin] = useState(false);
   const navigate = useNavigate();
   const { fetchState, doFetch } = useFetch<{ access_token: string }>({
     url: base_url + '/auth/login/local',
@@ -41,6 +43,15 @@ const Login = () => {
       }
     },
   });
+
+  const handleGuestLogin = async () => {
+    setIsGuestLogin(true);
+    await doFetch({
+      email: 'demo@demo.com',
+      password: 'PAssword!@12',
+    });
+    setIsGuestLogin(false);
+  };
 
   return (
     <div className="flex justify-center items-center w-full h-[100vh] bg-black text-white">
@@ -97,17 +108,29 @@ const Login = () => {
               />
             </div>
             <button
-              className="px-6 py-3 rounded-md w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 my-6"
+              className="px-6 py-3 rounded-md w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 mt-6 mb-2"
               type="submit"
               disabled={fetchState === 'loading'}
             >
-              {fetchState === 'loading' ? (
+              {fetchState === 'loading' && !isGuestLogin ? (
                 <ScaleLoader role="loader" height={13} />
               ) : (
                 'Submit'
               )}
             </button>
           </form>
+          <button
+            className="px-6 py-3 rounded-md w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 mt-1 mb-6"
+            type="button"
+            onClick={handleGuestLogin}
+            disabled={fetchState === 'loading' && isGuestLogin}
+          >
+            {fetchState === 'loading' && isGuestLogin ? (
+              <ScaleLoader role="loader" height={13} />
+            ) : (
+              'Guest Login'
+            )}
+          </button>
           <RequestPasswordResetModal />
           <Link
             to={'/register'}

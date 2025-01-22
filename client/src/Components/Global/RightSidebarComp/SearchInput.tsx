@@ -25,7 +25,6 @@ export default function SearchInput() {
   const [menuIsOpen, setMenuIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const navigate = useNavigate();
-  const { user } = useGlobalContext();
   const { control } = useForm<FormData>({
     defaultValues: {
       selectedUser: null,
@@ -40,7 +39,7 @@ export default function SearchInput() {
         callback([]);
         return;
       }
-      fetch(`${base_url}/user?query=${inputValue}`, {
+      fetch(`${base_url}/user/search?query=${inputValue}`, {
         headers: {
           Authorization: `Bearer ${getTokenFromLocalStorage()}`,
         },
@@ -87,15 +86,11 @@ export default function SearchInput() {
               Option: ({ data, ...props }) => (
                 <div
                   onClick={() => {
-                    if (data.id === user?.id) {
-                      navigate('/profile/me');
-                    } else {
-                      navigate(`/profile/${data.username}`);
-                    }
+                    navigate(`/profile/${data.username}`);
                     setMenuIsOpen(false);
                   }}
                   {...props}
-                  className="flex items-center p-2 cursor-pointer hover:bg-gray-900 gap-x-3"
+                  className="flex items-center p-2 cursor-pointer hover:bg-gray-900 gap-x-3 text-white"
                 >
                   <AvatarImage url={data.profile_img} diameter="40px" />
                   <div>

@@ -17,14 +17,9 @@ import {
 import { PostService } from './post.service';
 import { JwtAuthGuard } from '@/auth/guards/jwt.guard';
 import { Request } from 'express';
-import {
-  FileFieldsInterceptor,
-  FilesInterceptor,
-} from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { AuthRequest, jwtAuthTokenPayload } from '@/auth/entities/auth.entity';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
-@UseGuards(JwtAuthGuard)
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -40,6 +35,7 @@ export class PostController {
   }
 
   @Post('create')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('postimage', 4))
   async createPost(
     @Req() req: AuthRequest,
@@ -68,11 +64,13 @@ export class PostController {
   }
 
   @Delete(':postid')
+  @UseGuards(JwtAuthGuard)
   async deletePost(@Param() params: Request['params']) {
     await this.postService.deletePost(params.postid);
   }
 
   @Patch(':postid/toggle-like')
+  @UseGuards(JwtAuthGuard)
   async toggleLikePost(
     @Param() params: Request['params'],
     @Req() req: AuthRequest
@@ -80,16 +78,6 @@ export class PostController {
     const requestUser: jwtAuthTokenPayload = req.user;
     await this.postService.toggleLikePost(params.postid, requestUser.userId);
     return { message: 'Post liked' };
-  }
-
-  @Get('feed')
-  async getFeedPosts(@Req() req: AuthRequest, @Query('page') page: number = 0) {
-    const requestUser: jwtAuthTokenPayload = req.user;
-    const result = await this.postService.getFeedPosts(
-      requestUser.userId,
-      page
-    );
-    return result;
   }
 
   @Get(':postId')
@@ -110,6 +98,7 @@ export class PostController {
   }
 
   @Patch(':postId/toggle-bookmark')
+  @UseGuards(JwtAuthGuard)
   async toggleBookmarkPost(
     @Param('postId') postId: string,
     @Req() req: AuthRequest
@@ -123,6 +112,7 @@ export class PostController {
   }
 
   @Put(':postId/comment')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('commentimage', 4))
   async commentOnPost(
     @Param('postId') postId: string,
@@ -149,5 +139,11 @@ export class PostController {
       media: commentimage,
     });
     return { message: 'Comment added successfully', post: result };
+  }
+
+  @Get('trending-post')
+  async getTredingPosts() {
+    const result = await this.postService.getTrendingPost();
+    return { posts: result };
   }
 }

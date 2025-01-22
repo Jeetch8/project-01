@@ -86,6 +86,7 @@ export interface IFeedPost {
   media: IPostMedia[];
   caption: string;
   liked: boolean;
+  commented: boolean;
   bookmarked: boolean;
   communityId?: string;
   isCommunityPost?: boolean;

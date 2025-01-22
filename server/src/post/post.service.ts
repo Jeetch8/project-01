@@ -314,7 +314,6 @@ export class PostService {
       )
       .then((res) => new PostCon(res.records[0].get('comment')).getObject());
 
-    // Upload and create media for the comment
     for (const item of media) {
       const uploadedItem = await this.cloudinaryService.uploadImage(item);
       await this.createPostMedia({
@@ -328,46 +327,6 @@ export class PostService {
 
     const updatedPost = await this.getPost(postId, userId);
     return updatedPost.post;
-  }
-
-  async getFeedPosts(
-    userId: string,
-    page: number = 0,
-    limit: number = 25
-  ): Promise<{ posts: Post[]; hasMore: boolean; nextPage: number }> {
-    const skip = page * limit;
-    const result = await this.neo4jService.write(
-      `MATCH (user:USER {id: $userId})
-       MATCH (post:POST)
-       WHERE NOT (user)-[:SEEN {seen_at: $seen_at}]->(post)
-       WITH post, user
-       WITH post, user, collect(post)[toInteger($skip)..toInteger(toInteger($skip) + toInteger($limit))] AS paginatedPosts
-       UNWIND paginatedPosts AS paginatedPost
-       OPTIONAL MATCH (paginatedPost)-[:HAS_MEDIA]->(media:POST_MEDIA)
-       OPTIONAL MATCH (paginatedPost)<-[:POSTED]-(creator:USER)
-       WITH paginatedPost, collect(DISTINCT media) as post_media, creator, user
-       WITH paginatedPost, post_media, creator, user,
-            CASE WHEN NOT (user)-[:SEEN]->(paginatedPost) THEN true ELSE false END AS shouldCreateSeen
-       FOREACH (_ IN CASE WHEN shouldCreateSeen THEN [1] ELSE [] END |
-           CREATE (user)-[:SEEN {seen_at: $seen_at}]->(paginatedPost)
-       )
-       RETURN paginatedPost, post_media, creator
-       LIMIT toInteger($limit)`,
-      { userId, skip, seen_at: new Date().toISOString(), limit }
-    );
-    const posts = result.records.slice(0, limit).map((record) => {
-      const post = new PostCon(record.get('paginatedPost')).getObject();
-      const media = record
-        .get('post_media')
-        .map((m) => new PostMediaCon(m).getObject());
-      const creator = new UserCon(record.get('creator')).getObject();
-      return { ...post, media, creator };
-    });
-
-    const hasMore = result.records.length > limit;
-    const nextPage = hasMore ? page + 1 : null;
-
-    return { posts, hasMore, nextPage };
   }
 
   async searchPosts(query: string, page: number = 0, limit: number = 20) {
@@ -387,6 +346,39 @@ export class PostService {
     const posts = result.records.map((record) => {
       return new PostCon(record.get('post')).getObject();
     });
+    return posts;
+  }
+
+  async getTrendingPost() {
+    const cacheKey = 'trending_posts';
+    const cachedPosts = await this.redis.get(cacheKey);
+
+    if (cachedPosts) {
+      return JSON.parse(cachedPosts);
+    }
+
+    const result = await this.neo4jService.read(
+      `MATCH (post:POST)<-[r:POSTED]-(user:USER)
+       WHERE NOT EXISTS((post)-[:REPLY_TO]->())
+       WITH post, user, size((post)<-[:LIKES]-()) as likes, 
+            size((post)<-[:REPLY_TO]-()) as comments,
+            (likes + comments) as engagement
+       ORDER BY engagement DESC
+       LIMIT 3
+       RETURN post, user`
+    );
+
+    const posts = result.records.map((record) => {
+      const post = new PostCon(record.get('post')).getObject();
+      const user = new UserCon(record.get('user')).getObject();
+      return {
+        ...post,
+        creator: user,
+      };
+    });
+
+    await this.redis.set(cacheKey, JSON.stringify(posts), 'EX', 900);
+
     return posts;
   }
 }

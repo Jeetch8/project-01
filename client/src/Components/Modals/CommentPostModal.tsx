@@ -79,14 +79,14 @@ const CommentPostModal: React.FC<CommentPostModalProps> = ({
       <div className="flex flex-col space-y-4">
         <div className="flex items-start space-x-3">
           <div className="flex flex-col items-center h-full">
-            <AvatarImage url={post.creator.profile_img} diameter="48px" />
+            <AvatarImage url={post?.creator?.profile_img} diameter="48px" />
             <div className="w-[0.5px] bg-gray-900 flex-grow mt-2 h-full min-h-[100px]"></div>
           </div>
           <div className="flex-grow">
             <div>
-              <span className="font-bold mr-1">{post.creator.full_name}</span>
+              <span className="font-bold mr-1">{post?.creator?.full_name}</span>
               <span className="font-light text-gray-500 ml-1">
-                @{post.creator.username}
+                @{post?.creator?.username}
               </span>
               <span> · </span>
               <span className="text-sm text-gray-500 ml-1">{post.timeAgo}</span>
@@ -95,7 +95,7 @@ const CommentPostModal: React.FC<CommentPostModalProps> = ({
             <p className="text-gray-500 mt-2 py-3 px-4">
               replying to{' '}
               <span className="font-bold text-blue-500">
-                @{post.creator.username}
+                @{post?.creator?.username}
               </span>
             </p>
           </div>

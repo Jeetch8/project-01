@@ -3,3 +3,4 @@ node_modules
 .aider*
 sample
 /neo4j_data
+seed_cached_data

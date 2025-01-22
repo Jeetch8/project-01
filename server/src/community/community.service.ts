@@ -414,4 +414,46 @@ export class CommunityService {
       new CommunityCon(record.get('community')).getObject()
     );
   }
+
+  async getUserCommunityList(userId: string): Promise<Community[]> {
+    const result = await this.neo4jService.read(
+      `MATCH (u:USER {id: $userId})-[:ADMIN|MODERATOR|MEMBER]->(c:COMMUNITY)
+      RETURN c
+      ORDER BY c.title ASC`,
+      { userId }
+    );
+    return result.records.map((record) =>
+      new CommunityCon(record.get('c')).getObject()
+    );
+  }
+
+  async getMixedFeed(
+    userId: string,
+    page: number = 1
+  ): Promise<{
+    posts: Post[];
+    hasMore: boolean;
+    nextPage: number;
+  }> {
+    const skip = (page - 1) * 25;
+    const limit = 25;
+    const result = await this.neo4jService.read(
+      `
+      MATCH (u:USER {id: $userId})-[:MEMBER|:MODERATOR|:ADMIN]->(c:COMMUNITY)-[:COMMUNITY_POST]->(p:POST)
+      RETURN p
+      ORDER BY p.created_on DESC
+      SKIP toInteger($skip)
+      LIMIT toInteger(25)
+      `,
+      { userId, skip: Number(skip), limit }
+    );
+    const posts = result.records.map((record) =>
+      new PostCon(record.get('p')).getObject()
+    );
+
+    const hasMore = posts.length > limit;
+    const nextPage = hasMore ? page + 1 : null;
+
+    return { posts: posts.slice(0, limit), hasMore, nextPage };
+  }
 }

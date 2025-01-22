@@ -10,18 +10,11 @@ import {
   Req,
   Put,
   Query,
-  UseInterceptors,
-  UploadedFiles,
 } from '@nestjs/common';
 import { CommunityService } from './community.service';
 import { JwtAuthGuard } from '@/auth/guards/jwt.guard';
 import { AuthRequest } from '@/auth/entities/auth.entity';
-import {
-  CreateCommunityDto,
-  CreatePostInCommunityDto,
-  UpdateCommunityDto,
-} from './dto/community.dto';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { CreateCommunityDto, UpdateCommunityDto } from './dto/community.dto';
 import {
   CommunityRoles,
   CommunityRole,
@@ -47,16 +40,6 @@ export class CommunityController {
       creatorId: req.user.userId,
     });
     return { message: 'Community created', community: newCommunity };
-  }
-
-  @Get(':id')
-  async getCommunity(@Param('id') id: string, @Req() req: AuthRequest) {
-    const { community, userRoleInCommunity } =
-      await this.communityService.getCommunity(id, req.user.userId);
-    return {
-      community,
-      userRoleInCommunity,
-    };
   }
 
   @Put(':id/member/:userId')
@@ -194,5 +177,30 @@ export class CommunityController {
   async searchCommunities(@Query('query') query: string) {
     const communities = await this.communityService.searchCommunities(query);
     return { communities };
+  }
+
+  @Get('user/community-list')
+  async getUserCommunities(@Req() req: AuthRequest) {
+    const user = req.user;
+    const communities = await this.communityService.getUserCommunityList(
+      user.userId
+    );
+    return { communities };
+  }
+
+  @Get('feed/mixed')
+  async getMixedFeed(@Query('page') page: number = 0, @Req() req: AuthRequest) {
+    const res = await this.communityService.getMixedFeed(req.user.userId, page);
+    return { ...res };
+  }
+
+  @Get(':id')
+  async getCommunity(@Param('id') id: string, @Req() req: AuthRequest) {
+    const { community, userRoleInCommunity } =
+      await this.communityService.getCommunity(id, req.user.userId);
+    return {
+      community,
+      userRoleInCommunity,
+    };
   }
 }

@@ -16,7 +16,7 @@ const PostMedia: React.FC<PostMediaProps> = ({ url }) => {
   const [nextPage, setNextPage] = useState(1);
 
   const { doFetch } = useFetch<{
-    media: (IPostMedia & { post: IPost })[];
+    posts_media: (IPostMedia & { post: IPost & { timeAgo: string } })[];
     hasMore: boolean;
     nextPage: number;
     currentPage: number;
@@ -26,13 +26,14 @@ const PostMedia: React.FC<PostMediaProps> = ({ url }) => {
     authorized: true,
     onSuccess: (data) => {
       setNextPage(data.nextPage);
-      setMedia((prev) => [...prev, ...data.media]);
+      setMedia((prev) => [...prev, ...data.posts_media]);
       setHasMore(data.hasMore);
     },
   });
 
   useEffect(() => {
     doFetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   if (media.length === 0) {
@@ -67,11 +68,6 @@ const PostMedia: React.FC<PostMediaProps> = ({ url }) => {
           loader={
             <div className="flex justify-center items-center p-5">
               <HashLoader color="#fff" />
-            </div>
-          }
-          endMessage={
-            <div className="text-center text-lg text-white mt-5">
-              No more liked posts to show
             </div>
           }
         >

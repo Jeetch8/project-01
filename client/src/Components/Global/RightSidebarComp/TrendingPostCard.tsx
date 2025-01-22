@@ -1,11 +1,11 @@
-import React from 'react';
+import { IPost } from '@/types/interfaces';
 
-export default function NewsCard() {
+export default function TrendingPostCard(post: IPost) {
   return (
     <div className="flex justify-between py-3 cursor-pointer px-5">
       {/* left side/ text side */}
       <div>
-        <h3 className="font-bold text-[16px]">Paris Fashio Week Fall 2024</h3>
+        <h3 className="font-bold text-[16px]">{post.caption}</h3>
         <p className="text-sm text-zinc-500">Fashion · Live</p>
         <p className="text-sm text-zinc-500">
           Trending with <span className="text-blue-400">#ParisFashionWeek</span>

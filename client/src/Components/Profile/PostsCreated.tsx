@@ -11,7 +11,7 @@ import { HashLoader } from 'react-spinners';
 const PostsCreated: React.FC = () => {
   const [posts, setPosts] = useState<IFeedPost[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const { username: paramsUserName } = useParams();
 
   const { fetchState, doFetch } = useFetch<{
@@ -34,6 +34,7 @@ const PostsCreated: React.FC = () => {
 
   useEffect(() => {
     doFetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (fetchState === 'error') {

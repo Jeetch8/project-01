@@ -16,6 +16,7 @@ import { useParams } from 'react-router-dom';
 import { useFetch } from '@/hooks/useFetch';
 import { base_url } from '@/utils/base_url';
 import RingLoader from 'react-spinners/RingLoader';
+import FollowBtn from '@/Components/Global/FollowBtn';
 
 const Profile = () => {
   const [tweetsToShow, setTweetToShow] = useState('allUserTweets');
@@ -24,19 +25,24 @@ const Profile = () => {
   const { username: paramsUserName } = useParams();
   const [user, setUser] = useState<IGlobalContextUser | null>(null);
 
-  const { fetchState, doFetch } = useFetch<{ user: IGlobalContextUser }>({
+  const { fetchState, doFetch, dataRef } = useFetch<{
+    user: IGlobalContextUser;
+    doesFollow: boolean;
+  }>({
     url: `${base_url}/user/${paramsUserName}`,
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {
       setUser(data.user);
     },
+    onError() {
+      console.log('Here');
+    },
   });
 
   useEffect(() => {
-    if (paramsUserName === 'me' && globalUser) {
-      setUser(globalUser);
-    } else doFetch();
+    doFetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramsUserName]);
 
   return (
@@ -54,13 +60,15 @@ const Profile = () => {
           <div className="relative">
             <PhotoProvider>
               <PhotoView src={user?.banner_img ?? BlackScreen}>
-                <img
-                  src={user?.banner_img ?? BlackScreen}
-                  alt="banner"
-                  className={
-                    'w-full h-[250px] content-center object-center cursor-pointer'
-                  }
-                />
+                <div className="h-[250px] overflow-hidden">
+                  <img
+                    src={user?.banner_img ?? BlackScreen}
+                    alt="banner"
+                    className={
+                      'w-full content-center object-center cursor-pointer'
+                    }
+                  />
+                </div>
               </PhotoView>
             </PhotoProvider>
 
@@ -75,13 +83,20 @@ const Profile = () => {
                 </PhotoView>
               </PhotoProvider>
             </div>
-            <div className="flex justify-end mb-[25px]">
-              <button
-                className="border-[1px] border-gray-700 px-5 py-2 rounded-full mt-2 mr-4"
-                onClick={() => setIsOpen(true)}
-              >
-                Edit Profile
-              </button>
+            <div className="flex justify-end mb-[5px] mt-2 mr-4">
+              {globalUser?.id === user?.id ? (
+                <button
+                  className="border-2 border-gray-700 px-5 py-2 rounded-full"
+                  onClick={() => setIsOpen(true)}
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <FollowBtn
+                  userId={user?.id as string}
+                  defaultIsFollowing={dataRef.current?.doesFollow ?? false}
+                />
+              )}
             </div>
             <div className="text-[15px] leading-9 pl-[20px] pt-[0px]">
               <div className="leading-[3vh]">
@@ -96,7 +111,9 @@ const Profile = () => {
                 </h2>
                 <h2 className="flex items-center">
                   <SlCalender className="mr-2" /> Joined{' '}
-                  {`${Dayjs(user?.signup_date).format('MMM')} ${Dayjs(user?.signup_date).format('YYYY')}`}
+                  {`${Dayjs(user?.signup_date).format('MMM')} ${Dayjs(
+                    user?.signup_date
+                  ).format('YYYY')}`}
                 </h2>
               </div>
               <div className="flex space-x-6 text-[15px]">

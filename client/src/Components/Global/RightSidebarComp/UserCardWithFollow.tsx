@@ -1,5 +1,6 @@
 import AvatarImage from '../AvatarImage';
 import { IUser } from '@/types/interfaces';
+import FollowBtn from '../FollowBtn';
 
 export default function UserCardWithFollow({ user }: { user: IUser }) {
   return (
@@ -17,9 +18,13 @@ export default function UserCardWithFollow({ user }: { user: IUser }) {
           </div>
         </div>
         <div>
-          <button className="bg-white text-black px-4 py-2 font-semibold rounded-full hover:bg-gray-100 transition-all duration-200">
-            Follow
-          </button>
+          <FollowBtn
+            userId={user.id}
+            defaultIsFollowing={false}
+            className={
+              'h-[30px] w-[80px] hover:bg-gray-300 hover:border-gray-300 text-[14px]'
+            }
+          />
         </div>
       </div>
     </div>

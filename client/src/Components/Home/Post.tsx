@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarImage from '@/Components/Global/AvatarImage';
-import { TbHeartFilled, TbMessage } from 'react-icons/tb';
+import { TbHeartFilled, TbMessage, TbMessageFilled } from 'react-icons/tb';
 import { CiHeart } from 'react-icons/ci';
 import { CiBookmark } from 'react-icons/ci';
 import PostImages from './PostImages';
@@ -112,7 +112,11 @@ const Post = ({ post, outerClassName }: Props) => {
                 onClick={() => setIsCommentModalOpen(true)}
                 aria-label="comment-button"
               >
-                <TbMessage size={20} color="rgb(161 161 170)" />
+                {post.commented ? (
+                  <TbMessageFilled size={20} color="rgb(161 161 170)" />
+                ) : (
+                  <TbMessage size={20} color="rgb(161 161 170)" />
+                )}
               </span>
               <span className="text-sm">{post.comments_count}</span>
             </div>

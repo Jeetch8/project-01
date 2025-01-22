@@ -52,7 +52,7 @@ export class AuthService {
     { email, password }: LocalLoginPayloadDto,
     req: Request
   ) {
-    const result = await this.usersService.getUser({ email });
+    const result = await this.usersService.getUserAndToken({ email });
     const user = result.user;
     if (!user) {
       throw new NotFoundException('Email not found');
@@ -65,6 +65,7 @@ export class AuthService {
       const payload = {
         userId: user.id,
         email: user.email,
+        username: user.username,
       };
       const tokens = {
         access_token: await this.generateAccessToken(payload),
@@ -81,7 +82,7 @@ export class AuthService {
   async validateEmailVerificationToken(token: string) {
     const isJWTValid = await this.verifyEmailToken(token);
     if (!isJWTValid) throw new UnauthorizedException('Invalid token');
-    const result = await this.usersService.getUser({
+    const result = await this.usersService.getUserAndToken({
       email: isJWTValid.email,
       userId: isJWTValid.userId,
     });
@@ -107,7 +108,7 @@ export class AuthService {
   }) {
     const isJWTValid = await this.verifyPasswordResetToken(token);
     if (!isJWTValid) throw new UnauthorizedException('Invalid token provided');
-    const result = await this.usersService.getUser(isJWTValid.userId);
+    const result = await this.usersService.getUserAndToken(isJWTValid.userId);
     const user = result.user;
     const userAuth = result.userTokens;
     if (!user) {
@@ -123,7 +124,8 @@ export class AuthService {
   }
 
   async sendResetPasswordToken({ email }: RequestResetPasswordDto) {
-    const doesUserExist = (await this.usersService.getUser({ email })).user;
+    const doesUserExist = (await this.usersService.getUserAndToken({ email }))
+      .user;
     if (!doesUserExist) {
       throw new NotFoundException('User not found');
     }
@@ -146,7 +148,7 @@ export class AuthService {
     ip: string
   ) {
     const doesUserExist = (
-      await this.usersService.getUser({
+      await this.usersService.getUserAndToken({
         email: payload.email,
       })
     ).user;
@@ -154,6 +156,7 @@ export class AuthService {
       const tokenPayload = {
         userId: doesUserExist.id,
         email: doesUserExist.email,
+        username: doesUserExist.username,
       };
       return {
         access_token: await this.generateAccessToken(tokenPayload),
@@ -170,6 +173,7 @@ export class AuthService {
     const access_token = this.generateAccessToken({
       userId: newAppUser.user.id,
       email: payload.email,
+      username: newAppUser.user.username,
     });
     if (!access_token) {
       throw new BadRequestException('Something went wrong');
@@ -180,8 +184,9 @@ export class AuthService {
   }
 
   async registerLocalUser(payload: RegisterLocalPayloadDto) {
-    const user = (await this.usersService.getUser({ email: payload.email }))
-      .user;
+    const user = (
+      await this.usersService.getUserAndToken({ email: payload.email })
+    ).user;
     if (user) {
       throw new ConflictException('User with this email already exists');
     }
@@ -201,6 +206,7 @@ export class AuthService {
     const verifyEmailToken = await this.createEmailVerificationToken({
       userId: newUser.id,
       email: payload.email,
+      username: newUser.username,
     });
     await this.createParticipant(newUser);
     const userTokensStr = createUserTokenPropertiesString({

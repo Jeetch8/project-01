@@ -94,7 +94,7 @@ export function makeServer({ environment = 'development' }) {
     },
 
     routes() {
-      this.urlPrefix = 'http://localhost:5000';
+      this.urlPrefix = 'http://localhost:3000';
       this.namespace = '/api/v1';
 
       this.put('/user', (schema, request) => {
@@ -355,6 +355,40 @@ export function makeServer({ environment = 'development' }) {
       });
 
       this.passthrough('https://tenor.googleapis.com/*');
+
+      this.get('/community/user/community-list', (schema, request) => {
+        const communities: ICommunity[] = Array(20)
+          .fill(null)
+          .map(() => createCommunity());
+
+        return { communities };
+      });
+
+      this.get('/community/feed/mixed', (schema, request) => {
+        const page = parseInt(request.queryParams.page as string) || 1;
+        const communities: ICommunity[] = Array(20)
+          .fill(null)
+          .map(() => createCommunity());
+        const posts: IFeedPost[] = schema.db.posts.map((post) => ({
+          ...post,
+          creator: schema.db.users.find(post.userId),
+          media: Array(faker.number.int({ min: 0, max: 4 }))
+            .fill(null)
+            .map(() => createPostMedia()),
+          isCommunityPost: true,
+          communityName: faker.helpers.arrayElement(communities).title,
+          roleInCommunity: faker.helpers.maybe(
+            () => faker.helpers.arrayElement(['Admin', 'Mod'] as const),
+            { probability: 0.3 }
+          ),
+        }));
+        return {
+          posts,
+          hasMore: true,
+          nextPage: page + 1,
+          currentPage: page,
+        };
+      });
 
       this.get('/user/communities', (schema, request) => {
         const page = parseInt(request.queryParams.page as string) || 1;

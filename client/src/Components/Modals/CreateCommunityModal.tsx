@@ -106,10 +106,11 @@ const CreateCommunityModal = ({ isModalOpen, setIsModalOpen }: Props) => {
             label="Private Community"
           />
         </div>
-        <p className="text-sm text-gray-400">
-          Create a private community if you want to approve members before they
-          join. Public communities are open for anyone to join.
-        </p>
+        <div className="text-sm text-gray-400">
+          <p>Create a private community.</p>
+          <p>If you want to approve members before they join.</p>
+          <p>Public communities are open for anyone to join.</p>
+        </div>
         <div className="flex justify-end mt-4">
           <Button
             type="submit"

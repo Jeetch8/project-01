@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PiGlobeHemisphereWestThin } from 'react-icons/pi';
 import { IoIosArrowDown } from 'react-icons/io';
 import { useDetectOutsideClick } from '@/hooks/useDetectOutsideClick';
@@ -25,7 +25,7 @@ export default function AudienceSelectionDropDown({
   const { doFetch: fetchCommunities, fetchState } = useFetch<{
     communities: ICommunity[];
   }>({
-    url: `${base_url}/user/communities`,
+    url: `${base_url}/community/user/community-list`,
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {
@@ -39,7 +39,7 @@ export default function AudienceSelectionDropDown({
 
   useEffect(() => {
     onAudienceSelect(selectedOption);
-  }, [selectedOption]);
+  }, [selectedOption, onAudienceSelect]);
 
   const handleSelect = (option: { id: string; name: string }) => {
     setSelectedOption(option);

@@ -25,7 +25,12 @@ export const GlobalContextProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { fetchState, doFetch, dataRef } = useFetch<{
     user: IGlobalContextUser;
-  }>({ url: base_url + '/user/me', method: 'GET', authorized: true });
+  }>({
+    url: base_url + '/user/me',
+    method: 'GET',
+    authorized: true,
+    onError() {},
+  });
 
   useEffect(() => {
     doFetch();

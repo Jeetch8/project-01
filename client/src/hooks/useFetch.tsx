@@ -4,10 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getTokenFromLocalStorage } from '@/utils/localstorage';
 
 class CustomError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number
-  ) {
+  constructor(message: string, public statusCode: number) {
     super(message);
   }
 }
@@ -96,11 +93,11 @@ export const useFetch = <TData = unknown, TError = ApiError>({
 
         if (authorized) {
           const token = getTokenFromLocalStorage(authTokenVariable);
-          if (!token) {
-            console.log(url, '401 redirect ' + url);
-            handleUnAuthorisedAccessError();
-            return;
-          }
+          // if (!token) {
+          //   console.log(url, '401 redirect ' + url);
+          //   handleUnAuthorisedAccessError();
+          //   return;
+          // }
           fetchHeaders.set('Authorization', `Bearer ${token}`);
           fetchHeaders.set('credentials', 'include');
         }

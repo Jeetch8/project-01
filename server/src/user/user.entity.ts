@@ -1,5 +1,6 @@
 import { createObjectPropertiesString } from '@/utils/helpers';
 import { Node } from 'neo4j-driver';
+import neo4j from 'neo4j-driver';
 
 export class UserCon {
   constructor(private readonly node: Node) {}
@@ -9,7 +10,17 @@ export class UserCon {
   }
 
   getObject(): User {
-    return createUserObj({ ...this.node?.properties });
+    const followers_count = neo4j
+      .int(this.node.properties.followers_count)
+      .toNumber();
+    const following_count = neo4j
+      .int(this.node.properties.following_count)
+      .toNumber();
+    return createUserObj({
+      ...this.node?.properties,
+      followers_count,
+      following_count,
+    });
   }
 }
 

@@ -22,7 +22,6 @@ import {
 } from './dto/auth.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GithubAuthGuard } from './guards/github-auth.guard';
-import { Neo4jService } from 'nest-neo4j/dist';
 import { AuthProvider } from '@/user/user.entity';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { jwtAuthTokenPayload } from './entities/auth.entity';

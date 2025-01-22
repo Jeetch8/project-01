@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IFeedPost } from '@/types/interfaces';
+import { IFeedPost, IUser } from '@/types/interfaces';
 import { base_url } from '@/utils/base_url';
 import { useFetch } from '@/hooks/useFetch';
 import PostsTab from '@/Components/Explore/PostsTab';
@@ -14,7 +14,7 @@ const Explore: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'posts' | 'users'>('posts');
   const [posts, setPosts] = useState<IFeedPost[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<IUser[]>([]);
   const [hasMorePosts, setHasMorePosts] = useState(true);
   const [hasMoreUsers, setHasMoreUsers] = useState(true);
   const [currentPostPage, setCurrentPostPage] = useState(1);
@@ -40,7 +40,7 @@ const Explore: React.FC = () => {
   });
 
   const { doFetch: fetchUsers } = useFetch<{
-    users: any[];
+    users: IUser[];
     hasMore: boolean;
     nextPage: number;
   }>({
@@ -121,7 +121,7 @@ const Explore: React.FC = () => {
   };
 
   return (
-    <div className="w-[620px] text-white border-r-[1px] border-neutral-800">
+    <div className="min-w-[600px] text-white border-r-[1px] border-neutral-800">
       <div className="bg-[rgba(0,0,0,0.9)] backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center w-full border-b border-neutral-800 p-4">
           <div>

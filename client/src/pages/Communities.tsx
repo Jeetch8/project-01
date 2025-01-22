@@ -34,22 +34,36 @@ const Communities = () => {
   );
 
   const { doFetch, fetchState } = useFetch<{
-    communities: ICommunity[];
-    posts: { posts: IFeedPost[]; hasMore: boolean; nextPage: number };
+    posts: IFeedPost[];
+    hasMore: boolean;
+    nextPage: number;
   }>({
-    url: `${base_url}/user/communities?page=${currentPage}`,
+    url: `${base_url}/community/feed/mixed?page=${currentPage}`,
+    method: 'GET',
+    authorized: true,
+    onSuccess: (data) => {
+      if (data.posts.length > 0)
+        setPosts((prevPosts) => [...prevPosts, ...data.posts]);
+      setHasMore(data.hasMore);
+      setCurrentPage(data.nextPage);
+    },
+  });
+
+  const { doFetch: fetchCommunityList } = useFetch<{
+    communities: ICommunity[];
+  }>({
+    url: `${base_url}/community/user/community-list`,
     method: 'GET',
     authorized: true,
     onSuccess: (data) => {
       setCommunities(data.communities);
-      setPosts((prevPosts) => [...prevPosts, ...data.posts.posts]);
-      setHasMore(data.posts.hasMore);
-      setCurrentPage(data.posts.nextPage);
     },
   });
 
   useEffect(() => {
     doFetch();
+    fetchCommunityList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
@@ -113,7 +127,7 @@ const Communities = () => {
         </div>
       </div>
 
-      <div className="relative group border-y-[2px] border-zinc-900 mt-8">
+      <div className="relative group border-y-[2px] border-zinc-900 mt-8 h-[125px]">
         <div className="overflow-hidden" ref={emblaRef}>
           <div className="flex gap-4 p-4">
             {communities.map((community) => (

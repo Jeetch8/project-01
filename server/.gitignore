@@ -3,7 +3,7 @@
 /node_modules
 /build
 /neo4j_data
-
+.env
 # Logs
 logs
 *.log
