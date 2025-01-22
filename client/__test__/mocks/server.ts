@@ -60,6 +60,7 @@ const createFeedPost = (creator: IUser): IFeedPost => ({
   isCommunityPost: true,
   communityName: faker.word.words(2),
   roleInCommunity: faker.helpers.arrayElement(['ADMIN', 'MODERATOR', 'MEMBER']),
+  commented: faker.datatype.boolean(),
 });
 
 export function makeServer({ environment = 'development' }) {
@@ -137,7 +138,12 @@ export function makeServer({ environment = 'development' }) {
             postMedia.push(createPostMedia());
           }
           const user = schema.db.users.findBy({ id: posts[i].userId });
-          arr.push({ ...posts[i], media: postMedia, creator: user });
+          arr.push({
+            ...posts[i],
+            media: postMedia,
+            creator: user,
+            commented: false,
+          });
         }
         return {
           posts: arr,

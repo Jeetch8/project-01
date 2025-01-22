@@ -103,7 +103,10 @@ export interface IPostPage extends IFeedPost {
   comments: IPostPage[];
 }
 
-export type ISchemaPost = Omit<IFeedPost, 'creator' | 'comments' | 'media'>;
+export type ISchemaPost = Omit<
+  IFeedPost,
+  'creator' | 'comments' | 'media' | 'commented'
+>;
 
 export interface ICommunity {
   id: string;
